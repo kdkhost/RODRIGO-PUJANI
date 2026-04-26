@@ -1,0 +1,98 @@
+<?php
+
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\MediaAssetController;
+use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PageSectionController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\PracticeAreaController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SeoMetaController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SystemFileController;
+use App\Http\Controllers\Admin\TeamMemberController;
+use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\InstallController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SiteController;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Route;
+
+$crud = function (string $uri, string $name, string $controller, string $permission): void {
+    Route::middleware('permission:'.$permission)->group(function () use ($uri, $name, $controller): void {
+        Route::get($uri, [$controller, 'index'])->name($name.'.index');
+        Route::get($uri.'/create', [$controller, 'create'])->name($name.'.create');
+        Route::post($uri, [$controller, 'store'])->name($name.'.store');
+        Route::get($uri.'/{record}/edit', [$controller, 'edit'])->name($name.'.edit');
+        Route::match(['put', 'patch'], $uri.'/{record}', [$controller, 'update'])->name($name.'.update');
+        Route::delete($uri.'/{record}', [$controller, 'destroy'])->name($name.'.destroy');
+    });
+};
+
+Route::get('/instalar', [InstallController::class, 'index'])->name('install.index');
+Route::post('/instalar', [InstallController::class, 'store'])->name('install.store');
+
+Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
+    Route::get('/manifest.webmanifest', [SiteController::class, 'manifest'])->name('site.manifest');
+    Route::get('/sw.js', [SiteController::class, 'serviceWorker'])->name('site.service-worker');
+    Route::get('/offline', [SiteController::class, 'offline'])->name('site.offline');
+    Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('site.sitemap');
+    Route::get('/robots.txt', [SiteController::class, 'robots'])->name('site.robots');
+    Route::post('/contato/enviar', [SiteController::class, 'submitContact'])->name('site.contact.submit');
+    Route::get('/', [SiteController::class, 'home'])->name('site.home');
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () use ($crud) {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::middleware('permission:analytics.view')
+        ->get('/analytics', [AnalyticsController::class, 'index'])
+        ->name('analytics.index');
+
+    Route::middleware('permission:system-files.manage')
+        ->prefix('system-files')
+        ->name('system-files.')
+        ->group(function (): void {
+            Route::get('/', [SystemFileController::class, 'index'])->name('index');
+            Route::put('/{fileKey}', [SystemFileController::class, 'update'])->name('update');
+            Route::post('/{fileKey}/restore', [SystemFileController::class, 'restore'])->name('restore');
+        });
+
+    $crud('pages', 'pages', PageController::class, 'pages.manage');
+    $crud('page-sections', 'page-sections', PageSectionController::class, 'page-sections.manage');
+    $crud('practice-areas', 'practice-areas', PracticeAreaController::class, 'practice-areas.manage');
+    $crud('team-members', 'team-members', TeamMemberController::class, 'team-members.manage');
+    $crud('testimonials', 'testimonials', TestimonialController::class, 'testimonials.manage');
+    $crud('contact-messages', 'contact-messages', AdminContactMessageController::class, 'contact-messages.manage');
+    $crud('media-assets', 'media-assets', MediaAssetController::class, 'media-assets.manage');
+    $crud('seo-metas', 'seo-metas', SeoMetaController::class, 'seo-metas.manage');
+    $crud('users', 'users', UserController::class, 'users.manage');
+    $crud('roles', 'roles', RoleController::class, 'roles.manage');
+    $crud('permissions', 'permissions', PermissionController::class, 'permissions.manage');
+    $crud('settings', 'settings', SettingController::class, 'settings.manage');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function (): RedirectResponse {
+        $user = request()->user();
+
+        if ($user?->hasRole('Super Admin') || $user?->can('admin.access')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('profile.edit');
+    })->name('dashboard');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
+
+Route::middleware(['check.maintenance', 'track.visit'])
+    ->get('/{slug}', [SiteController::class, 'show'])
+    ->where('slug', '^(?!admin|instalar|login|logout|forgot-password|reset-password|register|dashboard|profile|verify-email|email|confirm-password|password|manifest\.webmanifest|sw\.js|offline|sitemap\.xml|robots\.txt|up).*$')
+    ->name('site.show');

@@ -1,0 +1,42 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/forms": "^0.5.2",
+        "@tailwindcss/vite": "^4.0.0",
+        "alpinejs": "^3.4.2",
+        "autoprefixer": "^10.4.2",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "postcss": "^8.4.31",
+        "tailwindcss": "^3.1.0",
+        "vite": "^7.0.7"
+    },
+    "dependencies": {
+        "@fullcalendar/core": "^4.4.2",
+        "@fullcalendar/daygrid": "^4.4.2",
+        "@fullcalendar/interaction": "^4.4.2",
+        "@fullcalendar/list": "^4.4.2",
+        "@fullcalendar/timegrid": "^4.4.2",
+        "@popperjs/core": "^2.11.8",
+        "admin-lte": "^4.0.0-rc7",
+        "bootstrap": "^5.3.8",
+        "bootstrap-icons": "^1.13.1",
+        "chart.js": "^4.5.1",
+        "filepond": "^4.32.12",
+        "filepond-plugin-file-validate-size": "^2.2.8",
+        "filepond-plugin-file-validate-type": "^1.2.9",
+        "filepond-plugin-image-preview": "^4.6.12",
+        "inputmask": "^5.0.9",
+        "jquery": "^4.0.0",
+        "summernote": "^0.9.1",
+        "sweetalert2": "^11.26.24",
+        "toastr": "^2.1.4"
+    }
+}

@@ -1,0 +1,589 @@
+import './bootstrap';
+
+import * as bootstrap from 'bootstrap';
+import 'admin-lte';
+import $ from 'jquery';
+import toastr from 'toastr';
+import Swal from 'sweetalert2';
+import 'summernote/dist/summernote-lite.min.js';
+import Inputmask from 'inputmask';
+import * as FilePond from 'filepond';
+import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
+import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
+import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
+import Chart from 'chart.js/auto';
+import { Calendar } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import listPlugin from '@fullcalendar/list';
+
+window.bootstrap = bootstrap;
+window.$ = window.jQuery = $;
+window.toastr = toastr;
+window.Swal = Swal;
+window.Chart = Chart;
+window.FullCalendar = {
+    Calendar,
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+};
+
+FilePond.registerPlugin(
+    FilePondPluginFileValidateSize,
+    FilePondPluginFileValidateType,
+    FilePondPluginImagePreview,
+);
+
+toastr.options = {
+    closeButton: true,
+    newestOnTop: true,
+    progressBar: true,
+    positionClass: 'toast-top-right',
+    timeOut: 4000,
+};
+
+const AdminUI = {
+    modalInstance: null,
+
+    boot() {
+        this.ensureModal();
+        this.ensureProgressCard();
+        this.flushPageToasts();
+        this.bindDocumentEvents();
+        this.initPlugins(document);
+        this.initAjaxTables(document);
+    },
+
+    showToast(type, message) {
+        const method = typeof window.toastr?.[type] === 'function' ? type : 'info';
+        window.toastr[method](message);
+    },
+
+    flushPageToasts() {
+        document.querySelectorAll('[data-page-toast]').forEach((element) => {
+            this.showToast(element.dataset.type || 'info', element.dataset.message || '');
+            element.remove();
+        });
+    },
+
+    ensureModal() {
+        if (document.getElementById('admin-modal')) {
+            this.modalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('admin-modal'));
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="modal fade" id="admin-modal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Carregando</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(wrapper.firstElementChild);
+        this.modalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('admin-modal'));
+    },
+
+    ensureProgressCard() {
+        if (document.getElementById('admin-upload-progress')) {
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.id = 'admin-upload-progress';
+        wrapper.className = 'admin-upload-progress card shadow-sm';
+        wrapper.innerHTML = `
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong class="small text-uppercase">Upload em andamento</strong>
+                    <span data-progress-percent class="small text-muted">0%</span>
+                </div>
+                <div class="progress mb-2" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" data-progress-bar style="width: 0%"></div>
+                </div>
+                <div class="small text-muted" data-progress-eta>Calculando tempo restante...</div>
+            </div>
+        `;
+        document.body.appendChild(wrapper);
+    },
+
+    bindDocumentEvents() {
+        document.addEventListener('click', (event) => {
+            const modalTrigger = event.target.closest('[data-modal-url]');
+            if (modalTrigger) {
+                event.preventDefault();
+                this.loadModal(modalTrigger.dataset.modalUrl, modalTrigger.dataset.modalTitle || 'Editar');
+                return;
+            }
+
+            const deleteTrigger = event.target.closest('[data-delete-url]');
+            if (deleteTrigger) {
+                event.preventDefault();
+                this.confirmDelete(deleteTrigger);
+                return;
+            }
+
+            const paginationLink = event.target.closest('[data-ajax-table] .pagination a');
+            if (paginationLink) {
+                event.preventDefault();
+                const table = paginationLink.closest('[data-ajax-table]');
+                this.refreshTable(table, paginationLink.href);
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('form');
+            if (!form) {
+                return;
+            }
+
+            const submitter = event.submitter;
+
+            if (submitter?.dataset.confirmSubmit === 'true') {
+                event.preventDefault();
+
+                const result = await Swal.fire({
+                    title: submitter.dataset.confirmTitle || 'Confirmar acao?',
+                    text: submitter.dataset.confirmText || 'Deseja continuar com esta operacao?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: submitter.dataset.confirmButton || 'Confirmar',
+                    cancelButtonText: 'Cancelar',
+                });
+
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                if (form.matches('[data-ajax-form]')) {
+                    this.submitForm(form);
+                    return;
+                }
+
+                form.submit();
+                return;
+            }
+
+            if (!form.matches('[data-ajax-form]')) {
+                return;
+            }
+
+            event.preventDefault();
+            this.submitForm(form);
+        });
+
+        document.addEventListener('input', (event) => {
+            const searchInput = event.target.closest('[data-table-search]');
+            if (!searchInput) {
+                return;
+            }
+
+            const table = document.querySelector(searchInput.dataset.tableTarget);
+            clearTimeout(searchInput._searchTimer);
+            searchInput._searchTimer = setTimeout(() => {
+                this.refreshTable(table);
+            }, 350);
+        });
+
+        document.addEventListener('change', (event) => {
+            const filterInput = event.target.closest('[data-table-filter]');
+            if (!filterInput) {
+                return;
+            }
+
+            const table = document.querySelector(filterInput.dataset.tableTarget);
+            this.refreshTable(table);
+        });
+    },
+
+    initAjaxTables(scope) {
+        scope.querySelectorAll('[data-ajax-table]').forEach((table) => {
+            if (!table.dataset.loaded) {
+                this.refreshTable(table);
+            }
+        });
+    },
+
+    serializeToolbar(table) {
+        const selector = table.dataset.toolbar;
+        const toolbar = selector ? document.querySelector(selector) : null;
+
+        if (!toolbar) {
+            return new URLSearchParams();
+        }
+
+        return new URLSearchParams(new FormData(toolbar));
+    },
+
+    async refreshTable(table, url = null) {
+        if (!table) {
+            return;
+        }
+
+        const endpoint = url || table.dataset.url;
+        const params = this.serializeToolbar(table);
+        const requestUrl = new URL(endpoint, window.location.origin);
+
+        params.forEach((value, key) => {
+            if (value) {
+                requestUrl.searchParams.set(key, value);
+            }
+        });
+
+        table.classList.add('opacity-50');
+
+        try {
+            const response = await window.axios.get(requestUrl.toString());
+            table.innerHTML = response.data.html;
+            table.dataset.loaded = 'true';
+            this.initPlugins(table);
+        } catch (error) {
+            this.showToast('error', error.response?.data?.message || 'Nao foi possivel carregar a listagem.');
+        } finally {
+            table.classList.remove('opacity-50');
+        }
+    },
+
+    async loadModal(url, title) {
+        const modal = document.getElementById('admin-modal');
+        modal.querySelector('.modal-title').textContent = title;
+        modal.querySelector('.modal-body').innerHTML = '<div class="py-5 text-center text-muted">Carregando...</div>';
+        this.modalInstance.show();
+
+        try {
+            const response = await window.axios.get(url);
+            modal.querySelector('.modal-title').textContent = response.data.title || title;
+            modal.querySelector('.modal-body').innerHTML = response.data.html;
+            this.initPlugins(modal);
+        } catch (error) {
+            modal.querySelector('.modal-body').innerHTML = '<div class="alert alert-danger mb-0">Falha ao carregar o formulario.</div>';
+        }
+    },
+
+    async confirmDelete(trigger) {
+        const confirmResult = await Swal.fire({
+            title: 'Confirmar exclusao?',
+            text: trigger.dataset.confirmText || 'Essa acao nao podera ser desfeita.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Excluir',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545',
+        });
+
+        if (!confirmResult.isConfirmed) {
+            return;
+        }
+
+        try {
+            const response = await window.axios.delete(trigger.dataset.deleteUrl);
+            this.showToast('success', response.data.message || 'Registro excluido com sucesso.');
+            const table = document.querySelector(trigger.dataset.tableTarget);
+            this.refreshTable(table);
+        } catch (error) {
+            this.showToast('error', error.response?.data?.message || 'Falha ao excluir o registro.');
+        }
+    },
+
+    async submitForm(form) {
+        const formData = new FormData(form);
+        const method = (form.dataset.method || form.method || 'POST').toUpperCase();
+        const url = form.action;
+        const submitButton = form.querySelector('[type="submit"]');
+
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+
+        this.resetFormErrors(form);
+
+        try {
+            const response = await window.axios({
+                method,
+                url,
+                data: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                onUploadProgress: (progressEvent) => {
+                    const total = progressEvent.total || 0;
+                    const loaded = progressEvent.loaded || 0;
+                    const percent = total ? Math.round((loaded / total) * 100) : 0;
+                    const elapsedSeconds = Math.max(
+                        1,
+                        (Date.now() - (form._uploadStartedAt || (form._uploadStartedAt = Date.now()))) / 1000,
+                    );
+                    const speed = loaded / elapsedSeconds;
+                    const eta = speed > 0 && total > 0 ? Math.max(0, Math.round((total - loaded) / speed)) : 0;
+                    this.updateProgress(percent, eta);
+                },
+            });
+
+            this.hideProgress();
+            this.showToast('success', response.data.message || 'Registro salvo com sucesso.');
+
+            if (response.data.closeModal !== false && this.modalInstance) {
+                this.modalInstance.hide();
+            }
+
+            if (response.data.redirect) {
+                window.location.href = response.data.redirect;
+                return;
+            }
+
+            if (response.data.tableTarget) {
+                const table = document.querySelector(response.data.tableTarget);
+                this.refreshTable(table);
+            }
+        } catch (error) {
+            this.hideProgress();
+
+            if (error.response?.status === 422) {
+                this.renderValidationErrors(form, error.response.data.errors || {});
+                this.showToast('warning', 'Revise os campos destacados.');
+                return;
+            }
+
+            this.showToast('error', error.response?.data?.message || 'Falha ao processar a solicitacao.');
+        } finally {
+            delete form._uploadStartedAt;
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+        }
+    },
+
+    resetFormErrors(form) {
+        form.querySelectorAll('.is-invalid').forEach((item) => item.classList.remove('is-invalid'));
+        form.querySelectorAll('[data-error-for]').forEach((item) => {
+            item.textContent = '';
+        });
+        form.querySelectorAll('[data-generated-error="true"]').forEach((item) => item.remove());
+    },
+
+    renderValidationErrors(form, errors) {
+        Object.entries(errors).forEach(([field, messages]) => {
+            this.applyFieldError(form, field, messages[0]);
+        });
+    },
+
+    applyFieldError(form, field, message) {
+        const input = this.resolveInput(form, field);
+        const errorNode = this.resolveErrorNode(form, input, field);
+
+        if (input) {
+            this.markInvalid(input);
+        }
+
+        if (errorNode) {
+            errorNode.textContent = message;
+            return;
+        }
+
+        this.showToast('warning', message);
+    },
+
+    resolveInput(form, field) {
+        const root = field.split('.')[0];
+        const candidates = Array.from(new Set([
+            field,
+            field.replace(/\.\d+$/g, '[]'),
+            `${root}[]`,
+            root,
+        ]));
+
+        for (const candidate of candidates) {
+            const selector = `[name="${candidate.replace(/"/g, '\\"')}"]`;
+            const input = form.querySelector(selector);
+            if (input) {
+                return input;
+            }
+        }
+
+        return form.querySelector(`[name^="${root}["]`);
+    },
+
+    resolveErrorNode(form, input, field) {
+        const root = field.split('.')[0];
+        const candidates = Array.from(new Set([field, `${root}[]`, root]));
+
+        for (const candidate of candidates) {
+            const node = form.querySelector(`[data-error-for="${candidate.replace(/"/g, '\\"')}"]`);
+            if (node) {
+                return node;
+            }
+        }
+
+        if (!input) {
+            return null;
+        }
+
+        const node = document.createElement('div');
+        node.className = 'invalid-feedback d-block';
+        node.dataset.errorFor = field;
+        node.dataset.generatedError = 'true';
+
+        this.feedbackAnchor(input).insertAdjacentElement('afterend', node);
+
+        return node;
+    },
+
+    markInvalid(input) {
+        input.classList.add('is-invalid');
+
+        const anchor = this.feedbackAnchor(input);
+        if (anchor && anchor !== input) {
+            anchor.classList.add('is-invalid');
+        }
+    },
+
+    feedbackAnchor(input) {
+        if (input.nextElementSibling?.classList?.contains('note-editor')) {
+            return input.nextElementSibling;
+        }
+
+        const filepondRoot = input.closest('.filepond--root');
+        if (filepondRoot) {
+            return filepondRoot;
+        }
+
+        if (input.nextElementSibling?.classList?.contains('filepond--root')) {
+            return input.nextElementSibling;
+        }
+
+        return input;
+    },
+
+    updateProgress(percent, etaSeconds) {
+        const card = document.getElementById('admin-upload-progress');
+        const bar = card.querySelector('[data-progress-bar]');
+        const percentLabel = card.querySelector('[data-progress-percent]');
+        const etaLabel = card.querySelector('[data-progress-eta]');
+
+        card.classList.add('active');
+        bar.style.width = `${percent}%`;
+        percentLabel.textContent = `${percent}%`;
+        etaLabel.textContent = etaSeconds > 0 ? `Tempo restante aproximado: ${etaSeconds}s` : 'Finalizando upload...';
+    },
+
+    hideProgress() {
+        const card = document.getElementById('admin-upload-progress');
+        const bar = card.querySelector('[data-progress-bar]');
+        const percentLabel = card.querySelector('[data-progress-percent]');
+        const etaLabel = card.querySelector('[data-progress-eta]');
+
+        bar.style.width = '0%';
+        percentLabel.textContent = '0%';
+        etaLabel.textContent = 'Calculando tempo restante...';
+        card.classList.remove('active');
+    },
+
+    initPlugins(scope) {
+        scope.querySelectorAll('[data-editor="summernote"]').forEach((element) => {
+            if (element.dataset.editorReady) {
+                return;
+            }
+
+            $(element).summernote({
+                height: 220,
+                lang: 'pt-BR',
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'underline', 'italic', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link', 'picture', 'video']],
+                    ['view', ['fullscreen', 'codeview']],
+                ],
+            });
+
+            element.dataset.editorReady = 'true';
+        });
+
+        scope.querySelectorAll('[data-filepond]').forEach((input) => {
+            if (input.dataset.filepondReady) {
+                return;
+            }
+
+            FilePond.create(input, {
+                allowMultiple: input.hasAttribute('multiple'),
+                credits: false,
+                storeAsFile: true,
+                acceptedFileTypes: input.dataset.accepted ? input.dataset.accepted.split(',') : null,
+                labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione arquivos</span>',
+            });
+
+            input.dataset.filepondReady = 'true';
+        });
+
+        scope.querySelectorAll('[data-mask]').forEach((input) => {
+            if (input.dataset.maskReady) {
+                return;
+            }
+
+            const mask = input.dataset.mask;
+            const config = {
+                phone: { mask: ['(99) 9999-9999', '(99) 99999-9999'] },
+                cep: { mask: '99999-999' },
+                cpf: { mask: '999.999.999-99' },
+                cnpj: { mask: '99.999.999/9999-99' },
+                time: { mask: '99:99' },
+                date: { mask: '99/99/9999' },
+                currency: { alias: 'currency', prefix: 'R$ ', groupSeparator: '.', radixPoint: ',', digits: 2, autoGroup: true },
+            };
+
+            if (config[mask]) {
+                Inputmask(config[mask]).mask(input);
+                input.dataset.maskReady = 'true';
+            }
+        });
+
+        scope.querySelectorAll('[data-cep-autofill]').forEach((input) => {
+            if (input.dataset.cepReady) {
+                return;
+            }
+
+            input.addEventListener('blur', async () => {
+                const cep = input.value.replace(/\D/g, '');
+                if (cep.length !== 8) {
+                    return;
+                }
+
+                try {
+                    const response = await window.axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+                    const data = response.data;
+                    if (data.erro) {
+                        return;
+                    }
+
+                    const form = input.closest('form');
+                    const map = {
+                        logradouro: form?.querySelector('[name="address_street"]'),
+                        bairro: form?.querySelector('[name="address_district"]'),
+                        localidade: form?.querySelector('[name="address_city"]'),
+                        uf: form?.querySelector('[name="address_state"]'),
+                    };
+
+                    Object.entries(map).forEach(([key, field]) => {
+                        if (field && !field.value) {
+                            field.value = data[key] || '';
+                        }
+                    });
+                } catch (error) {
+                    this.showToast('warning', 'Nao foi possivel consultar o CEP automaticamente.');
+                }
+            });
+
+            input.dataset.cepReady = 'true';
+        });
+    },
+};
+
+window.AdminUI = AdminUI;
+
+document.addEventListener('DOMContentLoaded', () => AdminUI.boot());
