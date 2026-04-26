@@ -2,6 +2,13 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.2] - 2026-04-26
+
+### Alterado
+- Layout administrativo recebeu acabamento premium mantendo AdminLTE 4, Bootstrap e a paleta escura/dourada do painel.
+- Dashboard, Analytics, listagens compartilhadas e arquivos do sistema passaram a usar cabecalhos, cards, tabelas e controles mais consistentes.
+- Pagina de perfil foi reconstruida no padrao do painel administrativo, com resumo da conta, formularios Bootstrap e zona critica padronizada.
+
 ## [1.0.1] - 2026-04-26
 
 ### Corrigido

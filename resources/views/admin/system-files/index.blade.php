@@ -1,11 +1,18 @@
 @extends('admin.layouts.app')
 
 @section('content')
-    <div class="app-content-header">
-        <div class="container-fluid d-flex flex-wrap gap-3 justify-content-between align-items-center">
-            <div>
-                <h1 class="mb-1">{{ $pageTitle }}</h1>
-                <div class="text-muted">Edicao controlada de arquivos criticos com backup automatico a cada alteracao.</div>
+    <div class="app-content-header admin-page-hero">
+        <div class="container-fluid">
+            <div class="admin-page-hero-inner">
+                <div>
+                    <div class="admin-eyebrow">Governanca tecnica</div>
+                    <h1>{{ $pageTitle }}</h1>
+                    <p>Edicao controlada de arquivos criticos com backup automatico a cada alteracao.</p>
+                </div>
+                <div class="admin-hero-stamp">
+                    <i class="bi bi-file-earmark-lock"></i>
+                    <span>Acesso restrito</span>
+                </div>
             </div>
         </div>
     </div>
@@ -26,9 +33,10 @@
             <div class="row g-4">
                 @foreach ($files as $file)
                     <div class="col-12" id="arquivo-{{ $file['key'] }}">
-                        <div class="card">
+                        <div class="card admin-form-card">
                             <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
                                 <div>
+                                    <div class="admin-card-kicker">Arquivo monitorado</div>
                                     <h3 class="card-title mb-1">{{ $file['label'] }}</h3>
                                     <div class="small text-muted">{{ $file['description'] }}</div>
                                 </div>
