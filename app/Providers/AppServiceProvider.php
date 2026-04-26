@@ -36,18 +36,42 @@ class AppServiceProvider extends ServiceProvider
                 }
 
                 $publicPages = Schema::hasTable('pages')
-                    ? Cache::rememberForever('site_pages.menu', fn () => Page::query()
+                    ? collect(Cache::rememberForever('site_pages.menu.v2', fn () => Page::query()
                         ->where('show_in_menu', true)
                         ->where('status', 'published')
                         ->orderBy('sort_order')
-                        ->get())
+                        ->get(['id', 'title', 'menu_title', 'slug', 'is_home'])
+                        ->map(fn (Page $page): array => [
+                            'id' => $page->id,
+                            'title' => $page->title,
+                            'menu_title' => $page->menu_title,
+                            'slug' => $page->slug,
+                            'is_home' => $page->is_home,
+                        ])
+                        ->all()))
+                        ->map(fn (array $page): object => (object) $page)
                     : collect();
 
-                $view->with('siteSettings', Cache::rememberForever('site_settings.all', fn () => Setting::query()
+                $settings = Cache::rememberForever('site_settings.all.v2', fn () => Setting::query()
                     ->orderBy('group')
                     ->orderBy('sort_order')
                     ->get()
-                    ->keyBy('key')));
+                    ->mapWithKeys(fn (Setting $setting): array => [
+                        $setting->key => [
+                            'id' => $setting->id,
+                            'group' => $setting->group,
+                            'key' => $setting->key,
+                            'label' => $setting->label,
+                            'type' => $setting->type,
+                            'value' => $setting->value,
+                            'json_value' => $setting->json_value,
+                            'is_public' => $setting->is_public,
+                            'sort_order' => $setting->sort_order,
+                        ],
+                    ])
+                    ->all());
+
+                $view->with('siteSettings', collect($settings)->map(fn (array $setting): object => (object) $setting));
                 $view->with('publicPages', $publicPages);
             } catch (Throwable) {
                 $view->with('siteSettings', collect());

@@ -288,9 +288,13 @@ abstract class AdminCrudController extends Controller
     {
         foreach ([
             'site_settings.all',
+            'site_settings.all.v2',
             'site_settings.map',
+            'site_settings.map.v2',
             'site_pages.menu',
+            'site_pages.menu.v2',
             'site_pages.public',
+            'site_pages.public.v2',
             'system_maintenance.settings',
         ] as $key) {
             Cache::forget($key);

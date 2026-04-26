@@ -2,6 +2,12 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.1] - 2026-04-26
+
+### Corrigido
+- Cache publico de configuracoes e paginas agora grava apenas arrays simples, evitando erro 500 em hospedagens com bloqueio de desserializacao de objetos PHP.
+- Chaves antigas de cache foram versionadas para ignorar registros serializados quebrados ja existentes no servidor.
+
 ## [1.0.0] - 2026-04-26
 
 ### Adicionado

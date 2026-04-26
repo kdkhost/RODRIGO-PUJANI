@@ -15,17 +15,27 @@ if (! function_exists('setting')) {
                 return $default;
             }
 
-            $item = Cache::rememberForever('site_settings.map', fn () => Setting::query()
+            $settings = Cache::rememberForever('site_settings.map.v2', fn () => Setting::query()
                 ->select(['key', 'type', 'value', 'json_value'])
                 ->get()
-                ->keyBy('key'))
-                ->get($key);
+                ->mapWithKeys(fn (Setting $setting): array => [
+                    $setting->key => [
+                        'type' => $setting->type,
+                        'value' => $setting->value,
+                        'json_value' => $setting->json_value,
+                    ],
+                ])
+                ->all());
+
+            $item = $settings[$key] ?? null;
 
             if (! $item) {
                 return $default;
             }
 
-            return $item->type === 'json' ? ($item->json_value ?? $default) : ($item->value ?? $default);
+            return ($item['type'] ?? null) === 'json'
+                ? ($item['json_value'] ?? $default)
+                : ($item['value'] ?? $default);
         } catch (Throwable) {
             return $default;
         }
@@ -40,10 +50,20 @@ if (! function_exists('public_pages')) {
                 return collect();
             }
 
-            return Cache::rememberForever('site_pages.public', fn () => Page::query()
+            $pages = Cache::rememberForever('site_pages.public.v2', fn () => Page::query()
                 ->where('status', 'published')
                 ->orderBy('sort_order')
-                ->get());
+                ->get(['id', 'title', 'menu_title', 'slug', 'is_home'])
+                ->map(fn (Page $page): array => [
+                    'id' => $page->id,
+                    'title' => $page->title,
+                    'menu_title' => $page->menu_title,
+                    'slug' => $page->slug,
+                    'is_home' => $page->is_home,
+                ])
+                ->all());
+
+            return collect($pages)->map(fn (array $page): object => (object) $page);
         } catch (Throwable) {
             return collect();
         }
