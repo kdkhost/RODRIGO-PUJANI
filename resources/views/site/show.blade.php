@@ -49,7 +49,14 @@
             'embedded' => true,
         ])
     @else
+        @php
+            $coverUrl = site_asset_url($page->cover_path);
+        @endphp
         <section class="hero-bg grid-pattern relative min-h-[60vh] flex flex-col justify-center overflow-hidden">
+            @if($coverUrl)
+                <img src="{{ $coverUrl }}" alt="{{ $page->title }}" class="absolute inset-0 w-full h-full object-cover opacity-45">
+                <div class="absolute inset-0" style="background:linear-gradient(90deg,rgba(11,12,16,.96),rgba(11,12,16,.68),rgba(11,12,16,.38));"></div>
+            @endif
             <div class="absolute left-0 top-0 bottom-0 w-px" style="background:linear-gradient(180deg,transparent,rgba(196,154,60,0.3),transparent);"></div>
             <div class="absolute right-0 top-0 bottom-0 w-px" style="background:linear-gradient(180deg,transparent,rgba(196,154,60,0.15),transparent);"></div>
             <div class="absolute top-1/4 right-8 lg:right-24 w-40 h-40 lg:w-64 lg:h-64 border border-gold/8 rotate-12 parallax" data-speed="0.3"></div>
@@ -57,7 +64,7 @@
             <div class="max-w-7xl mx-auto px-6 lg:px-16 pt-32 pb-20 w-full relative">
                 <div class="grid lg:grid-cols-12 gap-12 items-center">
                     <div class="lg:col-span-7">
-                        <div class="section-label aos mb-8">— {{ $page->menu_title ?: $page->title }}</div>
+                        <div class="section-label aos mb-8">{{ $page->menu_title ?: $page->title }}</div>
                         <h1 class="font-display leading-none mb-6 aos delay-100" style="font-size:clamp(3rem,7vw,6rem);font-weight:300;">{!! nl2br(e($title)) !!}</h1>
                         @if($subtitle)
                             <p class="text-cream/50 max-w-2xl leading-relaxed mb-10 aos delay-200" style="font-size:1.05rem;">{{ $subtitle }}</p>
@@ -68,7 +75,7 @@
                         </div>
                     </div>
                     <div class="lg:col-span-5">
-                        <div class="card-glass p-8 lg:p-10 aos-right delay-100">
+                        <div class="site-hero-proof p-8 lg:p-10 aos-right delay-100">
                             <div class="font-display text-2xl mb-4">Advocacia estratégica</div>
                             <p class="text-cream/50 leading-relaxed">{{ $page->excerpt ?: 'Atuação orientada por estratégia jurídica, leitura precisa do risco e compromisso com resultado.' }}</p>
                         </div>

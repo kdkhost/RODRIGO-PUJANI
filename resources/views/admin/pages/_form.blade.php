@@ -1,4 +1,6 @@
-@php($isEdit = $record->exists)
+@php
+    $isEdit = $record->exists;
+@endphp
 <form action="{{ $isEdit ? route($routeBase.'.update', $record->id) : route($routeBase.'.store') }}" method="POST" data-ajax-form enctype="multipart/form-data">
     @csrf
     @if($isEdit) @method('PUT') @endif
@@ -69,6 +71,9 @@
         <div class="col-12">
             <label class="form-label">Imagem de Capa</label>
             <input type="file" name="cover_image" class="form-control" data-filepond>
+            @if($record->cover_path)
+                <div class="mt-2 small text-muted">Imagem atual: <a href="{{ site_asset_url($record->cover_path) }}" target="_blank" rel="noopener">{{ $record->cover_path }}</a></div>
+            @endif
         </div>
         <div class="col-12">
             <label class="form-label">Resumo</label>

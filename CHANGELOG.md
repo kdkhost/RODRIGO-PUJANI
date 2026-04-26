@@ -2,6 +2,21 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.4] - 2026-04-26
+
+### Adicionado
+- Seeder premium para popular paginas, secoes, areas de atuacao, equipe, depoimentos e biblioteca de midias com conteudo editavel pelo painel.
+- Pacote local de 20 imagens premium para hero, capas, areas juridicas, profissionais e depoimentos.
+
+### Alterado
+- Site institucional passou a consumir capas, imagens e blocos estruturados do banco de dados, mantendo fallback seguro quando o conteudo ainda nao existir.
+- Secoes publicas de sobre, areas, resultados, equipe, depoimentos e contato receberam composicao visual mais premium preservando a paleta escura/dourada.
+- Formularios administrativos de paginas, areas, equipe e depoimentos agora mostram referencia da imagem atual para facilitar edicao do conteudo populado.
+
+### Corrigido
+- Validacao de JSON nas secoes administrativas agora bloqueia dados invalidos antes da gravacao.
+- Views Blade foram ajustadas para evitar compilacao invalida da diretiva `@php` em hospedagens compartilhadas.
+
 ## [1.0.3] - 2026-04-26
 
 ### Adicionado

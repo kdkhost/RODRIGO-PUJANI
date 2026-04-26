@@ -1,4 +1,6 @@
-@php($isEdit = $record->exists)
+@php
+    $isEdit = $record->exists;
+@endphp
 <form action="{{ $isEdit ? route($routeBase.'.update', $record->id) : route($routeBase.'.store') }}" method="POST" data-ajax-form enctype="multipart/form-data">
     @csrf
     @if($isEdit) @method('PUT') @endif
@@ -14,7 +16,7 @@
         <div class="col-md-6"><label class="form-label">Instagram</label><input type="url" name="instagram_url" class="form-control" value="{{ old('instagram_url', $record->instagram_url) }}"></div>
         <div class="col-md-6"><label class="form-label">Especialidades</label><input type="text" name="specialties_text" class="form-control" value="{{ old('specialties_text', collect($record->specialties)->implode(', ')) }}" placeholder="Civil, Empresarial"></div>
         <div class="col-md-3"><label class="form-label">Ordem</label><input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', $record->sort_order ?? 0) }}"></div>
-        <div class="col-md-3"><label class="form-label">Foto</label><input type="file" name="image" class="form-control" data-filepond></div>
+        <div class="col-md-3"><label class="form-label">Foto</label><input type="file" name="image" class="form-control" data-filepond>@if($record->image_path)<div class="mt-2 small text-muted">Foto atual: <a href="{{ site_asset_url($record->image_path) }}" target="_blank" rel="noopener">{{ $record->image_path }}</a></div>@endif</div>
         <div class="col-12"><label class="form-label">Bio</label><textarea name="bio" class="form-control" data-editor="summernote">{{ old('bio', $record->bio) }}</textarea></div>
         <div class="col-12 d-flex gap-4"><div class="form-check"><input type="checkbox" class="form-check-input" name="is_partner" id="is_partner" value="1" @checked(old('is_partner', $record->is_partner))><label class="form-check-label" for="is_partner">Sócio</label></div><div class="form-check"><input type="checkbox" class="form-check-input" name="is_active" id="is_member_active" value="1" @checked(old('is_active', $record->is_active ?? true))><label class="form-check-label" for="is_member_active">Ativo</label></div></div>
     </div>

@@ -1,4 +1,6 @@
-@php($isEdit = $record->exists)
+@php
+    $isEdit = $record->exists;
+@endphp
 <form action="{{ $isEdit ? route($routeBase.'.update', $record->id) : route($routeBase.'.store') }}" method="POST" data-ajax-form enctype="multipart/form-data">
     @csrf
     @if($isEdit) @method('PUT') @endif

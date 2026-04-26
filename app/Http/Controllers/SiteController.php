@@ -221,8 +221,13 @@ JS;
 
     protected function renderPage(Page $page): View
     {
+        $sectionBlocks = $page->sections
+            ->where('is_active', true)
+            ->keyBy('section_key');
+
         return view('site.show', [
             'page' => $page,
+            'sectionBlocks' => $sectionBlocks,
             'featuredAreas' => PracticeArea::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')
@@ -235,11 +240,11 @@ JS;
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->get(),
-            'siteMetrics' => $this->siteMetrics(),
-            'recognitions' => $this->recognitions(),
-            'timeline' => $this->timeline(),
-            'valueCards' => $this->valueCards(),
-            'differentials' => $this->differentials(),
+            'siteMetrics' => $this->sectionItems($sectionBlocks, 'metrics', $this->siteMetrics()),
+            'recognitions' => $this->sectionItems($sectionBlocks, 'recognitions', $this->recognitions()),
+            'timeline' => $this->sectionItems($sectionBlocks, 'timeline', $this->timeline()),
+            'valueCards' => $this->sectionItems($sectionBlocks, 'values', $this->valueCards()),
+            'differentials' => $this->sectionItems($sectionBlocks, 'differentials', $this->differentials()),
         ]);
     }
 
@@ -330,6 +335,15 @@ JS;
                 'text' => 'Casos complexos contam com especialistas de áreas complementares trabalhando em conjunto.',
             ],
         ]);
+    }
+
+    protected function sectionItems(Collection $sectionBlocks, string $key, Collection $fallback): Collection
+    {
+        $items = data_get($sectionBlocks->get($key)?->data, 'items');
+
+        return is_array($items) && $items !== []
+            ? collect($items)
+            : $fallback;
     }
 
     protected function manifestIcon(?string $path, string $sizes): ?array

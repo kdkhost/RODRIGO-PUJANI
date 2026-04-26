@@ -96,6 +96,27 @@ if (! function_exists('preloader_config')) {
     }
 }
 
+if (! function_exists('site_asset_url')) {
+    function site_asset_url(?string $path): ?string
+    {
+        if (! filled($path)) {
+            return null;
+        }
+
+        if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $normalized = ltrim($path, '/');
+
+        if (file_exists(public_path($normalized))) {
+            return asset($normalized);
+        }
+
+        return asset('storage/'.$normalized);
+    }
+}
+
 if (! function_exists('public_pages')) {
     function public_pages()
     {

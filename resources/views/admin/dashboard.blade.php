@@ -56,7 +56,9 @@
         <div class="container-fluid">
             <div class="row g-3 mb-4">
                 @foreach ($stats as $key => $value)
-                    @php($meta = $statMeta[$key] ?? ['label' => ucfirst($key), 'icon' => 'bi-circle', 'tone' => 'gold'])
+                    @php
+                        $meta = $statMeta[$key] ?? ['label' => ucfirst($key), 'icon' => 'bi-circle', 'tone' => 'gold'];
+                    @endphp
                     <div class="col-md-4 col-xl-2">
                         <div class="card admin-stat-card admin-stat-{{ $meta['tone'] }} h-100">
                             <div class="card-body">

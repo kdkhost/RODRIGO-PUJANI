@@ -27,7 +27,21 @@ class PageSectionController extends AdminCrudController
             'title' => ['nullable', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string'],
             'content' => ['nullable', 'string'],
-            'data_json' => ['nullable', 'string'],
+            'data_json' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (blank($value)) {
+                        return;
+                    }
+
+                    json_decode((string) $value, true);
+
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        $fail('O JSON informado nao e valido.');
+                    }
+                },
+            ],
             'style_variant' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ];

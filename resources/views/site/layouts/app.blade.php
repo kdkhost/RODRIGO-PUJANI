@@ -104,6 +104,8 @@
         .grid-pattern{background-image:linear-gradient(rgba(196,154,60,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(196,154,60,0.04) 1px, transparent 1px);background-size:60px 60px}
         .card-glass{background:rgba(255,255,255,0.02);border:1px solid var(--border);backdrop-filter:blur(10px);transition:all .3s}
         .card-glass:hover{background:rgba(196,154,60,0.05);border-color:rgba(196,154,60,0.35);transform:translateY(-4px)}
+        .site-hero-proof{border-left:1px solid rgba(196,154,60,.36);background:linear-gradient(90deg,rgba(196,154,60,.08),transparent);backdrop-filter:blur(10px)}
+        .site-hero-proof .font-display{color:rgba(240,233,220,.92)}
         .area-icon{width:48px;height:48px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:border-color .3s,background .3s}.card-glass:hover .area-icon{border-color:var(--gold);background:rgba(196,154,60,0.1)}
         .team-card .overlay{opacity:0;transition:opacity .4s}.team-card:hover .overlay{opacity:1}
         .testimonial-card{position:relative}.testimonial-card::before{content:'“';font-family:'Cormorant Garamond',serif;font-size:6rem;line-height:1;color:var(--gold);opacity:.15;position:absolute;top:-10px;left:16px}
@@ -150,7 +152,9 @@
             </a>
             <div class="hidden lg:flex items-center gap-10">
                 @foreach($publicPages as $menuPage)
-                    @php($url = $menuPage->is_home || $menuPage->slug === 'home' ? route('site.home') : route('site.show', $menuPage->slug))
+                    @php
+                        $url = $menuPage->is_home || $menuPage->slug === 'home' ? route('site.home') : route('site.show', $menuPage->slug);
+                    @endphp
                     <a href="{{ $url }}" class="nav-link">{{ $menuPage->menu_title ?: $menuPage->title }}</a>
                 @endforeach
             </div>
@@ -166,7 +170,9 @@
     <div class="mobile-menu fixed inset-y-0 right-0 w-80 bg-ink-2 z-50 lg:hidden flex flex-col" id="mobile-menu" style="background:#111318;border-left:1px solid rgba(196,154,60,0.15);">
         <div class="p-8 pt-20 flex flex-col gap-8">
             @foreach($publicPages as $menuPage)
-                @php($url = $menuPage->is_home || $menuPage->slug === 'home' ? route('site.home') : route('site.show', $menuPage->slug))
+                @php
+                    $url = $menuPage->is_home || $menuPage->slug === 'home' ? route('site.home') : route('site.show', $menuPage->slug);
+                @endphp
                 <a href="{{ $url }}" class="nav-link text-lg" onclick="closeMobile()">{{ $menuPage->menu_title ?: $menuPage->title }}</a>
             @endforeach
             <a href="{{ $contactUrl }}" class="btn-primary px-6 py-4 text-center mt-4" onclick="closeMobile()"><span>Agendar Consulta</span></a>
@@ -207,7 +213,9 @@
                     <div class="text-xs text-gold/50 tracking-widest uppercase mb-5">Navegação</div>
                     <div class="space-y-3">
                         @foreach($publicPages as $menuPage)
-                            @php($url = $menuPage->is_home || $menuPage->slug === 'home' ? route('site.home') : route('site.show', $menuPage->slug))
+                            @php
+                                $url = $menuPage->is_home || $menuPage->slug === 'home' ? route('site.home') : route('site.show', $menuPage->slug);
+                            @endphp
                             <a href="{{ $url }}" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">{{ $menuPage->menu_title ?: $menuPage->title }}</a>
                         @endforeach
                     </div>

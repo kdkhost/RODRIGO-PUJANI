@@ -1,8 +1,17 @@
+@php
+    $section = $sectionBlocks->get('team') ?? null;
+@endphp
+
 <section id="{{ $embedded ? 'equipe' : 'nossa-equipe' }}" class="py-24 lg:py-36" style="background:#0B0C10;">
     <div class="max-w-7xl mx-auto px-6 lg:px-16">
         <div class="text-center mb-16">
-            <div class="section-label aos mb-4 inline-block">— Profissionais de Alto Nível</div>
-            <h2 class="font-display leading-tight aos delay-100" style="font-size:clamp(2.2rem,5vw,4rem);font-weight:300;">Nossa <span class="text-gold-gradient font-semibold">Equipe</span></h2>
+            <div class="section-label aos mb-4 inline-block">Profissionais de Alto Nível</div>
+            <h2 class="font-display leading-tight aos delay-100" style="font-size:clamp(2.2rem,5vw,4rem);font-weight:300;">
+                {!! $section?->title ?: 'Nossa <span class="text-gold-gradient font-semibold">Equipe</span>' !!}
+            </h2>
+            @if($section?->subtitle)
+                <p class="text-cream/40 max-w-lg mx-auto mt-4 aos delay-200">{{ $section->subtitle }}</p>
+            @endif
         </div>
 
         <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -13,14 +22,20 @@
                         ->take(2)
                         ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
                         ->implode('');
+                    $imageUrl = site_asset_url($member->image_path);
                 @endphp
                 <article class="team-card relative overflow-hidden aos delay-{{ (($loop->index % 4) + 1) * 100 }}">
                     <div class="relative" style="aspect-ratio:3/4;background:#161820;border:1px solid rgba(196,154,60,0.12);">
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="w-24 h-24 rounded-full border-2 border-gold/30 flex items-center justify-center" style="background:rgba(196,154,60,0.08);">
-                                <span class="font-title text-3xl text-gold/60">{{ $initials }}</span>
+                        @if($imageUrl)
+                            <img src="{{ $imageUrl }}" alt="{{ $member->name }}" class="absolute inset-0 w-full h-full object-cover">
+                            <div class="absolute inset-0" style="background:linear-gradient(180deg,transparent 35%,rgba(11,12,16,.94));"></div>
+                        @else
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-24 h-24 rounded-full border-2 border-gold/30 flex items-center justify-center" style="background:rgba(196,154,60,0.08);">
+                                    <span class="font-title text-3xl text-gold/60">{{ $initials }}</span>
+                                </div>
                             </div>
-                        </div>
+                        @endif
                         <div class="absolute bottom-0 left-0 right-0 p-6">
                             <h4 class="font-display text-lg font-semibold text-cream/90">{{ $member->name }}</h4>
                             <div class="text-xs text-gold/60 tracking-widest uppercase mt-1">{{ $member->role }}</div>
