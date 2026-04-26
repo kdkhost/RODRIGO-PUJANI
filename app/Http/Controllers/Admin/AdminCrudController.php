@@ -296,6 +296,7 @@ abstract class AdminCrudController extends Controller
             'site_pages.public',
             'site_pages.public.v2',
             'system_maintenance.settings',
+            'preloader.settings.v1',
         ] as $key) {
             Cache::forget($key);
         }

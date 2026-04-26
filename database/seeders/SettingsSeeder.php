@@ -32,13 +32,31 @@ class SettingsSeeder extends Seeder
             ['group' => 'system', 'key' => 'system.maintenance_release_at', 'label' => 'Liberação automática', 'type' => 'text', 'value' => '', 'is_public' => false],
             ['group' => 'system', 'key' => 'system.maintenance_allowed_ips', 'label' => 'IPs liberados', 'type' => 'text', 'value' => '127.0.0.1,::1', 'is_public' => false],
             ['group' => 'system', 'key' => 'system.maintenance_allowed_devices', 'label' => 'Dispositivos liberados', 'type' => 'text', 'value' => 'iphone,android,windows', 'is_public' => false],
+            ['group' => 'preloader', 'key' => 'preloader.enabled', 'label' => 'Ativar preloader', 'type' => 'boolean', 'value' => '0', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.scope', 'label' => 'Exibicao', 'type' => 'text', 'value' => 'all', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.style', 'label' => 'Estilo', 'type' => 'text', 'value' => 'spinner', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.brand', 'label' => 'Marca', 'type' => 'text', 'value' => 'Pujani Advogados', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.message', 'label' => 'Mensagem', 'type' => 'text', 'value' => 'Carregando experiencia segura...', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.background_color', 'label' => 'Cor de fundo', 'type' => 'text', 'value' => '#0f1318', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.accent_color', 'label' => 'Cor principal', 'type' => 'text', 'value' => '#c49a3c', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.text_color', 'label' => 'Cor do texto', 'type' => 'text', 'value' => '#f4ead7', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.logo_path', 'label' => 'Logo', 'type' => 'text', 'value' => '', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.min_duration', 'label' => 'Duracao minima', 'type' => 'text', 'value' => '650', 'is_public' => true],
+            ['group' => 'preloader', 'key' => 'preloader.custom_css', 'label' => 'CSS personalizado', 'type' => 'textarea', 'value' => '', 'is_public' => false],
         ];
 
         foreach ($settings as $index => $item) {
-            Setting::query()->updateOrCreate(
-                ['key' => $item['key']],
-                $item + ['sort_order' => $index]
-            );
+            $setting = Setting::query()->firstOrNew(['key' => $item['key']]);
+
+            if (! $setting->exists) {
+                $setting->fill($item + ['sort_order' => $index]);
+            } else {
+                $metadata = $item;
+                unset($metadata['value']);
+                $setting->fill($metadata + ['sort_order' => $index]);
+            }
+
+            $setting->save();
         }
     }
 }

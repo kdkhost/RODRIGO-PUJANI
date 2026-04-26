@@ -8,7 +8,25 @@
                 <td>{{ $item->email }}</td>
                 <td>{{ $item->roles->pluck('name')->implode(', ') }}</td>
                 <td>{{ $item->is_active ? 'Sim' : 'Não' }}</td>
-                <td class="text-end"><button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button> <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button></td>
+                <td class="text-end">
+                    @can('impersonate.users')
+                        @if(auth()->id() !== $item->id && $item->is_active)
+                            <form action="{{ route('admin.users.impersonate', $item) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button
+                                    class="btn btn-sm btn-outline-dark"
+                                    type="submit"
+                                    data-confirm-submit="true"
+                                    data-confirm-title="Acessar sem senha?"
+                                    data-confirm-text="Voce sera autenticado temporariamente como {{ $item->name }}."
+                                    data-confirm-button="Acessar"
+                                >Impersonar</button>
+                            </form>
+                        @endif
+                    @endcan
+                    <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>
+                    <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button>
+                </td>
             </tr>
         @empty
             <tr><td colspan="5" class="text-center py-4 text-muted">Nenhum usuário encontrado.</td></tr>

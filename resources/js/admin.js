@@ -6,6 +6,7 @@ import $ from 'jquery';
 import toastr from 'toastr';
 import Swal from 'sweetalert2';
 import 'summernote/dist/summernote-lite.min.js';
+import 'summernote/dist/lang/summernote-pt-BR.min.js';
 import Inputmask from 'inputmask';
 import * as FilePond from 'filepond';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
@@ -13,6 +14,7 @@ import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import Chart from 'chart.js/auto';
 import { Calendar } from '@fullcalendar/core';
+import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -26,6 +28,7 @@ window.Chart = Chart;
 window.FullCalendar = {
     Calendar,
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+    locales: { 'pt-br': ptBrLocale },
 };
 
 FilePond.registerPlugin(
@@ -126,6 +129,16 @@ const AdminUI = {
             if (deleteTrigger) {
                 event.preventDefault();
                 this.confirmDelete(deleteTrigger);
+                return;
+            }
+
+            const calendarReset = event.target.closest('[data-calendar-reset]');
+            if (calendarReset) {
+                window.setTimeout(() => {
+                    const form = calendarReset.closest('form');
+                    const calendar = document.querySelector(form?.dataset.calendarToolbar || '#admin-calendar');
+                    this.refetchCalendar(calendar);
+                }, 0);
                 return;
             }
 
@@ -286,6 +299,7 @@ const AdminUI = {
             this.showToast('success', response.data.message || 'Registro excluido com sucesso.');
             const table = document.querySelector(trigger.dataset.tableTarget);
             this.refreshTable(table);
+            this.refetchCalendar(response.data.calendarTarget || trigger.dataset.calendarTarget);
         } catch (error) {
             this.showToast('error', error.response?.data?.message || 'Falha ao excluir o registro.');
         }
@@ -341,6 +355,8 @@ const AdminUI = {
                 const table = document.querySelector(response.data.tableTarget);
                 this.refreshTable(table);
             }
+
+            this.refetchCalendar(response.data.calendarTarget);
         } catch (error) {
             this.hideProgress();
 
@@ -484,22 +500,47 @@ const AdminUI = {
         card.classList.remove('active');
     },
 
+    refetchCalendar(target) {
+        const calendarElement = typeof target === 'string' ? document.querySelector(target) : target;
+
+        if (calendarElement?._fullCalendar) {
+            calendarElement._fullCalendar.refetchEvents();
+        }
+    },
+
     initPlugins(scope) {
+        this.initCharts(scope);
+        this.initCalendars(scope);
+
         scope.querySelectorAll('[data-editor="summernote"]').forEach((element) => {
             if (element.dataset.editorReady) {
                 return;
             }
 
             $(element).summernote({
-                height: 220,
+                height: Number(element.dataset.editorHeight || 320),
                 lang: 'pt-BR',
+                dialogsInBody: true,
+                placeholder: element.getAttribute('placeholder') || '',
+                fontNames: ['Arial', 'Segoe UI', 'Roboto', 'Times New Roman', 'Georgia', 'Courier New'],
+                styleTags: ['p', 'blockquote', 'pre', 'h2', 'h3', 'h4'],
                 toolbar: [
                     ['style', ['style']],
-                    ['font', ['bold', 'underline', 'italic', 'clear']],
+                    ['fontname', ['fontname']],
+                    ['fontsize', ['fontsize']],
+                    ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
+                    ['color', ['forecolor', 'backcolor']],
                     ['para', ['ul', 'ol', 'paragraph']],
-                    ['insert', ['link', 'picture', 'video']],
-                    ['view', ['fullscreen', 'codeview']],
+                    ['height', ['height']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'video', 'hr']],
+                    ['view', ['fullscreen', 'codeview', 'help']],
                 ],
+                callbacks: {
+                    onChange: () => {
+                        element.dispatchEvent(new Event('change', { bubbles: true }));
+                    },
+                },
             });
 
             element.dataset.editorReady = 'true';
@@ -580,6 +621,177 @@ const AdminUI = {
             });
 
             input.dataset.cepReady = 'true';
+        });
+    },
+
+    initCharts(scope) {
+        scope.querySelectorAll('[data-admin-chart]').forEach((canvas) => {
+            if (canvas.dataset.chartReady) {
+                return;
+            }
+
+            try {
+                const config = JSON.parse(canvas.dataset.adminChart || '{}');
+                const chart = new window.Chart(canvas, {
+                    ...config,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        ...(config.options || {}),
+                    },
+                });
+
+                canvas._adminChart = chart;
+                canvas.dataset.chartReady = 'true';
+            } catch (error) {
+                this.showToast('warning', 'Nao foi possivel inicializar um grafico do painel.');
+            }
+        });
+    },
+
+    initCalendars(scope) {
+        scope.querySelectorAll('[data-calendar]').forEach((element) => {
+            if (element._fullCalendar) {
+                return;
+            }
+
+            const toolbar = element.dataset.calendarToolbar ? document.querySelector(element.dataset.calendarToolbar) : null;
+            const readFilters = () => {
+                const params = {};
+
+                if (!toolbar) {
+                    return params;
+                }
+
+                new FormData(toolbar).forEach((value, key) => {
+                    if (value) {
+                        params[key] = value;
+                    }
+                });
+
+                return params;
+            };
+
+            const updateEventPosition = async (info) => {
+                const event = info.event;
+                const moveUrl = event.extendedProps?.moveUrl;
+
+                if (!moveUrl) {
+                    info.revert();
+                    return;
+                }
+
+                try {
+                    await window.axios.patch(moveUrl, {
+                        start_at: event.start ? event.start.toISOString() : null,
+                        end_at: event.end ? event.end.toISOString() : null,
+                        all_day: event.allDay ? 1 : 0,
+                    });
+                    this.showToast('success', 'Agenda atualizada.');
+                } catch (error) {
+                    info.revert();
+                    this.showToast('error', error.response?.data?.message || 'Nao foi possivel mover o evento.');
+                }
+            };
+
+            const calendar = new Calendar(element, {
+                plugins: window.FullCalendar.plugins,
+                locales: [window.FullCalendar.locales['pt-br']],
+                locale: 'pt-br',
+                timeZone: 'local',
+                defaultView: 'dayGridMonth',
+                height: 'auto',
+                contentHeight: 'auto',
+                nowIndicator: true,
+                weekNumbers: true,
+                navLinks: true,
+                selectable: true,
+                selectMirror: true,
+                editable: true,
+                eventResizableFromStart: true,
+                droppable: true,
+                eventLimit: true,
+                eventLimitClick: 'popover',
+                businessHours: true,
+                allDaySlot: true,
+                displayEventTime: true,
+                displayEventEnd: true,
+                slotDuration: '00:30:00',
+                snapDuration: '00:15:00',
+                minTime: '06:00:00',
+                maxTime: '22:00:00',
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                },
+                buttonText: {
+                    today: 'Hoje',
+                    month: 'Mes',
+                    week: 'Semana',
+                    day: 'Dia',
+                    list: 'Lista',
+                },
+                views: {
+                    dayGridMonth: { eventLimit: 4 },
+                    timeGridWeek: { slotEventOverlap: true },
+                    timeGridDay: { slotEventOverlap: true },
+                },
+                eventSources: [{
+                    url: element.dataset.calendarEventsUrl,
+                    method: 'GET',
+                    extraParams: readFilters,
+                    failure: () => this.showToast('error', 'Nao foi possivel carregar a agenda.'),
+                }],
+                loading: (isLoading) => element.classList.toggle('is-loading', isLoading),
+                select: (info) => {
+                    const url = new URL(element.dataset.calendarCreateUrl, window.location.origin);
+                    url.searchParams.set('start', info.startStr);
+                    url.searchParams.set('end', info.endStr);
+                    url.searchParams.set('all_day', info.allDay ? '1' : '0');
+                    this.loadModal(url.toString(), 'Novo evento');
+                    calendar.unselect();
+                },
+                eventClick: (info) => {
+                    const editUrl = info.event.extendedProps?.editUrl;
+
+                    if (editUrl) {
+                        info.jsEvent.preventDefault();
+                        this.loadModal(editUrl, info.event.title);
+                    }
+                },
+                eventDrop: updateEventPosition,
+                eventResize: updateEventPosition,
+                eventRender: (info) => {
+                    const props = info.event.extendedProps || {};
+                    const details = [
+                        info.event.title,
+                        props.status ? `Status: ${props.status}` : '',
+                        props.owner ? `Responsavel: ${props.owner}` : '',
+                        props.location ? `Local: ${props.location}` : '',
+                        props.description || '',
+                    ].filter(Boolean).join('\n');
+
+                    if (details) {
+                        info.el.setAttribute('title', details);
+                    }
+
+                    if (props.status) {
+                        info.el.dataset.status = props.status;
+                    }
+                },
+            });
+
+            calendar.render();
+            element._fullCalendar = calendar;
+
+            toolbar?.querySelectorAll('[data-calendar-filter]').forEach((field) => {
+                const eventName = field.tagName === 'INPUT' ? 'input' : 'change';
+                field.addEventListener(eventName, () => {
+                    window.clearTimeout(field._calendarTimer);
+                    field._calendarTimer = window.setTimeout(() => calendar.refetchEvents(), 250);
+                });
+            });
         });
     },
 };

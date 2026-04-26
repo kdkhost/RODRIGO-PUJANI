@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\MediaAssetController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\PreloaderController;
 use App\Http\Controllers\Admin\PracticeAreaController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SeoMetaController;
@@ -51,6 +54,32 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->get('/analytics', [AnalyticsController::class, 'index'])
         ->name('analytics.index');
 
+    Route::middleware('permission:calendar.manage')
+        ->prefix('calendar')
+        ->name('calendar.')
+        ->group(function (): void {
+            Route::get('/', [CalendarController::class, 'index'])->name('index');
+            Route::get('/events', [CalendarController::class, 'events'])->name('events');
+            Route::get('/create', [CalendarController::class, 'create'])->name('create');
+            Route::post('/events', [CalendarController::class, 'store'])->name('store');
+            Route::get('/events/{event}/edit', [CalendarController::class, 'edit'])->name('edit');
+            Route::match(['put', 'patch'], '/events/{event}', [CalendarController::class, 'update'])->name('update');
+            Route::patch('/events/{event}/move', [CalendarController::class, 'move'])->name('move');
+            Route::delete('/events/{event}', [CalendarController::class, 'destroy'])->name('destroy');
+        });
+
+    Route::middleware('permission:preloader.manage')
+        ->prefix('preloader')
+        ->name('preloader.')
+        ->group(function (): void {
+            Route::get('/', [PreloaderController::class, 'index'])->name('index');
+            Route::put('/', [PreloaderController::class, 'update'])->name('update');
+        });
+
+    Route::post('/users/{user}/impersonate', [ImpersonationController::class, 'start'])
+        ->middleware('permission:impersonate.users')
+        ->name('users.impersonate');
+
     Route::middleware('permission:system-files.manage')
         ->prefix('system-files')
         ->name('system-files.')
@@ -75,6 +104,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('/impersonate/stop', [ImpersonationController::class, 'stop'])->name('impersonate.stop');
+
     Route::get('/dashboard', function (): RedirectResponse {
         $user = request()->user();
 

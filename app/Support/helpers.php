@@ -42,6 +42,60 @@ if (! function_exists('setting')) {
     }
 }
 
+if (! function_exists('preloader_config')) {
+    function preloader_config(string $surface = 'site', bool $respectScope = true): array
+    {
+        try {
+            $config = Cache::rememberForever('preloader.settings.v1', function (): array {
+                $logoPath = (string) setting('preloader.logo_path', '');
+                $logoUrl = null;
+
+                if (filled($logoPath)) {
+                    $logoUrl = \Illuminate\Support\Str::startsWith($logoPath, ['http://', 'https://'])
+                        ? $logoPath
+                        : asset('storage/'.ltrim($logoPath, '/'));
+                }
+
+                return [
+                    'enabled' => filter_var(setting('preloader.enabled', '0'), FILTER_VALIDATE_BOOLEAN),
+                    'scope' => (string) setting('preloader.scope', 'all'),
+                    'style' => (string) setting('preloader.style', 'spinner'),
+                    'brand' => (string) setting('preloader.brand', config('app.name')),
+                    'message' => (string) setting('preloader.message', 'Carregando experiencia segura...'),
+                    'background_color' => (string) setting('preloader.background_color', '#0f1318'),
+                    'accent_color' => (string) setting('preloader.accent_color', '#c49a3c'),
+                    'text_color' => (string) setting('preloader.text_color', '#f4ead7'),
+                    'logo_path' => $logoPath,
+                    'logo_url' => $logoUrl,
+                    'min_duration' => max(0, min(6000, (int) setting('preloader.min_duration', '650'))),
+                    'custom_css' => (string) setting('preloader.custom_css', ''),
+                ];
+            });
+
+            if ($respectScope && $config['scope'] !== 'all' && $config['scope'] !== $surface) {
+                $config['enabled'] = false;
+            }
+
+            return $config;
+        } catch (Throwable) {
+            return [
+                'enabled' => false,
+                'scope' => 'all',
+                'style' => 'spinner',
+                'brand' => config('app.name'),
+                'message' => '',
+                'background_color' => '#0f1318',
+                'accent_color' => '#c49a3c',
+                'text_color' => '#f4ead7',
+                'logo_path' => '',
+                'logo_url' => null,
+                'min_duration' => 0,
+                'custom_css' => '',
+            ];
+        }
+    }
+}
+
 if (! function_exists('public_pages')) {
     function public_pages()
     {

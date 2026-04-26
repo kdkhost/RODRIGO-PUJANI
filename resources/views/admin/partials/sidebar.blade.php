@@ -3,6 +3,7 @@
         'Visao geral' => [
             ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'active' => 'admin.dashboard', 'icon' => 'bi-speedometer2', 'permission' => 'admin.access'],
             ['label' => 'Analytics', 'route' => 'admin.analytics.index', 'active' => 'admin.analytics.*', 'icon' => 'bi-bar-chart', 'permission' => 'analytics.view'],
+            ['label' => 'Agenda', 'route' => 'admin.calendar.index', 'active' => 'admin.calendar.*', 'icon' => 'bi-calendar3', 'permission' => 'calendar.manage'],
             ['label' => 'Meu Perfil', 'route' => 'profile.edit', 'active' => 'profile.*', 'icon' => 'bi-person-circle', 'permission' => null],
         ],
         'Conteudo' => [
@@ -17,6 +18,7 @@
         'Operacao' => [
             ['label' => 'Mensagens', 'route' => 'admin.contact-messages.index', 'active' => 'admin.contact-messages.*', 'icon' => 'bi-envelope', 'permission' => 'contact-messages.manage'],
             ['label' => 'Configuracoes', 'route' => 'admin.settings.index', 'active' => 'admin.settings.*', 'icon' => 'bi-sliders', 'permission' => 'settings.manage'],
+            ['label' => 'Preloader', 'route' => 'admin.preloader.index', 'active' => 'admin.preloader.*', 'icon' => 'bi-hourglass-split', 'permission' => 'preloader.manage'],
         ],
         'Seguranca' => [
             ['label' => 'Usuarios', 'route' => 'admin.users.index', 'active' => 'admin.users.*', 'icon' => 'bi-person-gear', 'permission' => 'users.manage'],

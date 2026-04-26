@@ -496,6 +496,131 @@ body {
     min-height: 310px;
 }
 
+.admin-chart-frame {
+    position: relative;
+    min-height: 280px;
+}
+
+.admin-chart-frame canvas {
+    width: 100% !important;
+    height: 280px !important;
+}
+
+.admin-calendar-card .card-body {
+    min-height: 680px;
+}
+
+.admin-calendar {
+    min-height: 640px;
+}
+
+.admin-calendar.is-loading {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.admin-calendar .fc-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.admin-calendar .fc-toolbar h2 {
+    margin: 0;
+    color: var(--admin-ink);
+    font-size: 1.15rem;
+    font-weight: 850;
+}
+
+.admin-calendar .fc-button {
+    border: 1px solid var(--admin-border);
+    border-radius: 0.58rem;
+    background: var(--admin-card-bg);
+    color: var(--admin-ink);
+    box-shadow: none;
+    text-transform: capitalize;
+}
+
+.admin-calendar .fc-button:hover,
+.admin-calendar .fc-button-primary:not(:disabled).fc-button-active {
+    border-color: var(--admin-primary);
+    background: var(--admin-primary);
+    color: #111318;
+}
+
+.admin-calendar .fc-day-header,
+.admin-calendar .fc-list-heading td {
+    color: var(--admin-muted);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-calendar .fc-event {
+    border: 0;
+    border-radius: 0.45rem;
+    padding: 0.12rem 0.25rem;
+    box-shadow: 0 6px 16px rgba(15, 19, 24, 0.14);
+}
+
+.admin-calendar .fc-today {
+    background: rgba(196, 154, 60, 0.08) !important;
+}
+
+.admin-calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    color: var(--admin-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.admin-calendar-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.admin-calendar-legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.admin-preloader-preview {
+    border: 1px solid var(--admin-border);
+    border-radius: 0.85rem;
+    overflow: hidden;
+    background: var(--admin-surface-2);
+}
+
+.admin-impersonation-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 1rem;
+    background: linear-gradient(90deg, #c49a3c, #e0bb6a);
+    color: #111318;
+}
+
+.admin-impersonation-bar div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+}
+
+.admin-impersonation-bar span {
+    font-size: 0.9rem;
+}
+
 .admin-profile-summary,
 .admin-danger-zone {
     border: 1px solid var(--admin-border);

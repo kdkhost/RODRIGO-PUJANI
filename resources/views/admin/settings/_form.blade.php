@@ -9,7 +9,7 @@
         <div class="col-md-6"><label class="form-label">Rótulo</label><input type="text" name="label" class="form-control" value="{{ old('label', $record->label) }}"></div>
         <div class="col-md-3"><label class="form-label">Ordem</label><input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', $record->sort_order ?? 0) }}"></div>
         <div class="col-md-3 form-check mt-5"><input type="checkbox" class="form-check-input" name="is_public" id="setting_public" value="1" @checked(old('is_public', $record->is_public))><label class="form-check-label" for="setting_public">Público</label></div>
-        <div class="col-12"><label class="form-label">Valor</label><textarea name="value" class="form-control" rows="3">{{ old('value', $record->value) }}</textarea></div>
+        <div class="col-12"><label class="form-label">Valor</label><textarea name="value" class="form-control" rows="3" @if(in_array(old('type', $record->type ?: 'text'), ['textarea', 'html'], true)) data-editor="summernote" data-editor-height="220" @endif>{{ old('value', $record->value) }}</textarea></div>
         <div class="col-12"><label class="form-label">JSON</label><textarea name="json_text" class="form-control" rows="5">{{ old('json_text', $record->json_value ? json_encode($record->json_value, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) : '') }}</textarea></div>
     </div>
     <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>

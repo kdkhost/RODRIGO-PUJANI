@@ -31,6 +31,9 @@ class PermissionsSeeder extends Seeder
             'settings.manage',
             'analytics.view',
             'system-files.manage',
+            'calendar.manage',
+            'preloader.manage',
+            'impersonate.users',
         ];
 
         foreach ($permissions as $name) {
@@ -51,6 +54,7 @@ class PermissionsSeeder extends Seeder
             'contact-messages.manage',
             'media-assets.manage',
             'seo-metas.manage',
+            'calendar.manage',
         ]);
 
         $admin = User::query()->updateOrCreate(

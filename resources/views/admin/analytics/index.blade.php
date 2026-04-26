@@ -1,6 +1,40 @@
 @extends('admin.layouts.app')
 
 @section('content')
+    @php
+        $devicesChart = [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => $devices->pluck('device_type')->values(),
+                'datasets' => [[
+                    'data' => $devices->pluck('total')->values(),
+                    'backgroundColor' => ['#C49A3C', '#3b82f6', '#198754', '#dc3545', '#7c3aed'],
+                    'borderWidth' => 0,
+                ]],
+            ],
+            'options' => ['plugins' => ['legend' => ['position' => 'bottom']]],
+        ];
+        $leadsChart = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $leadStats->pluck('status')->values(),
+                'datasets' => [[
+                    'label' => 'Leads',
+                    'data' => $leadStats->pluck('total')->values(),
+                    'backgroundColor' => '#C49A3C',
+                    'borderRadius' => 8,
+                ]],
+            ],
+            'options' => [
+                'plugins' => ['legend' => ['display' => false]],
+                'scales' => [
+                    'x' => ['grid' => ['display' => false]],
+                    'y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]],
+                ],
+            ],
+        ];
+    @endphp
+
     <div class="app-content-header admin-page-hero">
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
@@ -29,7 +63,9 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <canvas id="devices-chart" height="140"></canvas>
+                            <div class="admin-chart-frame">
+                                <canvas id="devices-chart" data-admin-chart='@json($devicesChart)'></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -42,7 +78,9 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <canvas id="leads-chart" height="140"></canvas>
+                            <div class="admin-chart-frame">
+                                <canvas id="leads-chart" data-admin-chart='@json($leadsChart)'></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -116,54 +154,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!window.Chart) return;
-
-            const devicesChart = document.getElementById('devices-chart');
-            if (devicesChart) {
-                new window.Chart(devicesChart, {
-                    type: 'doughnut',
-                    data: {
-                        labels: @json($devices->pluck('device_type')),
-                        datasets: [{
-                            data: @json($devices->pluck('total')),
-                            backgroundColor: ['#C49A3C', '#3b82f6', '#198754', '#dc3545'],
-                            borderWidth: 0,
-                        }],
-                    },
-                    options: {
-                        plugins: {
-                            legend: { position: 'bottom' },
-                        },
-                    },
-                });
-            }
-
-            const leadsChart = document.getElementById('leads-chart');
-            if (leadsChart) {
-                new window.Chart(leadsChart, {
-                    type: 'bar',
-                    data: {
-                        labels: @json($leadStats->pluck('status')),
-                        datasets: [{
-                            data: @json($leadStats->pluck('total')),
-                            backgroundColor: '#C49A3C',
-                            borderRadius: 8,
-                        }],
-                    },
-                    options: {
-                        plugins: {
-                            legend: { display: false },
-                        },
-                        scales: {
-                            x: { grid: { display: false } },
-                            y: { beginAtZero: true, ticks: { precision: 0 } },
-                        },
-                    },
-                });
-            }
-        });
-    </script>
 @endsection

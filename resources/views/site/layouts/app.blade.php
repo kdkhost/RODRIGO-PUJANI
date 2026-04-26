@@ -6,6 +6,7 @@
     $hashtags = collect($seo?->hashtags)->filter();
     $themeColor = setting('pwa.theme_color', '#0B0C10');
     $backgroundColor = setting('pwa.background_color', '#0B0C10');
+    $preloader = preloader_config('site');
     $companyName = config('app.name');
     $companyPhone = setting('site.company_phone', '(11) 3456-7890');
     $companyEmail = setting('site.company_email', 'contato@pujani.adv.br');
@@ -129,6 +130,9 @@
     <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT) !!}</script>
 </head>
 <body>
+    @if ($preloader['enabled'])
+        @include('shared.preloader', ['preloader' => $preloader])
+    @endif
     <div id="scroll-progress"></div>
     <div class="cursor" id="cursor"></div>
     <div class="cursor-ring" id="cursor-ring"></div>

@@ -10,6 +10,30 @@
             'contacts' => ['label' => 'Mensagens', 'icon' => 'bi-envelope', 'tone' => 'red'],
             'visits' => ['label' => 'Visitas', 'icon' => 'bi-graph-up-arrow', 'tone' => 'cyan'],
         ];
+        $visitsChart = [
+            'type' => 'line',
+            'data' => [
+                'labels' => $visitsByDay->pluck('day')->values(),
+                'datasets' => [[
+                    'label' => 'Visitas',
+                    'data' => $visitsByDay->pluck('total')->values(),
+                    'borderColor' => '#C49A3C',
+                    'backgroundColor' => 'rgba(196,154,60,0.18)',
+                    'pointBackgroundColor' => '#C49A3C',
+                    'pointBorderColor' => '#ffffff',
+                    'pointBorderWidth' => 2,
+                    'fill' => true,
+                    'tension' => 0.35,
+                ]],
+            ],
+            'options' => [
+                'plugins' => ['legend' => ['display' => false]],
+                'scales' => [
+                    'x' => ['grid' => ['display' => false]],
+                    'y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]],
+                ],
+            ],
+        ];
     @endphp
 
     <div class="app-content-header admin-page-hero admin-dashboard-hero">
@@ -55,7 +79,9 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <canvas id="visits-chart" height="128"></canvas>
+                            <div class="admin-chart-frame">
+                                <canvas id="visits-chart" data-admin-chart='@json($visitsChart)'></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -102,39 +128,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const el = document.getElementById('visits-chart');
-            if (!el || !window.Chart) return;
-
-            new window.Chart(el, {
-                type: 'line',
-                data: {
-                    labels: @json($visitsByDay->pluck('day')),
-                    datasets: [{
-                        label: 'Visitas',
-                        data: @json($visitsByDay->pluck('total')),
-                        borderColor: '#C49A3C',
-                        backgroundColor: 'rgba(196,154,60,0.18)',
-                        pointBackgroundColor: '#C49A3C',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        fill: true,
-                        tension: 0.35,
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                    },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: { beginAtZero: true, ticks: { precision: 0 } },
-                    },
-                },
-            });
-        });
-    </script>
 @endsection

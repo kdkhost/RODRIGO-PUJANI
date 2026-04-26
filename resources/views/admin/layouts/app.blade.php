@@ -9,6 +9,7 @@
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell">
     @php
+        $preloader = preloader_config('admin');
         $currentUser = auth()->user();
         $userInitials = collect(explode(' ', trim((string) $currentUser?->name)))
             ->filter()
@@ -32,8 +33,26 @@
     @if (session('error'))
         <div data-page-toast data-type="error" data-message="{{ session('error') }}"></div>
     @endif
+    @if ($preloader['enabled'])
+        @include('shared.preloader', ['preloader' => $preloader])
+    @endif
 
     <div class="app-wrapper">
+        @if(session('impersonator_id'))
+            <div class="admin-impersonation-bar">
+                <div>
+                    <strong>Impersonate ativo</strong>
+                    <span>Voce esta acessando como {{ $currentUser?->name }}. Operador original: {{ session('impersonator_name') }}.</span>
+                </div>
+                <form method="POST" action="{{ route('impersonate.stop') }}">
+                    @csrf
+                    <button class="btn btn-sm btn-dark" type="submit">
+                        <i class="bi bi-person-check me-1"></i>Encerrar
+                    </button>
+                </form>
+            </div>
+        @endif
+
         <nav class="app-header navbar navbar-expand admin-topbar">
             <div class="container-fluid">
                 <ul class="navbar-nav align-items-center">
