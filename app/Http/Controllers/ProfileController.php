@@ -31,6 +31,9 @@ class ProfileController extends Controller
         $user = $request->user();
         $validated = $request->validated();
         unset($validated['avatar']);
+        $validated['address_state'] = filled($validated['address_state'] ?? null)
+            ? strtoupper((string) $validated['address_state'])
+            : null;
 
         $user->fill($validated);
 

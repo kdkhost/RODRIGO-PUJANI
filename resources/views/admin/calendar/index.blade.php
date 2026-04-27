@@ -26,7 +26,7 @@
                 <div>
                     <div class="admin-eyebrow">Operação completa</div>
                     <h1>{{ $pageTitle }}</h1>
-                    <p>Visualize, crie, edite, arraste, redimensione, filtre e organize compromissos com uma agenda premium integrada ao banco do sistema.</p>
+                    <p>Painel vivo da agenda com compromissos, bloqueios, responsáveis e visão imediata da carga operacional.</p>
                 </div>
                 <button class="btn btn-primary admin-action-button" type="button" data-modal-url="{{ route('admin.calendar.create') }}" data-modal-title="Novo evento">
                     <i class="bi bi-calendar-plus me-1"></i>Novo evento
@@ -47,12 +47,16 @@
                     <strong>{{ number_format($eventStats['today'], 0, ',', '.') }}</strong>
                 </div>
                 <div class="admin-calendar-kpi">
-                    <span>Agendados</span>
-                    <strong>{{ number_format($eventStats['scheduled'], 0, ',', '.') }}</strong>
+                    <span>Próximos 7 dias</span>
+                    <strong>{{ number_format($eventStats['upcoming'], 0, ',', '.') }}</strong>
                 </div>
                 <div class="admin-calendar-kpi">
-                    <span>Confirmados</span>
-                    <strong>{{ number_format($eventStats['confirmed'], 0, ',', '.') }}</strong>
+                    <span>Dia inteiro</span>
+                    <strong>{{ number_format($eventStats['all_day'], 0, ',', '.') }}</strong>
+                </div>
+                <div class="admin-calendar-kpi">
+                    <span>Bloqueios visuais</span>
+                    <strong>{{ number_format($eventStats['background'], 0, ',', '.') }}</strong>
                 </div>
             </div>
 
@@ -106,38 +110,83 @@
                 </button>
             </form>
 
-            <div class="card admin-calendar-card">
-                <div class="card-header">
-                    <div>
-                        <div class="admin-card-kicker">FullCalendar 4</div>
-                        <h3 class="card-title">Agenda operacional</h3>
+            <div class="admin-calendar-layout">
+                <div class="card admin-calendar-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="admin-card-kicker">FullCalendar 4</div>
+                            <h3 class="card-title">Agenda operacional</h3>
+                        </div>
+                        <div class="admin-calendar-legend">
+                            <span><i style="background:#c49a3c"></i>Agendado</span>
+                            <span><i style="background:#198754"></i>Confirmado</span>
+                            <span><i style="background:#3b82f6"></i>Concluído</span>
+                            <span><i style="background:#dc3545"></i>Cancelado</span>
+                        </div>
                     </div>
-                    <div class="admin-calendar-legend">
-                        <span><i style="background:#c49a3c"></i>Agendado</span>
-                        <span><i style="background:#198754"></i>Confirmado</span>
-                        <span><i style="background:#3b82f6"></i>Concluído</span>
-                        <span><i style="background:#dc3545"></i>Cancelado</span>
+                    <div class="card-body">
+                        <div
+                            id="admin-calendar"
+                            class="admin-calendar"
+                            data-calendar
+                            data-calendar-height="650"
+                            data-calendar-content-height="570"
+                            data-calendar-aspect-ratio="1.7"
+                            data-calendar-events-url="{{ route('admin.calendar.events') }}"
+                            data-calendar-create-url="{{ route('admin.calendar.create') }}"
+                            data-calendar-toolbar="[data-calendar-toolbar='#admin-calendar']"
+                        ></div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div
-                        id="admin-calendar"
-                        class="admin-calendar"
-                        data-calendar
-                        data-calendar-height="610"
-                        data-calendar-content-height="520"
-                        data-calendar-aspect-ratio="1.64"
-                        data-calendar-events-url="{{ route('admin.calendar.events') }}"
-                        data-calendar-create-url="{{ route('admin.calendar.create') }}"
-                        data-calendar-toolbar="[data-calendar-toolbar='#admin-calendar']"
-                    ></div>
+
+                <div class="admin-calendar-insights">
+                    <div class="admin-calendar-side-card">
+                        <div class="admin-card-kicker">Próximos compromissos</div>
+                        <div class="admin-mini-stack">
+                            @forelse($upcomingEvents as $event)
+                                <button
+                                    type="button"
+                                    class="admin-calendar-record-item admin-calendar-record-item-button"
+                                    data-modal-url="{{ route('admin.calendar.edit', $event) }}"
+                                    data-modal-title="{{ $event->title }}"
+                                >
+                                    <div>
+                                        <strong>{{ $event->title }}</strong>
+                                        <span>{{ $event->category }} • {{ $event->owner?->name ?: 'Sem responsável' }}</span>
+                                    </div>
+                                    <small>{{ $event->all_day ? $event->start_at?->format('d/m/Y') : $event->start_at?->format('d/m/Y H:i') }}</small>
+                                </button>
+                            @empty
+                                <div class="admin-calendar-empty-state">
+                                    <strong>Sem compromissos futuros.</strong>
+                                    <span>A agenda exibirá aqui os próximos eventos liberados para o seu acesso.</span>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="admin-calendar-side-card">
+                        <div class="admin-card-kicker">Carga por responsável</div>
+                        <div class="admin-progress-list">
+                            @forelse($ownerLoad as $row)
+                                <div>
+                                    <span>{{ $row['name'] }}</span>
+                                    <strong>{{ number_format($row['total'], 0, ',', '.') }} evento(s)</strong>
+                                </div>
+                            @empty
+                                <div class="admin-calendar-empty-state admin-calendar-empty-state-compact">
+                                    <span>Nenhum responsável alocado ainda.</span>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="card admin-calendar-records-card mt-4">
                 <div class="card-header">
                     <div>
-                        <div class="admin-card-kicker">Gestão direta</div>
+                        <div class="admin-card-kicker">Gestão detalhada</div>
                         <h3 class="card-title">Eventos cadastrados</h3>
                     </div>
                 </div>

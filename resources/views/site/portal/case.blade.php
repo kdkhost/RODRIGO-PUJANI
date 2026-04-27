@@ -1,6 +1,8 @@
 @extends('site.portal.layout')
 
-@php($pageTitle = $legalCase->title)
+@php
+    $pageTitle = $legalCase->title;
+@endphp
 
 @section('content')
     <div class="portal-dashboard-header">

@@ -16,7 +16,7 @@ class UserController extends AdminCrudController
     protected string $singularLabel = 'Usuário';
     protected string $pluralLabel = 'Usuários';
     protected string $routeBase = 'admin.users';
-    protected array $searchable = ['name', 'email', 'phone'];
+    protected array $searchable = ['name', 'email', 'phone', 'document_number', 'address_city', 'address_state'];
     protected string $defaultSort = 'name';
     protected string $defaultDirection = 'asc';
 
@@ -39,7 +39,18 @@ class UserController extends AdminCrudController
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', $this->uniqueRule('users', 'email', $record)],
-            'phone' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'document_number' => ['nullable', 'string', 'max:32'],
+            'whatsapp' => ['nullable', 'string', 'max:30'],
+            'alternate_phone' => ['nullable', 'string', 'max:30'],
+            'birth_date' => ['nullable', 'date'],
+            'address_zip' => ['nullable', 'string', 'max:12'],
+            'address_street' => ['nullable', 'string', 'max:255'],
+            'address_number' => ['nullable', 'string', 'max:20'],
+            'address_complement' => ['nullable', 'string', 'max:255'],
+            'address_district' => ['nullable', 'string', 'max:255'],
+            'address_city' => ['nullable', 'string', 'max:255'],
+            'address_state' => ['nullable', 'string', 'size:2'],
             'avatar' => ['nullable', 'image', 'max:4096'],
             'timezone' => ['nullable', 'string', 'max:255'],
             'password' => $passwordRule,
@@ -52,6 +63,9 @@ class UserController extends AdminCrudController
     {
         unset($validated['avatar'], $validated['role_names']);
         $validated += $this->booleanData($request, ['is_active']);
+        $validated['address_state'] = filled($validated['address_state'] ?? null)
+            ? strtoupper((string) $validated['address_state'])
+            : null;
         $validated['avatar_path'] = $this->storeMediaFile($request, 'avatar', 'avatars', $record?->avatar_path);
 
         if (blank($validated['password'] ?? null)) {

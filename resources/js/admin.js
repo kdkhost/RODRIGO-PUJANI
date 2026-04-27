@@ -41,6 +41,8 @@ configureToastr();
 
 const AdminUI = {
     modalInstance: null,
+    calendarEventPanel: null,
+    activeCalendarEventId: null,
     summernoteWarningShown: false,
 
     escapeHtml(value) {
@@ -55,6 +57,7 @@ const AdminUI = {
     boot() {
         this.ensureModal();
         this.ensureProgressCard();
+        this.ensureCalendarEventPanel();
         this.flushPageToasts();
         this.bindDocumentEvents();
         this.initPlugins(document);
@@ -120,8 +123,157 @@ const AdminUI = {
         document.body.appendChild(wrapper);
     },
 
+    ensureCalendarEventPanel() {
+        if (document.getElementById('admin-calendar-event-panel')) {
+            this.calendarEventPanel = document.getElementById('admin-calendar-event-panel');
+            return;
+        }
+
+        const panel = document.createElement('div');
+        panel.id = 'admin-calendar-event-panel';
+        panel.className = 'admin-calendar-event-panel';
+        panel.setAttribute('data-calendar-event-panel', 'true');
+        document.body.appendChild(panel);
+        this.calendarEventPanel = panel;
+    },
+
+    hideCalendarEventPanel() {
+        if (!this.calendarEventPanel) {
+            return;
+        }
+
+        this.calendarEventPanel.classList.remove('active');
+        this.calendarEventPanel.innerHTML = '';
+        this.activeCalendarEventId = null;
+    },
+
+    formatCalendarEventDate(event) {
+        if (!event.start) {
+            return 'Sem data definida';
+        }
+
+        const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+        const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+
+        if (event.allDay) {
+            if (event.end) {
+                const inclusiveEnd = new Date(event.end.getTime() - 1000);
+                return `${dateFormatter.format(event.start)} até ${dateFormatter.format(inclusiveEnd)} • Dia inteiro`;
+            }
+
+            return `${dateFormatter.format(event.start)} • Dia inteiro`;
+        }
+
+        if (!event.end) {
+            return dateTimeFormatter.format(event.start);
+        }
+
+        return `${dateTimeFormatter.format(event.start)} até ${dateTimeFormatter.format(event.end)}`;
+    },
+
+    showCalendarEventPanel(event, triggerEvent) {
+        this.ensureCalendarEventPanel();
+
+        if (!this.calendarEventPanel) {
+            return;
+        }
+
+        if (this.activeCalendarEventId === event.id && this.calendarEventPanel.classList.contains('active')) {
+            this.hideCalendarEventPanel();
+            return;
+        }
+
+        const props = event.extendedProps || {};
+        const details = [
+            props.owner ? `<div><span>Responsável</span><strong>${this.escapeHtml(props.owner)}</strong></div>` : '',
+            props.location ? `<div><span>Local</span><strong>${this.escapeHtml(props.location)}</strong></div>` : '',
+            props.category ? `<div><span>Categoria</span><strong>${this.escapeHtml(props.category)}</strong></div>` : '',
+            props.visibilityLabel ? `<div><span>Visibilidade</span><strong>${this.escapeHtml(props.visibilityLabel)}</strong></div>` : '',
+        ].filter(Boolean).join('');
+
+        const badges = [
+            props.statusLabel ? `<span class="admin-calendar-panel-badge">${this.escapeHtml(props.statusLabel)}</span>` : '',
+            props.displayLabel && props.display !== 'auto'
+                ? `<span class="admin-calendar-panel-badge admin-calendar-panel-badge-soft">${this.escapeHtml(props.displayLabel)}</span>`
+                : '',
+        ].filter(Boolean).join('');
+
+        this.calendarEventPanel.innerHTML = `
+            <button type="button" class="admin-calendar-panel-close" aria-label="Fechar" data-calendar-panel-close>
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="admin-calendar-panel-head">
+                <div class="admin-card-kicker">Evento selecionado</div>
+                <h4>${this.escapeHtml(event.title)}</h4>
+                <p>${this.escapeHtml(this.formatCalendarEventDate(event))}</p>
+            </div>
+            ${badges ? `<div class="admin-calendar-panel-badges">${badges}</div>` : ''}
+            ${details ? `<div class="admin-calendar-panel-grid">${details}</div>` : ''}
+            ${props.description ? `<div class="admin-calendar-panel-copy">${this.escapeHtml(props.description)}</div>` : ''}
+            <div class="admin-calendar-panel-actions">
+                <button type="button" class="btn btn-primary" data-modal-url="${this.escapeHtml(props.editUrl || '')}" data-modal-title="${this.escapeHtml(event.title)}">
+                    <i class="bi bi-pencil-square me-1"></i>Editar
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-outline-danger"
+                    data-delete-url="${this.escapeHtml(props.deleteUrl || '')}"
+                    data-table-target="#admin-calendar-events-table"
+                    data-calendar-target="#admin-calendar"
+                    data-confirm-text="O evento será removido permanentemente da agenda."
+                >
+                    <i class="bi bi-trash me-1"></i>Excluir
+                </button>
+                ${props.externalUrl ? `
+                    <a href="${this.escapeHtml(props.externalUrl)}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Abrir link
+                    </a>
+                ` : ''}
+            </div>
+        `;
+
+        const isMobile = window.innerWidth < 992;
+        this.calendarEventPanel.style.left = '';
+        this.calendarEventPanel.style.top = '';
+        this.calendarEventPanel.style.right = '';
+        this.calendarEventPanel.style.bottom = '';
+
+        if (isMobile) {
+            this.calendarEventPanel.style.left = '1rem';
+            this.calendarEventPanel.style.right = '1rem';
+            this.calendarEventPanel.style.bottom = '1rem';
+        } else {
+            const width = 360;
+            const estimatedHeight = 320;
+            const left = Math.min(triggerEvent.clientX + 16, window.innerWidth - width - 20);
+            const top = Math.min(triggerEvent.clientY + 16, window.innerHeight - estimatedHeight - 20);
+            this.calendarEventPanel.style.left = `${Math.max(16, left)}px`;
+            this.calendarEventPanel.style.top = `${Math.max(16, top)}px`;
+        }
+
+        this.calendarEventPanel.classList.add('active');
+        this.activeCalendarEventId = event.id;
+    },
+
     bindDocumentEvents() {
         document.addEventListener('click', (event) => {
+            const panelClose = event.target.closest('[data-calendar-panel-close]');
+            if (panelClose) {
+                event.preventDefault();
+                this.hideCalendarEventPanel();
+                return;
+            }
+
             const modalTrigger = event.target.closest('[data-modal-url]');
             if (modalTrigger) {
                 event.preventDefault();
@@ -168,6 +320,17 @@ const AdminUI = {
                 event.preventDefault();
                 const table = paginationLink.closest('[data-ajax-table]');
                 this.refreshTable(table, paginationLink.href);
+                return;
+            }
+
+            if (!event.target.closest('.fc-event, .fc-list-item, [data-calendar-event-panel]')) {
+                this.hideCalendarEventPanel();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.hideCalendarEventPanel();
             }
         });
 
@@ -285,6 +448,7 @@ const AdminUI = {
     },
 
     async loadModal(url, title) {
+        this.hideCalendarEventPanel();
         const modal = document.getElementById('admin-modal');
         modal.querySelector('.modal-title').textContent = title;
         modal.querySelector('.modal-body').innerHTML = '<div class="py-5 text-center text-muted">Carregando...</div>';
@@ -302,6 +466,7 @@ const AdminUI = {
     },
 
     async confirmDelete(trigger) {
+        this.hideCalendarEventPanel();
         const confirmResult = await Swal.fire({
             title: 'Confirmar exclusão?',
             text: trigger.dataset.confirmText || 'Essa ação não poderá ser desfeita.',
@@ -536,6 +701,7 @@ const AdminUI = {
     },
 
     refetchCalendar(target) {
+        this.hideCalendarEventPanel();
         const calendarElement = typeof target === 'string' ? document.querySelector(target) : target;
 
         if (calendarElement?._fullCalendar) {
@@ -810,12 +976,8 @@ const AdminUI = {
                     calendar.unselect();
                 },
                 eventClick: (info) => {
-                    const editUrl = info.event.extendedProps?.editUrl;
-
-                    if (editUrl) {
-                        info.jsEvent.preventDefault();
-                        this.loadModal(editUrl, info.event.title);
-                    }
+                    info.jsEvent.preventDefault();
+                    this.showCalendarEventPanel(info.event, info.jsEvent);
                 },
                 eventDrop: updateEventPosition,
                 eventResize: updateEventPosition,
@@ -823,8 +985,8 @@ const AdminUI = {
                     const props = info.event.extendedProps || {};
                     const details = [
                         info.event.title,
-                        props.status ? `Status: ${props.status}` : '',
-                        props.display ? `Exibição: ${props.display}` : '',
+                        props.statusLabel ? `Status: ${props.statusLabel}` : '',
+                        props.displayLabel ? `Exibição: ${props.displayLabel}` : '',
                         props.owner ? `Responsável: ${props.owner}` : '',
                         props.location ? `Local: ${props.location}` : '',
                         props.description || '',
@@ -844,16 +1006,16 @@ const AdminUI = {
                     const showMeta = info.view.type !== 'dayGridMonth';
                     const meta = [];
 
+                    if (props.statusLabel) {
+                        meta.push(`<span class="admin-calendar-event-chip">${this.escapeHtml(props.statusLabel)}</span>`);
+                    }
+
                     if (showMeta && props.category) {
                         meta.push(`<span>${this.escapeHtml(props.category)}</span>`);
                     }
 
                     if (showMeta && props.owner) {
                         meta.push(`<span>${this.escapeHtml(props.owner)}</span>`);
-                    }
-
-                    if (showMeta && props.location) {
-                        meta.push(`<span>${this.escapeHtml(props.location)}</span>`);
                     }
 
                     const customMarkup = `

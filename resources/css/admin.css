@@ -779,7 +779,7 @@ img.admin-avatar {
 
 .admin-calendar-kpis {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 1rem;
 }
 
@@ -881,13 +881,14 @@ img.admin-avatar {
 .admin-calendar .fc-event {
     border: 0;
     border-radius: 0.6rem;
-    padding: 0.15rem 0.28rem;
-    box-shadow: 0 6px 16px rgba(15, 19, 24, 0.14);
+    padding: 0.18rem 0.32rem;
+    box-shadow: 0 10px 22px rgba(15, 19, 24, 0.14);
 }
 
 .admin-calendar .fc-bgevent {
-    opacity: 0.28;
+    opacity: 0.3;
     border-radius: 0.75rem;
+    box-shadow: inset 0 0 0 1px rgba(196, 154, 60, 0.22);
 }
 
 .admin-calendar .fc-bgevent.admin-calendar-status-scheduled {
@@ -907,7 +908,7 @@ img.admin-avatar {
 }
 
 .admin-calendar .fc-day-grid-event {
-    margin: 0.16rem 0.28rem;
+    margin: 0.14rem 0.22rem;
 }
 
 .admin-calendar .fc-time-grid .fc-event,
@@ -925,6 +926,10 @@ img.admin-avatar {
 
 .admin-calendar .fc-day-top {
     padding: 0.42rem 0.55rem 0.2rem;
+}
+
+.admin-calendar .fc-highlight {
+    background: rgba(196, 154, 60, 0.14);
 }
 
 .admin-calendar .fc-day-grid-event .fc-content,
@@ -978,6 +983,11 @@ img.admin-avatar {
     line-height: 1.1;
 }
 
+.admin-calendar-event-chip {
+    background: rgba(255, 255, 255, 0.18);
+    color: inherit;
+}
+
 .admin-calendar .fc-time-grid-event.admin-calendar-status-confirmed,
 .admin-calendar .fc-day-grid-event.admin-calendar-status-confirmed,
 .admin-calendar .fc-list-item.admin-calendar-status-confirmed {
@@ -1025,6 +1035,277 @@ img.admin-avatar {
     width: 10px;
     height: 10px;
     border-radius: 50%;
+}
+
+.admin-calendar-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.7fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.admin-calendar-insights,
+.admin-mini-stack,
+.admin-progress-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.admin-calendar-side-card,
+.admin-dashboard-highlight-card {
+    padding: 1rem 1.05rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.88rem;
+    background: var(--admin-card-bg);
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-dashboard-highlight-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.admin-dashboard-highlight-card span,
+.admin-calendar-record-item span,
+.admin-dashboard-list-item span {
+    color: var(--admin-muted);
+    font-size: 0.78rem;
+}
+
+.admin-dashboard-highlight-card strong,
+.admin-calendar-record-item strong,
+.admin-dashboard-list-item strong {
+    display: block;
+    color: var(--admin-ink);
+    font-weight: 800;
+}
+
+.admin-dashboard-highlight-card strong {
+    margin-top: 0.3rem;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.admin-calendar-record-item,
+.admin-dashboard-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.82rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-calendar-record-item,
+[data-bs-theme="dark"] .admin-dashboard-list-item {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-calendar-record-item-button {
+    width: 100%;
+    border: 1px solid var(--admin-border);
+    text-align: left;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.admin-calendar-record-item-button:hover {
+    border-color: rgba(196, 154, 60, 0.35);
+    background: rgba(196, 154, 60, 0.08);
+    transform: translateY(-1px);
+}
+
+.admin-calendar-record-item small,
+.admin-dashboard-list-item small {
+    color: var(--admin-muted);
+    font-weight: 700;
+    text-align: right;
+}
+
+.admin-calendar-empty-state {
+    display: grid;
+    gap: 0.45rem;
+    justify-items: start;
+    padding: 1rem;
+    border: 1px dashed var(--admin-border);
+    border-radius: 0.82rem;
+    background: rgba(15, 19, 24, 0.02);
+}
+
+[data-bs-theme="dark"] .admin-calendar-empty-state {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-calendar-empty-state strong {
+    color: var(--admin-ink);
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.admin-calendar-empty-state span {
+    color: var(--admin-muted);
+    line-height: 1.5;
+}
+
+.admin-calendar-empty-state-compact {
+    justify-items: stretch;
+}
+
+.admin-progress-list div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.78rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-progress-list div {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-progress-list span {
+    color: var(--admin-ink);
+    font-weight: 700;
+}
+
+.admin-progress-list strong {
+    color: var(--admin-muted);
+    font-size: 0.82rem;
+}
+
+.admin-chart-frame-sm {
+    min-height: 240px;
+}
+
+.admin-chart-frame-sm canvas {
+    height: 240px !important;
+}
+
+.admin-calendar-event-panel {
+    position: fixed;
+    z-index: 1080;
+    width: min(360px, calc(100vw - 2rem));
+    display: none;
+    padding: 1rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.95rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 24px 48px rgba(15, 19, 24, 0.18);
+    backdrop-filter: blur(18px);
+}
+
+[data-bs-theme="dark"] .admin-calendar-event-panel {
+    background: rgba(22, 29, 36, 0.96);
+}
+
+.admin-calendar-event-panel.active {
+    display: block;
+}
+
+.admin-calendar-panel-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.68rem;
+    background: transparent;
+    color: var(--admin-muted);
+}
+
+.admin-calendar-panel-head h4 {
+    margin: 0.28rem 0 0.2rem;
+    color: var(--admin-ink);
+    font-size: 1.1rem;
+    font-weight: 850;
+}
+
+.admin-calendar-panel-head p,
+.admin-calendar-panel-copy {
+    margin: 0;
+    color: var(--admin-muted);
+    line-height: 1.6;
+}
+
+.admin-calendar-panel-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.85rem;
+}
+
+.admin-calendar-panel-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.32rem 0.56rem;
+    border-radius: 999px;
+    background: rgba(196, 154, 60, 0.14);
+    color: var(--admin-ink);
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.admin-calendar-panel-badge-soft {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.admin-calendar-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin-top: 0.9rem;
+}
+
+.admin-calendar-panel-grid div {
+    padding: 0.75rem 0.8rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.8rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-calendar-panel-grid div {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-calendar-panel-grid span {
+    display: block;
+    color: var(--admin-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.admin-calendar-panel-grid strong {
+    display: block;
+    margin-top: 0.18rem;
+    color: var(--admin-ink);
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+.admin-calendar-panel-copy {
+    margin-top: 0.9rem;
+}
+
+.admin-calendar-panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1rem;
+}
+
+.admin-calendar-panel-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
 }
 
 .admin-permissions-grid {
@@ -1914,6 +2195,7 @@ img.admin-avatar {
         grid-template-columns: 1fr;
     }
 
+    .admin-calendar-layout,
     .admin-system-settings-grid,
     .admin-brand-preview-grid,
     .admin-system-assets-grid,
@@ -1951,8 +2233,23 @@ img.admin-avatar {
         flex-direction: column;
     }
 
+    .admin-calendar-panel-grid {
+        grid-template-columns: 1fr;
+    }
+
     .admin-page-hero-inner .btn,
     .admin-danger-zone .btn {
+        width: 100%;
+    }
+
+    .admin-calendar-record-item,
+    .admin-dashboard-list-item,
+    .admin-progress-list div {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-calendar-panel-actions .btn {
         width: 100%;
     }
 

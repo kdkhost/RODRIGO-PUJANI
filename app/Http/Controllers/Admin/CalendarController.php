@@ -22,6 +22,10 @@ class CalendarController extends Controller
     public function index(): View
     {
         $eventsQuery = $this->visibleEventsQuery();
+        $eventsForOwners = (clone $eventsQuery)
+            ->with('owner:id,name')
+            ->whereNotNull('owner_id')
+            ->get();
 
         return view('admin.calendar.index', [
             'pageTitle' => 'Agenda',
@@ -39,9 +43,25 @@ class CalendarController extends Controller
             'eventStats' => [
                 'total' => (clone $eventsQuery)->count(),
                 'today' => (clone $eventsQuery)->whereDate('start_at', today())->count(),
-                'scheduled' => (clone $eventsQuery)->where('status', 'scheduled')->count(),
-                'confirmed' => (clone $eventsQuery)->where('status', 'confirmed')->count(),
+                'upcoming' => (clone $eventsQuery)->whereBetween('start_at', [now(), now()->copy()->addDays(7)->endOfDay()])->count(),
+                'all_day' => (clone $eventsQuery)->where('all_day', true)->count(),
+                'background' => (clone $eventsQuery)->whereIn('display', ['background', 'inverse-background'])->count(),
             ],
+            'upcomingEvents' => (clone $eventsQuery)
+                ->with(['owner:id,name'])
+                ->where('start_at', '>=', now()->startOfDay())
+                ->orderBy('start_at')
+                ->limit(6)
+                ->get(),
+            'ownerLoad' => $eventsForOwners
+                ->groupBy('owner_id')
+                ->map(fn ($items): array => [
+                    'name' => $items->first()?->owner?->name ?: 'Sem responsável',
+                    'total' => $items->count(),
+                ])
+                ->sortByDesc('total')
+                ->take(5)
+                ->values(),
         ]);
     }
 
@@ -328,8 +348,11 @@ class CalendarController extends Controller
             ],
             'extendedProps' => $extendedProps + [
                 'status' => $event->status,
+                'statusLabel' => $this->statusLabel($event->status),
                 'visibility' => $event->visibility,
+                'visibilityLabel' => $this->visibilityLabel($event->visibility),
                 'display' => $event->display,
+                'displayLabel' => $this->displayLabel($event->display),
                 'category' => $event->category,
                 'location' => $event->location,
                 'description' => strip_tags((string) $event->description),
@@ -341,6 +364,37 @@ class CalendarController extends Controller
                 'deleteUrl' => route('admin.calendar.destroy', $event),
             ],
         ] + $advancedProps;
+    }
+
+    private function statusLabel(string $status): string
+    {
+        return match ($status) {
+            'scheduled' => 'Agendado',
+            'confirmed' => 'Confirmado',
+            'done' => 'Concluído',
+            'canceled' => 'Cancelado',
+            default => ucfirst($status),
+        };
+    }
+
+    private function visibilityLabel(string $visibility): string
+    {
+        return match ($visibility) {
+            'private' => 'Privado',
+            'team' => 'Equipe',
+            'public' => 'Público',
+            default => ucfirst($visibility),
+        };
+    }
+
+    private function displayLabel(string $display): string
+    {
+        return match ($display) {
+            'auto' => 'Evento normal',
+            'background' => 'Marcação de fundo',
+            'inverse-background' => 'Bloqueio invertido',
+            default => ucfirst($display),
+        };
     }
 
     private function availableOwners()

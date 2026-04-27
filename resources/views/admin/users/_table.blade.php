@@ -1,11 +1,30 @@
 <div class="table-responsive">
     <table class="table table-hover align-middle">
-        <thead><tr><th>Nome</th><th>E-mail</th><th>Funções</th><th>Ativo</th><th class="text-end">Ações</th></tr></thead>
+        <thead>
+        <tr>
+            <th>Usuário</th>
+            <th>Contato</th>
+            <th>Funções</th>
+            <th>Ativo</th>
+            <th class="text-end">Ações</th>
+        </tr>
+        </thead>
         <tbody>
         @forelse($items as $item)
             <tr>
-                <td>{{ $item->name }}</td>
-                <td>{{ $item->email }}</td>
+                <td>
+                    <div class="admin-entity-title">{{ $item->name }}</div>
+                    <div class="admin-entity-meta">
+                        {{ $item->document_number ?: 'Documento não informado' }}
+                        @if($item->address_city || $item->address_state)
+                            • {{ collect([$item->address_city, $item->address_state])->filter()->implode('/') }}
+                        @endif
+                    </div>
+                </td>
+                <td>
+                    <div class="admin-entity-title">{{ $item->email }}</div>
+                    <div class="admin-entity-meta">{{ $item->phone ?: ($item->whatsapp ?: 'Sem telefone cadastrado') }}</div>
+                </td>
                 <td>{{ $item->roles->pluck('name')->implode(', ') }}</td>
                 <td>{{ $item->is_active ? 'Sim' : 'Não' }}</td>
                 <td class="text-end">

@@ -2,9 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\CalendarEvent;
 use App\Models\Client;
-use App\Models\Setting;
 use App\Models\MediaAsset;
+use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -233,6 +234,13 @@ class AdminAuthorizationTest extends TestCase
                 'name' => 'Usuario Atualizado',
                 'email' => $managedUser->email,
                 'phone' => '(11) 99999-9999',
+                'document_number' => '123.456.789-09',
+                'address_zip' => '01310-100',
+                'address_street' => 'Avenida Paulista',
+                'address_number' => '1000',
+                'address_district' => 'Bela Vista',
+                'address_city' => 'São Paulo',
+                'address_state' => 'SP',
                 'timezone' => 'America/Sao_Paulo',
                 'is_active' => '1',
             ])
@@ -240,6 +248,8 @@ class AdminAuthorizationTest extends TestCase
             ->assertJsonStructure(['message', 'tableTarget']);
 
         $this->assertSame('Usuario Atualizado', $managedUser->refresh()->name);
+        $this->assertSame('São Paulo', $managedUser->address_city);
+        $this->assertSame('SP', $managedUser->address_state);
     }
 
     public function test_media_asset_upload_creates_only_one_record(): void
@@ -265,6 +275,62 @@ class AdminAuthorizationTest extends TestCase
 
         File::delete(public_path($asset->path));
         File::deleteDirectory(public_path('uploads/testing'));
+    }
+
+    public function test_admin_dashboard_renders_premium_overview_without_errors(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->givePermissionTo('admin.access');
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Centro de comando')
+            ->assertSee('visão única', false);
+    }
+
+    public function test_admin_analytics_page_renders_premium_panels_without_errors(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->givePermissionTo(['admin.access', 'analytics.view']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.analytics.index'))
+            ->assertOk()
+            ->assertSee('Inteligência do site')
+            ->assertSee('Visão premium do tráfego');
+    }
+
+    public function test_admin_calendar_page_renders_premium_layout_and_upcoming_event(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->givePermissionTo(['admin.access', 'calendar.manage']);
+
+        CalendarEvent::query()->create([
+            'title' => 'Reunião estratégica',
+            'category' => 'Reunião',
+            'status' => 'scheduled',
+            'visibility' => 'team',
+            'start_at' => now()->addDay()->setHour(9)->setMinute(0),
+            'end_at' => now()->addDay()->setHour(10)->setMinute(0),
+            'editable' => true,
+            'overlap' => true,
+            'display' => 'auto',
+            'owner_id' => $admin->id,
+            'created_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.calendar.index'))
+            ->assertOk()
+            ->assertSee('Agenda operacional')
+            ->assertSee('Reunião estratégica');
     }
 
     private function fakePngUpload(string $name): UploadedFile

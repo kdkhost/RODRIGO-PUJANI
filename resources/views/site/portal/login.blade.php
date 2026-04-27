@@ -1,6 +1,8 @@
 @extends('site.portal.layout')
 
-@php($pageTitle = 'Portal do cliente')
+@php
+    $pageTitle = 'Portal do cliente';
+@endphp
 
 @section('content')
     <div class="portal-form-heading">

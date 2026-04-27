@@ -1,5 +1,6 @@
 import './bootstrap';
 
+import Chart from 'chart.js/auto';
 import {
     appendRecaptchaToken,
     applyAutoPlaceholders,
@@ -17,6 +18,7 @@ const SiteUI = {
         flushPageToasts();
         applyAutoPlaceholders();
         bindRecaptchaForms(document);
+        this.initCharts();
 
         [
             this.bindCursor,
@@ -33,6 +35,31 @@ const SiteUI = {
                 task.call(this);
             } catch (error) {
                 console.error('Falha ao iniciar recurso visual do site.', error);
+            }
+        });
+    },
+
+    initCharts() {
+        document.querySelectorAll('[data-site-chart]').forEach((canvas) => {
+            if (canvas.dataset.chartReady === 'true') {
+                return;
+            }
+
+            try {
+                const config = JSON.parse(canvas.dataset.siteChart || '{}');
+                const chart = new Chart(canvas, {
+                    ...config,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        ...(config.options || {}),
+                    },
+                });
+
+                canvas._siteChart = chart;
+                canvas.dataset.chartReady = 'true';
+            } catch (error) {
+                console.error('Falha ao inicializar gráfico do portal.', error);
             }
         });
     },

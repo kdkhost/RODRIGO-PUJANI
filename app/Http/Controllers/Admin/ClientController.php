@@ -69,7 +69,7 @@ class ClientController extends AdminCrudController
             'address_complement' => ['nullable', 'string', 'max:255'],
             'address_district' => ['nullable', 'string', 'max:255'],
             'address_city' => ['nullable', 'string', 'max:255'],
-            'address_state' => ['nullable', 'string', 'max:8'],
+            'address_state' => ['nullable', 'string', 'size:2'],
             'notes' => ['nullable', 'string'],
             'assigned_lawyer_id' => ['nullable', 'integer', 'exists:users,id'],
             'portal_access_code' => [
@@ -86,6 +86,9 @@ class ClientController extends AdminCrudController
     {
         $validated += $this->booleanData($request, ['is_active', 'portal_enabled']);
         $validated['created_by'] ??= $record?->created_by ?: $request->user()?->id;
+        $validated['address_state'] = filled($validated['address_state'] ?? null)
+            ? strtoupper((string) $validated['address_state'])
+            : null;
 
         if ($request->user()?->isAssociatedLawyer()) {
             $validated['assigned_lawyer_id'] = $request->user()->id;

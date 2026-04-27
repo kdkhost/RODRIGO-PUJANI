@@ -88,6 +88,22 @@ class ClientPortalController extends Controller
             ->limit(8)
             ->get();
 
+        $rawUpdatesTrend = $client->legalCaseUpdates()
+            ->where('is_visible_to_client', true)
+            ->where('occurred_at', '>=', now()->subMonths(5)->startOfMonth())
+            ->get()
+            ->groupBy(fn ($update) => $update->occurred_at?->copy()->startOfMonth()->format('Y-m-01'))
+            ->map(fn ($group) => $group->count());
+
+        $updatesTrend = collect(range(5, 0))->map(function (int $monthsAgo) use ($rawUpdatesTrend): array {
+            $date = now()->subMonths($monthsAgo)->startOfMonth();
+
+            return [
+                'label' => $date->format('m/Y'),
+                'total' => (int) ($rawUpdatesTrend[$date->format('Y-m-01')] ?? 0),
+            ];
+        });
+
         return view('site.portal.dashboard', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
@@ -97,9 +113,52 @@ class ClientPortalController extends Controller
             'stats' => [
                 'cases' => $cases->count(),
                 'deadlines' => $cases->filter(fn (LegalCase $legalCase) => filled($legalCase->next_deadline_at))->count(),
+                'hearings' => $cases->filter(fn (LegalCase $legalCase) => filled($legalCase->next_hearing_at))->count(),
                 'documents' => $sharedDocuments->count(),
                 'updates' => $recentUpdates->count(),
             ],
+            'caseStatusBreakdown' => $cases
+                ->groupBy('status')
+                ->map(fn ($group, $status): array => [
+                    'label' => str((string) $status)->replace('_', ' ')->headline()->toString(),
+                    'total' => $group->count(),
+                ])
+                ->values(),
+            'documentCategoryBreakdown' => $sharedDocuments
+                ->groupBy(fn ($document) => $document->category ?: 'Documento')
+                ->map(fn ($group, $category): array => [
+                    'label' => (string) $category,
+                    'total' => $group->count(),
+                ])
+                ->values(),
+            'updatesTrend' => $updatesTrend,
+            'upcomingMilestones' => $cases
+                ->flatMap(function (LegalCase $legalCase) {
+                    $items = collect();
+
+                    if ($legalCase->next_deadline_at) {
+                        $items->push([
+                            'type' => 'Prazo',
+                            'title' => $legalCase->title,
+                            'subtitle' => $legalCase->process_number ?: ($legalCase->practice_area ?: 'Processo interno'),
+                            'at' => $legalCase->next_deadline_at,
+                        ]);
+                    }
+
+                    if ($legalCase->next_hearing_at) {
+                        $items->push([
+                            'type' => 'Audiência',
+                            'title' => $legalCase->title,
+                            'subtitle' => $legalCase->court_name ?: ($legalCase->process_number ?: 'Processo'),
+                            'at' => $legalCase->next_hearing_at,
+                        ]);
+                    }
+
+                    return $items;
+                })
+                ->sortBy('at')
+                ->take(6)
+                ->values(),
         ]);
     }
 

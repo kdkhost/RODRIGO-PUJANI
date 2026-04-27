@@ -353,6 +353,17 @@ body {
     margin-bottom: 1rem;
 }
 
+.portal-stats-grid-expanded {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.portal-dashboard-analytics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
 .portal-stat-card,
 .portal-case-card,
 .portal-section {
@@ -394,6 +405,16 @@ body {
     color: #141b24;
     font-size: 1rem;
     font-weight: 800;
+}
+
+.portal-chart-frame {
+    position: relative;
+    min-height: 260px;
+}
+
+.portal-chart-frame canvas {
+    width: 100% !important;
+    height: 260px !important;
 }
 
 .portal-case-grid {
@@ -591,6 +612,8 @@ body {
 
 @media (max-width: 900px) {
     .portal-stats-grid,
+    .portal-stats-grid-expanded,
+    .portal-dashboard-analytics,
     .portal-case-grid,
     .portal-dashboard-grid,
     .portal-case-detail-grid {
