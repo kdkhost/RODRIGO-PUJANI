@@ -148,6 +148,10 @@
             @yield('content')
         </main>
 
+        <button type="button" class="admin-scroll-top" data-admin-scroll-top aria-label="Voltar ao topo" aria-hidden="true">
+            <i class="bi bi-arrow-up"></i>
+        </button>
+
         <footer class="app-footer admin-app-footer">
             <div class="container-fluid py-3">
                 <div>

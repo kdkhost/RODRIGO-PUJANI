@@ -1978,6 +1978,45 @@ img.admin-avatar {
     justify-content: space-between;
 }
 
+.admin-scroll-top {
+    position: fixed;
+    right: 1.35rem;
+    bottom: 1.35rem;
+    z-index: 1080;
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--admin-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--admin-ink);
+    box-shadow: var(--admin-shadow-md);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(14px);
+    transition: opacity 0.22s ease, transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+[data-bs-theme="dark"] .admin-scroll-top {
+    background: rgba(18, 24, 33, 0.82);
+}
+
+.admin-scroll-top:hover {
+    border-color: rgba(196, 154, 60, 0.4);
+    background: rgba(196, 154, 60, 0.14);
+}
+
+.admin-scroll-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
 .note-editor.note-frame {
     border-color: var(--admin-border);
     border-radius: 0.68rem;
@@ -2192,6 +2231,13 @@ img.admin-avatar {
 }
 
 @media (max-width: 767.98px) {
+    .admin-scroll-top {
+        right: 1rem;
+        bottom: 1rem;
+        width: 44px;
+        height: 44px;
+    }
+
     .admin-calendar {
         min-height: 0;
         max-height: none;

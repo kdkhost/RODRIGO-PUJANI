@@ -59,6 +59,7 @@ const AdminUI = {
         this.ensureProgressCard();
         this.ensureCalendarEventPanel();
         this.flushPageToasts();
+        this.bindBackToTop();
         this.bindDocumentEvents();
         this.initPlugins(document);
         this.initAjaxTables(document);
@@ -74,6 +75,30 @@ const AdminUI = {
             this.showToast(element.dataset.type || 'info', element.dataset.message || '');
             element.remove();
         });
+    },
+
+    bindBackToTop() {
+        const button = document.querySelector('[data-admin-scroll-top]');
+
+        if (!button) {
+            return;
+        }
+
+        const syncVisibility = () => {
+            const visible = window.scrollY > 320;
+            button.classList.toggle('is-visible', visible);
+            button.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        };
+
+        button.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth',
+            });
+        });
+
+        syncVisibility();
+        window.addEventListener('scroll', syncVisibility, { passive: true });
     },
 
     ensureModal() {

@@ -23,6 +23,7 @@ const SiteUI = {
         [
             this.bindCursor,
             this.bindNavbar,
+            this.bindBackToTop,
             this.bindMobileMenu,
             this.bindObserver,
             this.bindCounters,
@@ -110,6 +111,35 @@ const SiteUI = {
             const total = document.documentElement.scrollHeight - window.innerHeight;
             progress.style.width = total > 0 ? `${(window.scrollY / total) * 100}%` : '0%';
         });
+    },
+
+    bindBackToTop() {
+        const buttons = Array.from(document.querySelectorAll('[data-scroll-top]'));
+
+        if (!buttons.length) {
+            return;
+        }
+
+        const toggleButtons = () => {
+            const visible = window.scrollY > 360;
+
+            buttons.forEach((button) => {
+                button.classList.toggle('is-visible', visible);
+                button.setAttribute('aria-hidden', visible ? 'false' : 'true');
+            });
+        };
+
+        buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth',
+                });
+            });
+        });
+
+        toggleButtons();
+        window.addEventListener('scroll', toggleButtons, { passive: true });
     },
 
     bindMobileMenu() {

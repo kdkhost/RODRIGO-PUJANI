@@ -84,5 +84,11 @@
             </div>
         </section>
     </main>
+
+    <button type="button" class="site-scroll-top" data-scroll-top aria-label="Voltar ao topo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m18 15-6-6-6 6"></path>
+        </svg>
+    </button>
 </body>
 </html>
