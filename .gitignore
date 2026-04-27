@@ -17,8 +17,11 @@
 /public/build
 /public/hot
 /public/storage
+/public/uploads
 /storage/*.key
 /storage/pail
+/database/*.sqlite
+/database/*.sqlite-*
 /vendor
 Homestead.json
 Homestead.yaml
