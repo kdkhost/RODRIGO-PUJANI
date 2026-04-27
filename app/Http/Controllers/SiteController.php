@@ -7,6 +7,7 @@ use App\Models\Page;
 use App\Models\PracticeArea;
 use App\Models\TeamMember;
 use App\Models\Testimonial;
+use App\Services\RecaptchaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -31,7 +32,7 @@ class SiteController extends Controller
         return $this->renderPage($page);
     }
 
-    public function submitContact(Request $request): JsonResponse
+    public function submitContact(Request $request, RecaptchaService $recaptcha): JsonResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -41,6 +42,8 @@ class SiteController extends Controller
             'subject' => ['nullable', 'string', 'max:255'],
             'message' => ['required', 'string'],
         ]);
+
+        $recaptcha->validateOrFail($request, 'contact_message');
 
         $data['consent'] = $request->boolean('consent');
         $data['status'] = 'new';

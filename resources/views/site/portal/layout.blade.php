@@ -1,22 +1,58 @@
+@php
+    $branding = branding_config();
+    $recaptcha = recaptcha_config();
+@endphp
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html
+    lang="pt-BR"
+    data-recaptcha-enabled="{{ $recaptcha['enabled'] ? '1' : '0' }}"
+    data-recaptcha-site-key="{{ $recaptcha['enabled'] ? $recaptcha['site_key'] : '' }}"
+>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $pageTitle ?? 'Portal do cliente' }} - {{ config('app.name') }}</title>
+    <title>{{ $pageTitle ?? 'Portal do cliente' }} - {{ $branding['brand_name'] }}</title>
+    @if($branding['favicon_url'])
+        <link rel="icon" href="{{ $branding['favicon_url'] }}">
+        <link rel="apple-touch-icon" href="{{ $branding['favicon_url'] }}">
+    @endif
     @vite(['resources/css/site.css', 'resources/js/site.js'])
 </head>
 <body class="portal-body">
+    @if (session('portal_status'))
+        <div data-page-toast data-type="success" data-message="{{ session('portal_status') }}"></div>
+    @endif
+    @if (session('portal_error'))
+        <div data-page-toast data-type="error" data-message="{{ session('portal_error') }}"></div>
+    @endif
+    @if (session('status'))
+        <div data-page-toast data-type="success" data-message="{{ session('status') }}"></div>
+    @endif
+    @if (session('error'))
+        <div data-page-toast data-type="error" data-message="{{ session('error') }}"></div>
+    @endif
+    @foreach ($errors->all() as $message)
+        <div data-page-toast data-type="warning" data-message="{{ $message }}"></div>
+    @endforeach
+
     <main class="portal-shell">
         <section class="portal-panel">
             <div class="portal-panel-bg"></div>
             <div class="portal-panel-overlay"></div>
             <div class="portal-panel-content">
                 <a href="{{ route('site.home') }}" class="portal-brand">
-                    <span class="portal-brand-mark">{{ $portalPanel['brand']['short'] ?? 'P' }}</span>
+                    @if($portalPanel['brand']['logo_url'] ?? null)
+                        <img
+                            src="{{ $portalPanel['brand']['logo_url'] }}"
+                            alt="{{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}"
+                            class="portal-brand-logo"
+                        >
+                    @else
+                        <span class="portal-brand-mark">{{ $portalPanel['brand']['short'] ?? $branding['brand_short_name'] }}</span>
+                    @endif
                     <span>
-                        <strong>Pujani</strong>
+                        <strong>{{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}</strong>
                         <small>Portal do cliente</small>
                     </span>
                 </a>

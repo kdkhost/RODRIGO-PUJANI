@@ -1,3 +1,24 @@
+@php
+    $branding = branding_config();
+    $preloader = preloader_config('admin');
+    $currentUser = auth()->user();
+    $userInitials = collect(explode(' ', trim((string) $currentUser?->name)))
+        ->filter()
+        ->map(fn ($part) => mb_substr($part, 0, 1))
+        ->take(2)
+        ->implode('');
+    $userInitials = $userInitials !== '' ? mb_strtoupper($userInitials) : 'PA';
+    $userAvatarUrl = $currentUser?->avatar_path ? site_asset_url($currentUser->avatar_path) : null;
+    $roleSummary = $currentUser && method_exists($currentUser, 'getRoleNames')
+        ? $currentUser->getRoleNames()->implode(', ')
+        : 'Usuário';
+    $statusMessage = match (session('status')) {
+        'profile-updated' => 'Perfil atualizado com sucesso.',
+        'password-updated' => 'Senha atualizada com sucesso.',
+        'verification-link-sent' => 'Link de verificação enviado para o e-mail cadastrado.',
+        default => session('status'),
+    };
+@endphp
 <!DOCTYPE html>
 <html lang="pt-BR" data-bs-theme="light">
 <head>
@@ -5,35 +26,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle ?? config('app.name') }}</title>
+    @if($branding['favicon_url'])
+        <link rel="icon" href="{{ $branding['favicon_url'] }}">
+        <link rel="apple-touch-icon" href="{{ $branding['favicon_url'] }}">
+    @endif
     @vite(['resources/css/admin.css', 'resources/js/admin.js'])
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell">
-    @php
-        $preloader = preloader_config('admin');
-        $currentUser = auth()->user();
-        $userInitials = collect(explode(' ', trim((string) $currentUser?->name)))
-            ->filter()
-            ->map(fn ($part) => mb_substr($part, 0, 1))
-            ->take(2)
-            ->implode('');
-        $userInitials = $userInitials !== '' ? mb_strtoupper($userInitials) : 'PA';
-        $userAvatarUrl = $currentUser?->avatar_path ? site_asset_url($currentUser->avatar_path) : null;
-        $roleSummary = $currentUser && method_exists($currentUser, 'getRoleNames')
-            ? $currentUser->getRoleNames()->implode(', ')
-            : 'Usuário';
-        $statusMessage = match (session('status')) {
-            'profile-updated' => 'Perfil atualizado com sucesso.',
-            'password-updated' => 'Senha atualizada com sucesso.',
-            'verification-link-sent' => 'Link de verificação enviado para o e-mail cadastrado.',
-            default => session('status'),
-        };
-    @endphp
     @if ($statusMessage)
         <div data-page-toast data-type="success" data-message="{{ $statusMessage }}"></div>
     @endif
     @if (session('error'))
         <div data-page-toast data-type="error" data-message="{{ session('error') }}"></div>
     @endif
+    @foreach ($errors->all() as $message)
+        <div data-page-toast data-type="warning" data-message="{{ $message }}"></div>
+    @endforeach
     @if ($preloader['enabled'])
         @include('shared.preloader', ['preloader' => $preloader])
     @endif
@@ -64,8 +72,8 @@
                     </li>
                     <li class="nav-item d-none d-md-flex ms-2">
                         <div class="admin-topbar-title">
-                            <span class="admin-topbar-kicker">Painel administrativo</span>
-                            <strong>{{ $pageTitle ?? config('app.name') }}</strong>
+                            <span class="admin-topbar-kicker">{{ $branding['admin_subtitle'] }}</span>
+                            <strong>{{ $pageTitle ?? $branding['brand_name'] }}</strong>
                         </div>
                     </li>
                 </ul>
@@ -120,10 +128,14 @@
         <aside class="app-sidebar shadow" data-bs-theme="dark">
             <div class="sidebar-brand">
                 <a href="{{ route('admin.dashboard') }}" class="brand-link text-decoration-none">
-                    <span class="brand-mark">P</span>
+                    @if($branding['logo_url'])
+                        <img class="brand-mark-image" src="{{ $branding['logo_url'] }}" alt="{{ $branding['brand_name'] }}">
+                    @else
+                        <span class="brand-mark">{{ $branding['brand_short_name'] }}</span>
+                    @endif
                     <span class="brand-copy">
-                        <span class="brand-text fw-semibold">Pujani</span>
-                        <small>Painel administrativo</small>
+                        <span class="brand-text fw-semibold">{{ $branding['brand_name'] }}</span>
+                        <small>{{ $branding['admin_subtitle'] }}</small>
                     </span>
                 </a>
             </div>
@@ -135,6 +147,16 @@
         <main class="app-main">
             @yield('content')
         </main>
+
+        <footer class="app-footer admin-app-footer">
+            <div class="container-fluid py-3">
+                <div>
+                    <strong>{{ $branding['admin_footer_text'] }}</strong>
+                    <small>{{ $branding['admin_footer_meta'] }}</small>
+                </div>
+                <small>&copy; {{ now()->year }} {{ $branding['brand_name'] }}</small>
+            </div>
+        </footer>
     </div>
 
     <script>

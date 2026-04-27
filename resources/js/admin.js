@@ -16,9 +16,12 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
+import { applyAutoPlaceholders, configureToastr } from './shared/ui';
 
 window.bootstrap = bootstrap;
 window.$ = window.jQuery = $;
+globalThis.$ = $;
+globalThis.jQuery = $;
 window.toastr = toastr;
 window.Swal = Swal;
 window.Chart = Chart;
@@ -34,13 +37,7 @@ FilePond.registerPlugin(
     FilePondPluginImagePreview,
 );
 
-toastr.options = {
-    closeButton: true,
-    newestOnTop: true,
-    progressBar: true,
-    positionClass: 'toast-top-right',
-    timeOut: 4000,
-};
+configureToastr();
 
 const AdminUI = {
     modalInstance: null,
@@ -547,6 +544,7 @@ const AdminUI = {
     },
 
     initPlugins(scope) {
+        applyAutoPlaceholders(scope);
         this.initCharts(scope);
         this.initCalendars(scope);
 

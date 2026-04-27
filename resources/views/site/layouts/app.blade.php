@@ -1,13 +1,15 @@
 @php
     $seo = $page->seoMeta;
-    $title = $seo?->title ?: ($page->title.' | '.config('app.name'));
+    $branding = branding_config();
+    $recaptcha = recaptcha_config();
+    $title = $seo?->title ?: ($page->title.' | '.$branding['brand_name']);
     $description = $seo?->description ?: ($page->excerpt ?: 'Pujani Advogados com atuação estratégica, ética e resultado.');
     $keywords = $seo?->keywords ?: 'Pujani Advogados, advocacia, direito, consultoria jurídica, advogado';
     $hashtags = collect($seo?->hashtags)->filter();
     $themeColor = setting('pwa.theme_color', '#0B0C10');
     $backgroundColor = setting('pwa.background_color', '#0B0C10');
     $preloader = preloader_config('site');
-    $companyName = config('app.name');
+    $companyName = $branding['brand_name'];
     $companyPhone = setting('site.company_phone', '(11) 3456-7890');
     $companyEmail = setting('site.company_email', 'contato@pujani.adv.br');
     $companyAddress = setting('site.company_address', 'Av. Paulista, 1842 · Bela Vista · São Paulo/SP');
@@ -33,8 +35,8 @@
     };
 
     $ogImage = $resolveAsset($seo?->og_image_path ?: setting('pwa.icon_512', 'pwa/icon-512.png'));
-    $icon192 = $resolveAsset(setting('pwa.icon_192', 'pwa/icon-192.png'));
-    $icon512 = $resolveAsset(setting('pwa.icon_512', 'pwa/icon-512.png'));
+    $icon192 = $branding['favicon_url'] ?: $resolveAsset(setting('pwa.icon_192', 'pwa/icon-192.png'));
+    $icon512 = $branding['favicon_url'] ?: $resolveAsset(setting('pwa.icon_512', 'pwa/icon-512.png'));
     $homeUrl = route('site.home');
     $menuPages = collect($publicPages ?? [])
         ->reject(fn ($menuPage) => ($menuPage->is_home ?? false) || ($menuPage->slug ?? null) === 'home')
@@ -76,7 +78,12 @@
     ];
 @endphp
 <!DOCTYPE html>
-<html lang="pt-BR" class="scroll-smooth">
+<html
+    lang="pt-BR"
+    class="scroll-smooth"
+    data-recaptcha-enabled="{{ $recaptcha['enabled'] ? '1' : '0' }}"
+    data-recaptcha-site-key="{{ $recaptcha['enabled'] ? $recaptcha['site_key'] : '' }}"
+>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -102,8 +109,9 @@
     @if($ogImage)<meta name="twitter:image" content="{{ $ogImage }}">@endif
     @if($seo?->canonical_url)<link rel="canonical" href="{{ $seo->canonical_url }}">@endif
     <link rel="manifest" href="{{ route('site.manifest') }}">
+    @if($branding['favicon_url'])<link rel="icon" href="{{ $branding['favicon_url'] }}">@endif
     @if($icon192)<link rel="apple-touch-icon" href="{{ $icon192 }}">@endif
-    @if($icon512)<link rel="icon" href="{{ $icon512 }}" sizes="512x512" type="image/png">@endif
+    @if(!$branding['favicon_url'] && $icon512)<link rel="icon" href="{{ $icon512 }}" sizes="512x512" type="image/png">@endif
     @foreach($hashtags as $hashtag)
         <meta property="article:tag" content="{{ $hashtag }}">
     @endforeach
@@ -158,6 +166,15 @@
     <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT) !!}</script>
 </head>
 <body>
+    @if (session('status'))
+        <div data-page-toast data-type="success" data-message="{{ session('status') }}"></div>
+    @endif
+    @if (session('error'))
+        <div data-page-toast data-type="error" data-message="{{ session('error') }}"></div>
+    @endif
+    @foreach ($errors->all() as $message)
+        <div data-page-toast data-type="warning" data-message="{{ $message }}"></div>
+    @endforeach
     @if ($preloader['enabled'])
         @include('shared.preloader', ['preloader' => $preloader])
     @endif

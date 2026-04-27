@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SeoMetaController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SystemFileController;
+use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\InstallController;
@@ -94,6 +95,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->group(function (): void {
             Route::get('/', [PreloaderController::class, 'index'])->name('index');
             Route::put('/', [PreloaderController::class, 'update'])->name('update');
+        });
+
+    Route::middleware('permission:settings.manage')
+        ->prefix('system-settings')
+        ->name('system-settings.')
+        ->group(function (): void {
+            Route::get('/', [SystemSettingsController::class, 'index'])->name('index');
+            Route::put('/', [SystemSettingsController::class, 'update'])->name('update');
+            Route::post('/seed-demo-data', [SystemSettingsController::class, 'seedDemoData'])->name('seed-demo-data');
         });
 
     Route::middleware('permission:settings.manage')

@@ -1,9 +1,23 @@
 import './bootstrap';
 
+import {
+    appendRecaptchaToken,
+    applyAutoPlaceholders,
+    bindRecaptchaForms,
+    configureToastr,
+    flushPageToasts,
+    showToast,
+} from './shared/ui';
+
 const SiteUI = {
     deferredInstallPrompt: null,
 
     boot() {
+        configureToastr();
+        flushPageToasts();
+        applyAutoPlaceholders();
+        bindRecaptchaForms(document);
+
         [
             this.bindCursor,
             this.bindNavbar,
@@ -371,6 +385,8 @@ const SiteUI = {
             this.clearFormFeedback(form);
 
             try {
+                await appendRecaptchaToken(form, form.dataset.recaptchaAction || 'contact_message');
+
                 await window.axios.post(form.action, new FormData(form), {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
@@ -378,11 +394,11 @@ const SiteUI = {
                 form.classList.add('hidden');
                 successState?.classList.remove('hidden');
                 form.reset();
+                showToast('success', 'Solicitação enviada com sucesso.');
             } catch (error) {
-                this.showFormFeedback(
-                    form,
-                    error.response?.data?.message || 'Não foi possível enviar sua solicitação agora.'
-                );
+                const message = this.resolveErrorMessage(error, 'Não foi possível enviar sua solicitação agora.');
+                this.showFormFeedback(form, message);
+                showToast('error', message);
             }
         });
     },
@@ -390,7 +406,7 @@ const SiteUI = {
     bindPwa() {
         document.body.classList.toggle(
             'app-installed',
-            window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+            window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
         );
 
         if ('serviceWorker' in navigator) {
@@ -434,6 +450,15 @@ const SiteUI = {
 
     clearFormFeedback(form) {
         form.querySelector('[data-form-feedback]')?.remove();
+    },
+
+    resolveErrorMessage(error, fallbackMessage) {
+        const validationErrors = error.response?.data?.errors || {};
+        const firstMessage = Object.values(validationErrors)
+            .flat()
+            .find((message) => String(message || '').trim() !== '');
+
+        return firstMessage || error.response?.data?.message || fallbackMessage;
     },
 };
 

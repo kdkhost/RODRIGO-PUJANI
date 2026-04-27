@@ -2,7 +2,7 @@
     $groups = [
         'Visão geral' => [
             ['label' => 'Painel', 'route' => 'admin.dashboard', 'active' => 'admin.dashboard', 'icon' => 'bi-speedometer2', 'permission' => 'admin.access'],
-            ['label' => 'Análises', 'route' => 'admin.analytics.index', 'active' => 'admin.analytics.*', 'icon' => 'bi-bar-chart', 'permission' => 'analytics.view'],
+            ['label' => 'Analises', 'route' => 'admin.analytics.index', 'active' => 'admin.analytics.*', 'icon' => 'bi-bar-chart', 'permission' => 'analytics.view'],
             ['label' => 'Meu perfil', 'route' => 'profile.edit', 'active' => 'profile.*', 'icon' => 'bi-person-circle', 'permission' => null],
         ],
         'Jurídico' => [
@@ -26,6 +26,7 @@
             ['label' => 'Mensagens', 'route' => 'admin.contact-messages.index', 'active' => 'admin.contact-messages.*', 'icon' => 'bi-envelope', 'permission' => 'contact-messages.manage'],
             ['label' => 'Portal do cliente', 'route' => 'admin.client-portal.index', 'active' => 'admin.client-portal.*', 'icon' => 'bi-phone', 'permission' => 'client-portal.manage'],
             ['label' => 'Tela de login', 'route' => 'admin.auth-appearance.index', 'active' => 'admin.auth-appearance.*', 'icon' => 'bi-window-sidebar', 'permission' => 'settings.manage'],
+            ['label' => 'Sistema', 'route' => 'admin.system-settings.index', 'active' => 'admin.system-settings.*', 'icon' => 'bi-gear-wide-connected', 'permission' => 'settings.manage'],
             ['label' => 'Configurações', 'route' => 'admin.settings.index', 'active' => 'admin.settings.*', 'icon' => 'bi-sliders', 'permission' => 'settings.manage'],
             ['label' => 'Pré-carregador', 'route' => 'admin.preloader.index', 'active' => 'admin.preloader.*', 'icon' => 'bi-hourglass-split', 'permission' => 'preloader.manage'],
         ],

@@ -1,3 +1,4 @@
+@import 'toastr/build/toastr.min.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -67,6 +68,13 @@
     background: rgba(196, 154, 60, 0.12);
     color: #d8b463;
     font-weight: 800;
+}
+
+.auth-brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.16));
 }
 
 .auth-brand strong,

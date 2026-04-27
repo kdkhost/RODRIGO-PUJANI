@@ -6,6 +6,7 @@ use App\Models\Setting;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 if (! function_exists('setting')) {
     function setting(string $key, mixed $default = null): mixed
@@ -96,6 +97,75 @@ if (! function_exists('preloader_config')) {
     }
 }
 
+if (! function_exists('branding_config')) {
+    function branding_config(): array
+    {
+        try {
+            return Cache::rememberForever('branding.config.v1', function (): array {
+                $brandName = (string) setting('branding.brand_name', config('app.name'));
+                $brandShort = (string) setting('branding.brand_short_name', Str::upper(Str::substr($brandName, 0, 1)));
+                $logoPath = (string) setting('branding.logo_path', '');
+                $faviconPath = (string) setting('branding.favicon_path', '');
+
+                return [
+                    'brand_name' => $brandName,
+                    'brand_short_name' => $brandShort !== '' ? $brandShort : 'P',
+                    'admin_subtitle' => (string) setting('branding.admin_subtitle', 'Painel administrativo'),
+                    'logo_path' => $logoPath,
+                    'logo_url' => site_asset_url($logoPath),
+                    'favicon_path' => $faviconPath,
+                    'favicon_url' => site_asset_url($faviconPath) ?: site_asset_url(setting('pwa.icon_192', 'pwa/icon-192.png')),
+                    'admin_footer_text' => (string) setting('branding.admin_footer_text', 'Painel administrativo premium para operacao juridica.'),
+                    'admin_footer_meta' => (string) setting('branding.admin_footer_meta', 'Laravel 13 | PHP 8.4 | Multiusuario'),
+                ];
+            });
+        } catch (Throwable) {
+            return [
+                'brand_name' => config('app.name'),
+                'brand_short_name' => 'P',
+                'admin_subtitle' => 'Painel administrativo',
+                'logo_path' => '',
+                'logo_url' => null,
+                'favicon_path' => '',
+                'favicon_url' => null,
+                'admin_footer_text' => 'Painel administrativo premium para operacao juridica.',
+                'admin_footer_meta' => 'Laravel 13 | PHP 8.4 | Multiusuario',
+            ];
+        }
+    }
+}
+
+if (! function_exists('recaptcha_config')) {
+    function recaptcha_config(): array
+    {
+        try {
+            return Cache::rememberForever('recaptcha.config.v1', function (): array {
+                $enabled = filter_var(setting('security.recaptcha_enabled', env('RECAPTCHA_ENABLED', '0')), FILTER_VALIDATE_BOOLEAN);
+                $siteKey = trim((string) setting('security.recaptcha_site_key', env('RECAPTCHA_SITE_KEY', '')));
+                $secretKey = trim((string) setting('security.recaptcha_secret_key', env('RECAPTCHA_SECRET_KEY', '')));
+                $minimumScore = (float) setting('security.recaptcha_min_score', env('RECAPTCHA_MIN_SCORE', '0.5'));
+                $minimumScore = max(0.1, min(1.0, $minimumScore));
+
+                return [
+                    'enabled' => $enabled && $siteKey !== '' && $secretKey !== '',
+                    'site_key' => $siteKey,
+                    'secret_key' => $secretKey,
+                    'minimum_score' => $minimumScore,
+                    'verify_url' => 'https://www.google.com/recaptcha/api/siteverify',
+                ];
+            });
+        } catch (Throwable) {
+            return [
+                'enabled' => false,
+                'site_key' => '',
+                'secret_key' => '',
+                'minimum_score' => 0.5,
+                'verify_url' => 'https://www.google.com/recaptcha/api/siteverify',
+            ];
+        }
+    }
+}
+
 if (! function_exists('site_asset_url')) {
     function site_asset_url(?string $path): ?string
     {
@@ -103,7 +173,7 @@ if (! function_exists('site_asset_url')) {
             return null;
         }
 
-        if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+        if (Str::startsWith($path, ['http://', 'https://'])) {
             return $path;
         }
 

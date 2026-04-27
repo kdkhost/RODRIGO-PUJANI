@@ -1,3 +1,4 @@
+@import 'toastr/build/toastr.min.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -80,6 +81,13 @@ body {
     color: #d8b463;
     font-size: 1rem;
     font-weight: 800;
+}
+
+.portal-brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.16));
 }
 
 .portal-brand strong,

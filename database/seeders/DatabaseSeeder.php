@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             PermissionsSeeder::class,
             SettingsSeeder::class,
             SiteContentSeeder::class,
+            DemoOfficeSeeder::class,
         ]);
     }
 }

@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocument;
+use App\Services\RecaptchaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -26,12 +26,14 @@ class ClientPortalController extends Controller
         ]);
     }
 
-    public function authenticate(Request $request): RedirectResponse
+    public function authenticate(Request $request, RecaptchaService $recaptcha): RedirectResponse
     {
         $data = $request->validate([
             'document_number' => ['required', 'string', 'max:32'],
             'access_code' => ['required', 'string', 'max:32'],
         ]);
+
+        $recaptcha->validateOrFail($request, 'portal_login');
 
         $documentDigits = preg_replace('/\D+/', '', $data['document_number']);
 
@@ -174,6 +176,8 @@ class ClientPortalController extends Controller
 
     private function portalPanel(): array
     {
+        $branding = branding_config();
+
         return [
             'eyebrow' => (string) setting('portal.login_eyebrow', 'Acompanhamento digital'),
             'title' => (string) setting('portal.login_title', 'Acompanhe seus processos com clareza e segurança.'),
@@ -192,8 +196,9 @@ class ClientPortalController extends Controller
                 }),
             ])->filter(fn (array $metric): bool => filled($metric['title']) || filled($metric['subtitle']))->values(),
             'brand' => [
-                'name' => config('app.name'),
-                'short' => Str::upper(Str::substr(config('app.name'), 0, 1)),
+                'name' => $branding['brand_name'],
+                'short' => $branding['brand_short_name'],
+                'logo_url' => $branding['logo_url'],
             ],
         ];
     }

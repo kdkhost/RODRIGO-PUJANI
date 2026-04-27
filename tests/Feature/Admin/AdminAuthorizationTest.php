@@ -2,12 +2,15 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Client;
+use App\Models\Setting;
 use App\Models\MediaAsset;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AdminAuthorizationTest extends TestCase
@@ -40,6 +43,20 @@ class AdminAuthorizationTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.settings.index'));
 
         $response->assertOk();
+    }
+
+    public function test_user_with_settings_permission_can_open_system_settings(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $user = User::factory()->create([
+            'is_active' => true,
+        ]);
+        $user->givePermissionTo(['admin.access', 'settings.manage']);
+
+        $response = $this->actingAs($user)->get(route('admin.system-settings.index'));
+
+        $response->assertOk()->assertSee('Configurações do sistema');
     }
 
     public function test_settings_permission_can_update_auth_appearance_texts(): void
@@ -78,6 +95,77 @@ class AdminAuthorizationTest extends TestCase
             ->assertSee('Portal Seguro')
             ->assertSee('Clientes')
             ->assertSee('Instalavel');
+    }
+
+    public function test_settings_permission_can_update_system_settings_and_seed_demo_data(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create([
+            'is_active' => true,
+        ]);
+        $admin->givePermissionTo(['admin.access', 'settings.manage']);
+
+        $logo = $this->fakePngUpload('logo.png');
+        $favicon = $this->fakePngUpload('favicon.png');
+
+        $response = $this->actingAs($admin)->post(route('admin.system-settings.update'), [
+            '_method' => 'PUT',
+            'brand_name' => 'Pujani Premium',
+            'brand_short_name' => 'PP',
+            'admin_subtitle' => 'Operação jurídica',
+            'admin_footer_text' => 'Rodapé premium',
+            'admin_footer_meta' => 'Laravel 13 | Painel premium',
+            'logo' => $logo,
+            'favicon' => $favicon,
+            'recaptcha_enabled' => '1',
+            'recaptcha_site_key' => 'site-key-demo',
+            'recaptcha_secret_key' => 'secret-key-demo',
+            'recaptcha_min_score' => '0.7',
+        ], [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'application/json',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('message', 'Configurações do sistema atualizadas com sucesso.');
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'branding.brand_name',
+            'value' => 'Pujani Premium',
+        ]);
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'security.recaptcha_min_score',
+            'value' => '0.7',
+        ]);
+
+        $logoSetting = Setting::query()->where('key', 'branding.logo_path')->value('value');
+        $faviconSetting = Setting::query()->where('key', 'branding.favicon_path')->value('value');
+
+        $this->assertNotEmpty($logoSetting);
+        $this->assertNotEmpty($faviconSetting);
+        $this->assertFileExists(public_path($logoSetting));
+        $this->assertFileExists(public_path($faviconSetting));
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.system-settings.seed-demo-data'))
+            ->assertOk()
+            ->assertJsonPath('message', 'Dados de exemplo populados com sucesso.');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'gestor.demo@pujani.adv.br',
+        ]);
+
+        $this->assertDatabaseHas('clients', [
+            'email' => 'helena.martins@cliente.demo',
+        ]);
+
+        $this->assertGreaterThanOrEqual(1, Client::query()->count());
+
+        File::delete(public_path($logoSetting));
+        File::delete(public_path($faviconSetting));
     }
 
     public function test_administrator_cannot_open_system_files_even_with_permission(): void
@@ -177,5 +265,14 @@ class AdminAuthorizationTest extends TestCase
 
         File::delete(public_path($asset->path));
         File::deleteDirectory(public_path('uploads/testing'));
+    }
+
+    private function fakePngUpload(string $name): UploadedFile
+    {
+        $path = storage_path('framework/testing/'.Str::uuid().'-'.$name);
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+XWZ0AAAAASUVORK5CYII='));
+
+        return new UploadedFile($path, $name, 'image/png', null, true);
     }
 }

@@ -47,10 +47,11 @@
 
             <div class="card-glass p-8 lg:p-10 aos-right delay-100">
                 <div class="font-display text-2xl font-light text-cream/90 mb-8">Solicitar Consulta Gratuita</div>
-                <form id="contact-form" class="space-y-5" data-site-contact-form action="{{ route('site.contact.submit') }}" method="POST">
+                <form id="contact-form" class="space-y-5" data-site-contact-form data-recaptcha-action="contact_message" action="{{ route('site.contact.submit') }}" method="POST">
                     @csrf
                     <input type="hidden" name="source_page" value="{{ $page->slug }}">
                     <input type="hidden" name="subject" value="Solicitação de consulta gratuita">
+                    <input type="hidden" name="recaptcha_token" value="">
                     <div class="grid md:grid-cols-2 gap-4">
                         <div class="input-wrap">
                             <input type="text" name="name" class="form-input w-full px-4 py-3.5 text-sm" placeholder="Seu nome completo" required>
