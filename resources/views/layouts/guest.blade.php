@@ -13,6 +13,30 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
+        @php
+            $authPanel = [
+                'eyebrow' => (string) setting('auth.panel_eyebrow', 'Admin Suite'),
+                'title' => (string) setting('auth.panel_title', 'Gestao juridica com acesso seguro.'),
+                'description' => (string) setting('auth.panel_description', 'Painel administrativo para conteudo, agenda, midias, usuarios e permissoes do escritorio.'),
+            ];
+
+            $authMetrics = collect([1, 2, 3])
+                ->map(fn (int $index): array => [
+                    'title' => (string) setting("auth.metric_{$index}_title", match ($index) {
+                        1 => 'Laravel 13',
+                        2 => 'ACL',
+                        default => 'PWA',
+                    }),
+                    'subtitle' => (string) setting("auth.metric_{$index}_subtitle", match ($index) {
+                        1 => 'Base atual',
+                        2 => 'Permissoes',
+                        default => 'Experiencia app',
+                    }),
+                ])
+                ->filter(fn (array $metric): bool => filled($metric['title']) || filled($metric['subtitle']))
+                ->values();
+        @endphp
+
         <main class="auth-premium-shell">
             <section class="auth-premium-panel" aria-label="Pujani Advogados">
                 <div class="auth-premium-panel-bg"></div>
@@ -27,25 +51,31 @@
                     </a>
 
                     <div class="auth-panel-copy">
-                        <span>Admin Suite</span>
-                        <h1>Gestao juridica com acesso seguro.</h1>
-                        <p>Painel administrativo para conteudo, agenda, midias, usuarios e permissoes do escritorio.</p>
+                        @if(filled($authPanel['eyebrow']))
+                            <span>{{ $authPanel['eyebrow'] }}</span>
+                        @endif
+                        @if(filled($authPanel['title']))
+                            <h1>{{ $authPanel['title'] }}</h1>
+                        @endif
+                        @if(filled($authPanel['description']))
+                            <p>{{ $authPanel['description'] }}</p>
+                        @endif
                     </div>
 
-                    <div class="auth-panel-metrics" aria-label="Recursos do painel">
-                        <div>
-                            <strong>Laravel 13</strong>
-                            <span>Base atual</span>
+                    @if($authMetrics->isNotEmpty())
+                        <div class="auth-panel-metrics" aria-label="Recursos do painel">
+                            @foreach($authMetrics as $metric)
+                                <div>
+                                    @if(filled($metric['title']))
+                                        <strong>{{ $metric['title'] }}</strong>
+                                    @endif
+                                    @if(filled($metric['subtitle']))
+                                        <span>{{ $metric['subtitle'] }}</span>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
-                        <div>
-                            <strong>ACL</strong>
-                            <span>Permissoes</span>
-                        </div>
-                        <div>
-                            <strong>PWA</strong>
-                            <span>Experiencia app</span>
-                        </div>
-                    </div>
+                    @endif
                 </div>
             </section>
 

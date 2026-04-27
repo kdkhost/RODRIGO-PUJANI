@@ -42,6 +42,44 @@ class AdminAuthorizationTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_settings_permission_can_update_auth_appearance_texts(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create([
+            'is_active' => true,
+        ]);
+        $admin->givePermissionTo(['admin.access', 'settings.manage']);
+
+        $this->actingAs($admin)
+            ->putJson(route('admin.auth-appearance.update'), [
+                'panel_eyebrow' => 'Portal Seguro',
+                'panel_title' => 'Acesso estrategico',
+                'panel_description' => 'Conteudo personalizado pelo administrativo.',
+                'metric_1_title' => 'Clientes',
+                'metric_1_subtitle' => 'Atendimento',
+                'metric_2_title' => 'Agenda',
+                'metric_2_subtitle' => 'Integrada',
+                'metric_3_title' => 'Portal',
+                'metric_3_subtitle' => 'Instalavel',
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Tela de login atualizada com sucesso.');
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'auth.metric_1_title',
+            'value' => 'Clientes',
+        ]);
+
+        auth()->logout();
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Portal Seguro')
+            ->assertSee('Clientes')
+            ->assertSee('Instalavel');
+    }
+
     public function test_system_files_route_requires_specific_permission(): void
     {
         $this->seed(PermissionsSeeder::class);

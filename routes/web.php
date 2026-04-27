@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\AuthAppearanceController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -74,6 +75,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->group(function (): void {
             Route::get('/', [PreloaderController::class, 'index'])->name('index');
             Route::put('/', [PreloaderController::class, 'update'])->name('update');
+        });
+
+    Route::middleware('permission:settings.manage')
+        ->prefix('auth-appearance')
+        ->name('auth-appearance.')
+        ->group(function (): void {
+            Route::get('/', [AuthAppearanceController::class, 'index'])->name('index');
+            Route::put('/', [AuthAppearanceController::class, 'update'])->name('update');
         });
 
     Route::post('/users/{user}/impersonate', [ImpersonationController::class, 'start'])

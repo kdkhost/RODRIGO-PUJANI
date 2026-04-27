@@ -927,6 +927,118 @@ img.admin-avatar {
     resize: vertical;
 }
 
+.admin-auth-preview {
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: clamp(1.2rem, 3vw, 2rem);
+    border: 1px solid rgba(196, 154, 60, 0.18);
+    border-radius: 0.9rem;
+    color: #f7ecd8;
+    background:
+        linear-gradient(90deg, rgba(9, 13, 18, 0.92), rgba(9, 13, 18, 0.72)),
+        url('/assets/site/premium/hero-home.jpg') center/cover;
+    overflow: hidden;
+}
+
+.admin-auth-preview-brand {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-auth-preview-brand > span {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(196, 154, 60, 0.55);
+    border-radius: 0.65rem;
+    background: rgba(196, 154, 60, 0.12);
+    color: #d8b463;
+    font-weight: 800;
+}
+
+.admin-auth-preview-brand strong,
+.admin-auth-preview-brand small {
+    display: block;
+    line-height: 1.05;
+}
+
+.admin-auth-preview-brand strong {
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.admin-auth-preview-brand small {
+    margin-top: 0.18rem;
+    color: rgba(247, 236, 216, 0.54);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.admin-auth-preview-copy > span {
+    color: #d8b463;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.admin-auth-preview-copy h2 {
+    max-width: 28rem;
+    margin: 0.65rem 0 0;
+    font-size: clamp(1.9rem, 4vw, 3.1rem);
+    font-weight: 850;
+    line-height: 1;
+}
+
+.admin-auth-preview-copy p {
+    max-width: 25rem;
+    margin: 0.9rem 0 0;
+    color: rgba(247, 236, 216, 0.72);
+    line-height: 1.65;
+}
+
+.admin-auth-preview-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.admin-auth-preview-metrics div {
+    min-height: 78px;
+    padding: 0.85rem;
+    border: 1px solid rgba(247, 236, 216, 0.1);
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.055);
+    backdrop-filter: blur(14px);
+}
+
+.admin-auth-preview-metrics strong,
+.admin-auth-preview-metrics span {
+    display: block;
+}
+
+.admin-auth-preview-metrics strong {
+    font-size: 0.9rem;
+    font-weight: 850;
+}
+
+.admin-auth-preview-metrics span {
+    margin-top: 0.24rem;
+    color: rgba(247, 236, 216, 0.58);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
 .modal-content {
     border: 1px solid var(--admin-border);
     border-radius: 0.9rem;
