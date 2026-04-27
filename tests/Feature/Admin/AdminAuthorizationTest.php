@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\MediaAsset;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class AdminAuthorizationTest extends TestCase
@@ -57,5 +60,52 @@ class AdminAuthorizationTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.system-files.index'))
             ->assertOk();
+    }
+
+    public function test_admin_user_can_update_user_without_validation_type_error(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->givePermissionTo(['admin.access', 'users.manage']);
+        $managedUser = User::factory()->create(['is_active' => true]);
+
+        $this->actingAs($admin)
+            ->putJson(route('admin.users.update', $managedUser), [
+                'name' => 'Usuario Atualizado',
+                'email' => $managedUser->email,
+                'phone' => '(11) 99999-9999',
+                'timezone' => 'America/Sao_Paulo',
+                'is_active' => '1',
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['message', 'tableTarget']);
+
+        $this->assertSame('Usuario Atualizado', $managedUser->refresh()->name);
+    }
+
+    public function test_media_asset_upload_creates_only_one_record(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->givePermissionTo(['admin.access', 'media-assets.manage']);
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.media-assets.store'), [
+                'directory' => 'testing',
+                'file' => UploadedFile::fake()->create('documento.pdf', 20, 'application/pdf'),
+                'is_public' => '1',
+            ])
+            ->assertOk();
+
+        $asset = MediaAsset::query()->firstOrFail();
+
+        $this->assertSame(1, MediaAsset::query()->count());
+        $this->assertStringStartsWith('uploads/testing/', $asset->path);
+        $this->assertFileExists(public_path($asset->path));
+
+        File::delete(public_path($asset->path));
+        File::deleteDirectory(public_path('uploads/testing'));
     }
 }

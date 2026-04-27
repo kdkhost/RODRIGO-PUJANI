@@ -3,16 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MediaAsset;
+use App\Support\PublicUpload;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 use Illuminate\View\View;
 
 abstract class AdminCrudController extends Controller
@@ -225,35 +223,24 @@ abstract class AdminCrudController extends Controller
         return $data;
     }
 
-    protected function storeMediaFile(Request $request, string $field, string $directory, ?string $currentPath = null): ?string
+    protected function storeMediaFile(
+        Request $request,
+        string $field,
+        string $directory,
+        ?string $currentPath = null,
+        bool $registerAsset = true,
+    ): ?string
     {
         if (! $request->hasFile($field)) {
             return $currentPath;
         }
 
-        if ($currentPath && Storage::disk('public')->exists($currentPath)) {
-            Storage::disk('public')->delete($currentPath);
-        }
+        return PublicUpload::store($request->file($field), $directory, $currentPath, auth()->id(), $registerAsset);
+    }
 
-        /** @var UploadedFile $file */
-        $file = $request->file($field);
-        $path = $file->store($directory, 'public');
-
-        MediaAsset::query()->create([
-            'original_name' => $file->getClientOriginalName(),
-            'file_name' => basename($path),
-            'disk' => 'public',
-            'directory' => $directory,
-            'path' => $path,
-            'extension' => $file->getClientOriginalExtension(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'type' => Str::startsWith((string) $file->getMimeType(), 'image/') ? 'image' : 'file',
-            'uploaded_by' => auth()->id(),
-            'is_public' => true,
-        ]);
-
-        return $path;
+    protected function deleteMediaFile(?string $path): void
+    {
+        PublicUpload::delete($path);
     }
 
     protected function syncSeoMeta(Model $record, Request $request): void
@@ -302,7 +289,7 @@ abstract class AdminCrudController extends Controller
         }
     }
 
-    protected function uniqueRule(string $table, string $column, ?Model $record = null): Rule
+    protected function uniqueRule(string $table, string $column, ?Model $record = null): Unique
     {
         return Rule::unique($table, $column)->ignore($record?->getKey());
     }

@@ -53,7 +53,7 @@ if (! function_exists('preloader_config')) {
                 if (filled($logoPath)) {
                     $logoUrl = \Illuminate\Support\Str::startsWith($logoPath, ['http://', 'https://'])
                         ? $logoPath
-                        : asset('storage/'.ltrim($logoPath, '/'));
+                        : site_asset_url($logoPath);
                 }
 
                 return [

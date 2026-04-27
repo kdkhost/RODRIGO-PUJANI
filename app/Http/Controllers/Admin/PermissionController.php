@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionController extends AdminCrudController
 {
@@ -32,5 +33,15 @@ class PermissionController extends AdminCrudController
         $validated['guard_name'] = $validated['guard_name'] ?? 'web';
 
         return $validated;
+    }
+
+    protected function afterSave(Model $record, Request $request, bool $created): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    protected function beforeDelete(Model $record): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

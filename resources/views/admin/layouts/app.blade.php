@@ -17,6 +17,7 @@
             ->take(2)
             ->implode('');
         $userInitials = $userInitials !== '' ? mb_strtoupper($userInitials) : 'PA';
+        $userAvatarUrl = $currentUser?->avatar_path ? site_asset_url($currentUser->avatar_path) : null;
         $roleSummary = $currentUser && method_exists($currentUser, 'getRoleNames')
             ? $currentUser->getRoleNames()->implode(', ')
             : 'Usuario';
@@ -82,7 +83,11 @@
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle admin-user-menu" data-bs-toggle="dropdown" href="#">
-                            <span class="admin-avatar admin-avatar-sm">{{ $userInitials }}</span>
+                            @if($userAvatarUrl)
+                                <img class="admin-avatar admin-avatar-sm" src="{{ $userAvatarUrl }}" alt="{{ $currentUser?->name }}">
+                            @else
+                                <span class="admin-avatar admin-avatar-sm">{{ $userInitials }}</span>
+                            @endif
                             <span class="admin-user-copy d-none d-sm-flex">
                                 <span>{{ $currentUser?->name }}</span>
                                 <small>{{ $roleSummary ?: 'Usuario' }}</small>

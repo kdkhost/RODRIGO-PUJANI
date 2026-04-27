@@ -1,12 +1,9 @@
 import './bootstrap';
 
 import * as bootstrap from 'bootstrap';
-import 'admin-lte';
 import $ from 'jquery';
 import toastr from 'toastr';
 import Swal from 'sweetalert2';
-import 'summernote/dist/summernote-lite.min.js';
-import 'summernote/dist/lang/summernote-pt-BR.min.js';
 import Inputmask from 'inputmask';
 import * as FilePond from 'filepond';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
@@ -47,6 +44,7 @@ toastr.options = {
 
 const AdminUI = {
     modalInstance: null,
+    summernoteWarningShown: false,
 
     boot() {
         this.ensureModal();
@@ -275,7 +273,8 @@ const AdminUI = {
             modal.querySelector('.modal-body').innerHTML = response.data.html;
             this.initPlugins(modal);
         } catch (error) {
-            modal.querySelector('.modal-body').innerHTML = '<div class="alert alert-danger mb-0">Falha ao carregar o formulario.</div>';
+            console.error('Admin modal load failed.', error);
+            modal.querySelector('.modal-body').innerHTML = `<div class="alert alert-danger mb-0">${error.response?.data?.message || 'Falha ao carregar o formulario.'}</div>`;
         }
     },
 
@@ -517,33 +516,45 @@ const AdminUI = {
                 return;
             }
 
-            $(element).summernote({
-                height: Number(element.dataset.editorHeight || 320),
-                lang: 'pt-BR',
-                dialogsInBody: true,
-                placeholder: element.getAttribute('placeholder') || '',
-                fontNames: ['Arial', 'Segoe UI', 'Roboto', 'Times New Roman', 'Georgia', 'Courier New'],
-                styleTags: ['p', 'blockquote', 'pre', 'h2', 'h3', 'h4'],
-                toolbar: [
-                    ['style', ['style']],
-                    ['fontname', ['fontname']],
-                    ['fontsize', ['fontsize']],
-                    ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
-                    ['color', ['forecolor', 'backcolor']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['height', ['height']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'video', 'hr']],
-                    ['view', ['fullscreen', 'codeview', 'help']],
-                ],
-                callbacks: {
-                    onChange: () => {
-                        element.dispatchEvent(new Event('change', { bubbles: true }));
-                    },
-                },
-            });
+            if (typeof $.fn?.summernote !== 'function') {
+                if (!this.summernoteWarningShown) {
+                    console.warn('Summernote is unavailable. Textareas will remain editable without rich text controls.');
+                    this.summernoteWarningShown = true;
+                }
+                return;
+            }
 
-            element.dataset.editorReady = 'true';
+            try {
+                $(element).summernote({
+                    height: Number(element.dataset.editorHeight || 320),
+                    lang: 'pt-BR',
+                    dialogsInBody: true,
+                    placeholder: element.getAttribute('placeholder') || '',
+                    fontNames: ['Arial', 'Segoe UI', 'Roboto', 'Times New Roman', 'Georgia', 'Courier New'],
+                    styleTags: ['p', 'blockquote', 'pre', 'h2', 'h3', 'h4'],
+                    toolbar: [
+                        ['style', ['style']],
+                        ['fontname', ['fontname']],
+                        ['fontsize', ['fontsize']],
+                        ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
+                        ['color', ['forecolor', 'backcolor']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['height', ['height']],
+                        ['table', ['table']],
+                        ['insert', ['link', 'picture', 'video', 'hr']],
+                        ['view', ['fullscreen', 'codeview', 'help']],
+                    ],
+                    callbacks: {
+                        onChange: () => {
+                            element.dispatchEvent(new Event('change', { bubbles: true }));
+                        },
+                    },
+                });
+
+                element.dataset.editorReady = 'true';
+            } catch (error) {
+                console.error('Summernote initialization failed.', error);
+            }
         });
 
         scope.querySelectorAll('[data-filepond]').forEach((input) => {
@@ -551,15 +562,19 @@ const AdminUI = {
                 return;
             }
 
-            FilePond.create(input, {
-                allowMultiple: input.hasAttribute('multiple'),
-                credits: false,
-                storeAsFile: true,
-                acceptedFileTypes: input.dataset.accepted ? input.dataset.accepted.split(',') : null,
-                labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione arquivos</span>',
-            });
+            try {
+                FilePond.create(input, {
+                    allowMultiple: input.hasAttribute('multiple'),
+                    credits: false,
+                    storeAsFile: true,
+                    acceptedFileTypes: input.dataset.accepted ? input.dataset.accepted.split(',') : null,
+                    labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione arquivos</span>',
+                });
 
-            input.dataset.filepondReady = 'true';
+                input.dataset.filepondReady = 'true';
+            } catch (error) {
+                console.error('FilePond initialization failed.', error);
+            }
         });
 
         scope.querySelectorAll('[data-mask]').forEach((input) => {
@@ -700,8 +715,10 @@ const AdminUI = {
                 locale: 'pt-br',
                 timeZone: 'local',
                 defaultView: 'dayGridMonth',
-                height: 'auto',
-                contentHeight: 'auto',
+                height: Number(element.dataset.calendarHeight || 640),
+                contentHeight: Number(element.dataset.calendarContentHeight || 560),
+                aspectRatio: Number(element.dataset.calendarAspectRatio || 1.72),
+                handleWindowResize: true,
                 nowIndicator: true,
                 weekNumbers: true,
                 navLinks: true,
@@ -798,4 +815,20 @@ const AdminUI = {
 
 window.AdminUI = AdminUI;
 
-document.addEventListener('DOMContentLoaded', () => AdminUI.boot());
+const adminPluginsReady = Promise.allSettled([
+    import('admin-lte'),
+    import('summernote/dist/summernote-lite.min.js')
+        .then(() => import('summernote/dist/lang/summernote-pt-BR.min.js')),
+]).then((results) => {
+    results
+        .filter((result) => result.status === 'rejected')
+        .forEach((result) => console.error('Admin plugin failed to load.', result.reason));
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await adminPluginsReady;
+    } finally {
+        AdminUI.boot();
+    }
+});

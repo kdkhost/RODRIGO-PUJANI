@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Models\MediaAsset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MediaAssetController extends AdminCrudController
@@ -35,11 +34,9 @@ class MediaAssetController extends AdminCrudController
         $directory = $validated['directory'] ?: 'media';
 
         if ($request->hasFile('file')) {
-            if ($record?->path && Storage::disk('public')->exists($record->path)) {
-                Storage::disk('public')->delete($record->path);
-            }
+            $this->deleteMediaFile($record?->path);
 
-            $path = $this->storeMediaFile($request, 'file', $directory, null);
+            $path = $this->storeMediaFile($request, 'file', $directory, null, false);
             $file = $request->file('file');
 
             $validated['original_name'] = $file->getClientOriginalName();
@@ -62,8 +59,6 @@ class MediaAssetController extends AdminCrudController
 
     protected function beforeDelete(Model $record): void
     {
-        if ($record->path && Storage::disk('public')->exists($record->path)) {
-            Storage::disk('public')->delete($record->path);
-        }
+        $this->deleteMediaFile($record->path);
     }
 }

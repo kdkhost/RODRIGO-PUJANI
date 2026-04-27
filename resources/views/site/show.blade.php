@@ -5,6 +5,21 @@
     $title = $page->hero_title ?: $page->title;
     $subtitle = $page->hero_subtitle ?: $page->excerpt;
     $isHome = $template === 'home';
+    $menuPages = collect($publicPages ?? []);
+    $pageUrl = function (?string $slug, ?string $fallback = null) use ($menuPages): string {
+        if (! filled($slug)) {
+            return $fallback ?: route('site.home');
+        }
+
+        $menuPage = $menuPages->first(fn ($item) => ($item->slug ?? null) === $slug);
+
+        if ($menuPage?->is_home || $slug === 'home') {
+            return route('site.home');
+        }
+
+        return $menuPage ? route('site.show', $menuPage->slug) : ($fallback ?: route('site.show', $slug));
+    };
+    $areasPageUrl = $pageUrl('areas-de-atuacao', route('site.home'));
 @endphp
 
 @section('content')
@@ -71,7 +86,7 @@
                         @endif
                         <div class="flex flex-wrap gap-4 aos delay-300">
                             <a href="{{ $page->hero_cta_url ?: route('site.show', 'contato') }}" class="btn-primary px-8 py-4 inline-flex items-center gap-3"><span>{{ $page->hero_cta_label ?: 'Falar com um advogado' }}</span></a>
-                            <a href="{{ route('site.show', 'areas-de-atuacao') }}" class="btn-ghost px-8 py-4 inline-block">Áreas de Atuação</a>
+                            <a href="{{ $areasPageUrl }}" class="btn-ghost px-8 py-4 inline-block">Áreas de Atuação</a>
                         </div>
                     </div>
                     <div class="lg:col-span-5">

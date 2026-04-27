@@ -23,6 +23,14 @@ export default defineConfig({
                         return;
                     }
 
+                    if (id.includes('summernote')) {
+                        return 'vendor-summernote';
+                    }
+
+                    if (id.includes('admin-lte')) {
+                        return 'vendor-admin-lte';
+                    }
+
                     if (id.includes('@fullcalendar') || id.includes('chart.js')) {
                         return 'vendor-analytics';
                     }
@@ -32,10 +40,8 @@ export default defineConfig({
                     }
 
                     if (
-                        id.includes('summernote')
-                        || id.includes('jquery')
+                        id.includes('jquery')
                         || id.includes('bootstrap')
-                        || id.includes('admin-lte')
                         || id.includes('@popperjs')
                         || id.includes('toastr')
                         || id.includes('sweetalert2')

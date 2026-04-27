@@ -69,6 +69,9 @@
                         id="admin-calendar"
                         class="admin-calendar"
                         data-calendar
+                        data-calendar-height="640"
+                        data-calendar-content-height="560"
+                        data-calendar-aspect-ratio="1.72"
                         data-calendar-events-url="{{ route('admin.calendar.events') }}"
                         data-calendar-create-url="{{ route('admin.calendar.create') }}"
                         data-calendar-toolbar="[data-calendar-toolbar='#admin-calendar']"

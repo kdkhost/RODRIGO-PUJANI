@@ -155,6 +155,12 @@ body {
     letter-spacing: 0.02em;
 }
 
+img.admin-avatar {
+    display: inline-block;
+    padding: 0;
+    object-fit: cover;
+}
+
 .admin-avatar-sm {
     width: 34px;
     height: 34px;
@@ -219,6 +225,87 @@ body {
     font-size: 0.68rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
+}
+
+.admin-sidebar-menu {
+    gap: 0.18rem;
+}
+
+.admin-sidebar-menu > .nav-item {
+    margin-bottom: 0.22rem;
+}
+
+.admin-sidebar-menu > .nav-item > .nav-link {
+    min-height: 44px;
+    padding: 0.64rem 0.78rem;
+    border: 1px solid transparent;
+}
+
+.admin-sidebar-menu > .nav-item > .nav-link p {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.admin-sidebar-menu > .nav-item > .nav-link p > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-sidebar-menu > .nav-item.menu-open > .nav-link,
+.admin-sidebar-menu > .nav-item > .nav-link.active {
+    border-color: rgba(196, 154, 60, 0.22);
+    background: linear-gradient(90deg, rgba(196, 154, 60, 0.2), rgba(196, 154, 60, 0.06));
+    color: #fff;
+}
+
+.admin-sidebar-menu > .nav-item.menu-open > .nav-link {
+    box-shadow: inset 3px 0 0 var(--admin-primary);
+}
+
+.admin-sidebar-menu .nav-arrow {
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.78rem;
+}
+
+.admin-sidebar-count {
+    display: inline-flex;
+    min-width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.admin-sidebar-menu .nav-treeview {
+    margin: 0.18rem 0 0.45rem 1.06rem;
+    padding: 0.2rem 0 0.2rem 0.48rem;
+    border-left: 1px solid rgba(196, 154, 60, 0.16);
+    background: transparent !important;
+}
+
+.admin-sidebar-menu .nav-treeview > .nav-item > .nav-link {
+    min-height: 36px;
+    padding: 0.48rem 0.62rem;
+    font-size: 0.9rem;
+}
+
+.admin-sidebar-menu .nav-treeview > .nav-item > .nav-link .nav-icon {
+    width: 1.2rem;
+    font-size: 0.84rem;
+}
+
+.admin-sidebar-menu .nav-treeview > .nav-item > .nav-link p {
+    margin: 0;
 }
 
 .sidebar-menu .nav-header {
@@ -507,11 +594,14 @@ body {
 }
 
 .admin-calendar-card .card-body {
-    min-height: 680px;
+    min-height: 0;
+    padding: 1rem;
 }
 
 .admin-calendar {
-    min-height: 640px;
+    min-height: 560px;
+    max-height: 660px;
+    overflow: hidden;
 }
 
 .admin-calendar.is-loading {
@@ -588,6 +678,64 @@ body {
     width: 10px;
     height: 10px;
     border-radius: 50%;
+}
+
+.admin-permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+.admin-permission-option {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    min-height: 58px;
+    padding: 0.75rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.72rem;
+    background: rgba(15, 19, 24, 0.025);
+}
+
+[data-bs-theme="dark"] .admin-permission-option {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-permission-option .form-check-input {
+    margin-top: 0.15rem;
+}
+
+.admin-permission-option strong,
+.admin-permission-name {
+    display: block;
+    color: var(--admin-ink);
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+.admin-permission-option small,
+.admin-permission-meta {
+    color: var(--admin-muted);
+    font-size: 0.75rem;
+}
+
+.admin-permission-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.admin-permission-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.32rem 0.52rem;
+    border-radius: 999px;
+    background: var(--admin-primary-soft);
+    color: var(--admin-ink);
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 .admin-preloader-preview {

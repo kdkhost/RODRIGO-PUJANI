@@ -5,7 +5,7 @@
 <section id="{{ $embedded ? 'equipe' : 'nossa-equipe' }}" class="py-24 lg:py-36" style="background:#0B0C10;">
     <div class="max-w-7xl mx-auto px-6 lg:px-16">
         <div class="text-center mb-16">
-            <div class="section-label aos mb-4 inline-block">Profissionais de Alto Nível</div>
+            <div class="section-label aos mb-4 inline-block">— Profissionais de Alto Nível</div>
             <h2 class="font-display leading-tight aos delay-100" style="font-size:clamp(2.2rem,5vw,4rem);font-weight:300;">
                 {!! $section?->title ?: 'Nossa <span class="text-gold-gradient font-semibold">Equipe</span>' !!}
             </h2>

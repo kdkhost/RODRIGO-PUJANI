@@ -133,7 +133,11 @@ class SiteController extends Controller
 
     public function serviceWorker(): Response
     {
-        $cacheName = 'pujani-site-v'.config('app.version', '1');
+        $buildManifestPath = public_path('build/manifest.json');
+        $buildVersion = file_exists($buildManifestPath)
+            ? substr(sha1_file($buildManifestPath), 0, 12)
+            : config('app.version', '1');
+        $cacheName = 'pujani-site-'.$buildVersion;
         $offlineUrl = route('site.offline');
         $manifestUrl = route('site.manifest');
         $homeUrl = route('site.home');
@@ -142,6 +146,7 @@ class SiteController extends Controller
 const CACHE_NAME = '{$cacheName}';
 const OFFLINE_URL = '{$offlineUrl}';
 const PRECACHE_URLS = ['{$homeUrl}', '{$offlineUrl}', '{$manifestUrl}'];
+const BUILD_PATH_PREFIX = '/build/';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -166,6 +171,23 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
 
     if (request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/admin')) {
+        return;
+    }
+
+    if (url.pathname.startsWith(BUILD_PATH_PREFIX)) {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    if (response.ok) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                    }
+
+                    return response;
+                })
+                .catch(() => caches.match(request))
+        );
+
         return;
     }
 
@@ -207,6 +229,7 @@ JS;
 
         return response($script, 200, [
             'Content-Type' => 'application/javascript; charset=UTF-8',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
     }
 

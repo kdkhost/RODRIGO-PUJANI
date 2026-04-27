@@ -8,6 +8,7 @@
             ->take(2)
             ->implode('');
         $initials = $initials !== '' ? mb_strtoupper($initials) : 'PA';
+        $avatarUrl = $user->avatar_path ? site_asset_url($user->avatar_path) : null;
         $roleSummary = method_exists($user, 'getRoleNames') ? $user->getRoleNames()->implode(', ') : null;
     @endphp
 
@@ -20,7 +21,11 @@
                     <p>Mantenha seus dados administrativos atualizados e proteja o acesso ao painel.</p>
                 </div>
                 <div class="admin-profile-badge">
-                    <span class="admin-avatar admin-avatar-lg">{{ $initials }}</span>
+                    @if($avatarUrl)
+                        <img class="admin-avatar admin-avatar-lg" src="{{ $avatarUrl }}" alt="{{ $user->name }}">
+                    @else
+                        <span class="admin-avatar admin-avatar-lg">{{ $initials }}</span>
+                    @endif
                     <div>
                         <strong>{{ $user->name }}</strong>
                         <small>{{ $roleSummary ?: 'Usuario autenticado' }}</small>
@@ -37,7 +42,11 @@
                     <div class="admin-profile-summary">
                         <div class="admin-profile-cover"></div>
                         <div class="admin-profile-summary-body">
-                            <span class="admin-avatar admin-avatar-xl">{{ $initials }}</span>
+                            @if($avatarUrl)
+                                <img class="admin-avatar admin-avatar-xl" src="{{ $avatarUrl }}" alt="{{ $user->name }}">
+                            @else
+                                <span class="admin-avatar admin-avatar-xl">{{ $initials }}</span>
+                            @endif
                             <h2>{{ $user->name }}</h2>
                             <p>{{ $user->email }}</p>
 
@@ -79,7 +88,7 @@
                                         @csrf
                                     </form>
 
-                                    <form method="post" action="{{ route('profile.update') }}" class="admin-premium-form">
+                                    <form method="post" action="{{ route('profile.update') }}" class="admin-premium-form" enctype="multipart/form-data">
                                         @csrf
                                         @method('patch')
 
@@ -94,6 +103,15 @@
                                                 <label for="email" class="form-label">E-mail</label>
                                                 <input id="email" name="email" type="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" required autocomplete="username">
                                                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-12">
+                                                <label for="avatar" class="form-label">Foto do perfil</label>
+                                                <input id="avatar" name="avatar" type="file" class="form-control @error('avatar') is-invalid @enderror" data-filepond data-accepted="image/png,image/jpeg,image/webp">
+                                                @error('avatar')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                                @if($avatarUrl)
+                                                    <div class="small text-muted mt-2">Foto atual: <a href="{{ $avatarUrl }}" target="_blank" rel="noopener">{{ $user->avatar_path }}</a></div>
+                                                @endif
                                             </div>
                                         </div>
 

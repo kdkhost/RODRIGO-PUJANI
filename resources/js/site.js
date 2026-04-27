@@ -1,19 +1,26 @@
 import './bootstrap';
-import Inputmask from 'inputmask';
 
 const SiteUI = {
     deferredInstallPrompt: null,
 
     boot() {
-        this.bindCursor();
-        this.bindNavbar();
-        this.bindMobileMenu();
-        this.bindObserver();
-        this.bindCounters();
-        this.bindPhoneMasks();
-        this.bindParallax();
-        this.bindContactForm();
-        this.bindPwa();
+        [
+            this.bindCursor,
+            this.bindNavbar,
+            this.bindMobileMenu,
+            this.bindObserver,
+            this.bindCounters,
+            this.bindPhoneMasks,
+            this.bindParallax,
+            this.bindContactForm,
+            this.bindPwa,
+        ].forEach((task) => {
+            try {
+                task.call(this);
+            } catch (error) {
+                console.error('Falha ao iniciar recurso visual do site.', error);
+            }
+        });
     },
 
     bindCursor() {
@@ -106,22 +113,53 @@ const SiteUI = {
     },
 
     bindObserver() {
+        const elements = document.querySelectorAll('.aos, .aos-left, .aos-right, .aos-scale');
+
+        if (!elements.length) {
+            return;
+        }
+
+        if (!('IntersectionObserver' in window)) {
+            elements.forEach((element) => element.classList.add('visible'));
+            return;
+        }
+
+        const reveal = (element) => element.classList.add('visible');
+        const isVisibleNow = (element) => {
+            const rect = element.getBoundingClientRect();
+
+            return rect.top < window.innerHeight * 0.95 && rect.bottom > 0;
+        };
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+                    reveal(entry.target);
                     observer.unobserve(entry.target);
                 }
             });
         }, { threshold: 0.12 });
 
-        document
-            .querySelectorAll('.aos, .aos-left, .aos-right, .aos-scale')
-            .forEach((element) => observer.observe(element));
+        elements.forEach((element) => {
+            if (isVisibleNow(element)) {
+                reveal(element);
+                return;
+            }
+
+            observer.observe(element);
+        });
+
+        document.documentElement.classList.add('site-animations-ready');
+        window.setTimeout(() => elements.forEach(reveal), 1600);
     },
 
     bindCounters() {
         const animateCounter = (element, target) => {
+            if (element.dataset.counterReady === 'true') {
+                return;
+            }
+
+            element.dataset.counterReady = 'true';
             const duration = 2000;
             const start = performance.now();
 
@@ -132,28 +170,92 @@ const SiteUI = {
 
                 if (progress < 1) {
                     requestAnimationFrame(update);
+                    return;
                 }
+
+                element.textContent = target.toLocaleString('pt-BR');
             };
 
             requestAnimationFrame(update);
         };
 
+        const counters = document.querySelectorAll('.counter');
+
+        if (!counters.length) {
+            return;
+        }
+
+        const startCounter = (element) => {
+            const target = Number(element.dataset.target || 0);
+
+            if (Number.isFinite(target)) {
+                animateCounter(element, target);
+            }
+        };
+
+        const isVisibleNow = (element) => {
+            const rect = element.getBoundingClientRect();
+
+            return rect.top < window.innerHeight && rect.bottom > 0;
+        };
+
+        if (!('IntersectionObserver' in window)) {
+            counters.forEach(startCounter);
+            return;
+        }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    animateCounter(entry.target, Number(entry.target.dataset.target || 0));
+                    startCounter(entry.target);
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.4 });
+        }, { threshold: 0.1 });
 
-        document.querySelectorAll('.counter').forEach((element) => observer.observe(element));
+        counters.forEach((element) => {
+            if (isVisibleNow(element)) {
+                startCounter(element);
+                return;
+            }
+
+            observer.observe(element);
+        });
     },
 
     bindPhoneMasks() {
         document.querySelectorAll('input[type="tel"], [data-mask="phone"]').forEach((input) => {
-            Inputmask({ mask: ['(99) 9999-9999', '(99) 99999-9999'] }).mask(input);
+            if (input.dataset.siteMaskReady) {
+                return;
+            }
+
+            const applyMask = () => {
+                input.value = this.formatPhone(input.value);
+            };
+
+            input.addEventListener('input', applyMask);
+            input.addEventListener('blur', applyMask);
+            applyMask();
+            input.dataset.siteMaskReady = 'true';
         });
+    },
+
+    formatPhone(value) {
+        const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+
+        if (digits.length <= 2) {
+            return digits ? `(${digits}` : '';
+        }
+
+        if (digits.length <= 6) {
+            return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+        }
+
+        if (digits.length <= 10) {
+            return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+        }
+
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
     },
 
     bindParallax() {

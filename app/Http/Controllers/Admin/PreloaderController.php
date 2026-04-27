@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MediaAsset;
 use App\Models\Setting;
+use App\Support\PublicUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -70,6 +69,10 @@ class PreloaderController extends Controller
         $currentLogo = (string) setting('preloader.logo_path', '');
         $payload['preloader.logo_path'] = $request->boolean('remove_logo') ? '' : $currentLogo;
 
+        if ($request->boolean('remove_logo') && ! $request->hasFile('logo')) {
+            PublicUpload::delete($currentLogo);
+        }
+
         if ($request->hasFile('logo')) {
             $payload['preloader.logo_path'] = $this->storeLogo($request->file('logo'), $currentLogo);
         }
@@ -103,26 +106,6 @@ class PreloaderController extends Controller
 
     private function storeLogo(UploadedFile $file, ?string $currentPath): string
     {
-        if ($currentPath && Storage::disk('public')->exists($currentPath)) {
-            Storage::disk('public')->delete($currentPath);
-        }
-
-        $path = $file->store('preloader', 'public');
-
-        MediaAsset::query()->create([
-            'original_name' => $file->getClientOriginalName(),
-            'file_name' => basename($path),
-            'disk' => 'public',
-            'directory' => 'preloader',
-            'path' => $path,
-            'extension' => $file->getClientOriginalExtension(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'type' => 'image',
-            'uploaded_by' => auth()->id(),
-            'is_public' => true,
-        ]);
-
-        return $path;
+        return PublicUpload::store($file, 'preloader', $currentPath, auth()->id());
     }
 }

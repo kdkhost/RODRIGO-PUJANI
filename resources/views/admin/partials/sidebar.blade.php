@@ -27,27 +27,67 @@
             ['label' => 'Arquivos do Sistema', 'route' => 'admin.system-files.index', 'active' => 'admin.system-files.*', 'icon' => 'bi-file-earmark-code', 'permission' => 'system-files.manage'],
         ],
     ];
+
+    $groupIcons = [
+        'Visao geral' => 'bi-grid-1x2',
+        'Conteudo' => 'bi-layout-text-sidebar-reverse',
+        'Operacao' => 'bi-briefcase',
+        'Seguranca' => 'bi-shield-lock',
+    ];
+
+    $preparedGroups = collect($groups)
+        ->map(function (array $items, string $label) use ($groupIcons): array {
+            $visibleItems = collect($items)
+                ->filter(fn (array $item): bool => ! $item['permission'] || auth()->user()?->can($item['permission']))
+                ->values();
+
+            return [
+                'label' => $label,
+                'icon' => $groupIcons[$label] ?? 'bi-folder2',
+                'items' => $visibleItems,
+                'active' => $visibleItems->contains(fn (array $item): bool => request()->routeIs($item['active'])),
+            ];
+        })
+        ->filter(fn (array $group): bool => $group['items']->isNotEmpty())
+        ->values();
+
+    $openIndex = $preparedGroups->search(fn (array $group): bool => $group['active']);
+    $openIndex = $openIndex === false ? 0 : $openIndex;
 @endphp
 
-<nav class="mt-3 px-2">
-    <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu">
-        @foreach ($groups as $groupLabel => $items)
+<nav class="mt-3 px-2" aria-label="Menu administrativo">
+    <ul
+        class="nav sidebar-menu admin-sidebar-menu flex-column"
+        data-lte-toggle="treeview"
+        data-accordion="true"
+        role="menu"
+    >
+        @foreach ($preparedGroups as $group)
             @php
-                $visibleItems = collect($items)->filter(fn ($item) => ! $item['permission'] || auth()->user()?->can($item['permission']));
+                $isOpen = $loop->index === $openIndex;
             @endphp
 
-            @continue($visibleItems->isEmpty())
+            <li class="nav-item {{ $isOpen ? 'menu-open' : '' }}">
+                <a href="#" class="nav-link admin-sidebar-parent-link {{ $group['active'] ? 'active' : '' }}">
+                    <i class="nav-icon bi {{ $group['icon'] }}"></i>
+                    <p>
+                        <span>{{ $group['label'] }}</span>
+                        <span class="admin-sidebar-count">{{ $group['items']->count() }}</span>
+                        <i class="nav-arrow bi bi-chevron-right"></i>
+                    </p>
+                </a>
 
-            <li class="nav-header">{{ $groupLabel }}</li>
-
-            @foreach ($visibleItems as $item)
-                <li class="nav-item">
-                    <a href="{{ route($item['route']) }}" class="nav-link {{ request()->routeIs($item['active']) ? 'active' : '' }}">
-                        <i class="nav-icon bi {{ $item['icon'] }}"></i>
-                        <p>{{ $item['label'] }}</p>
-                    </a>
-                </li>
-            @endforeach
+                <ul class="nav nav-treeview">
+                    @foreach ($group['items'] as $item)
+                        <li class="nav-item">
+                            <a href="{{ route($item['route']) }}" class="nav-link {{ request()->routeIs($item['active']) ? 'active' : '' }}">
+                                <i class="nav-icon bi {{ $item['icon'] }}"></i>
+                                <p>{{ $item['label'] }}</p>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </li>
         @endforeach
     </ul>
 </nav>

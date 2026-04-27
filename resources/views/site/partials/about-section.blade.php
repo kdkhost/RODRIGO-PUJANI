@@ -1,6 +1,5 @@
 @php
     $section = $sectionBlocks->get('about') ?? null;
-    $imageUrl = site_asset_url(data_get($section?->data, 'image_path') ?? $page->cover_path);
 @endphp
 
 <section id="{{ $embedded ? 'sobre' : 'sobre-escritorio' }}" class="py-24 lg:py-36 relative overflow-hidden" style="background:#0F1017;">
@@ -8,18 +7,18 @@
     <div class="max-w-7xl mx-auto px-6 lg:px-16">
         <div class="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
             <div>
-                <div class="section-label aos mb-6">Quem Somos</div>
+                <div class="section-label aos mb-6">— Quem Somos</div>
                 <blockquote class="font-display leading-tight mb-10 aos delay-100" style="font-size:clamp(2rem,4vw,3.2rem);font-weight:300;font-style:italic;border-left:2px solid var(--gold);padding-left:1.5rem;">
-                    {{ $section?->title ?: 'O direito é um compromisso com estratégia, clareza e resultado.' }}
+                    {{ $section?->title ?: '"O direito não é apenas uma profissão — é um compromisso com a justiça e com as pessoas."' }}
                 </blockquote>
                 <div class="text-cream/50 leading-relaxed mb-10 aos delay-200">
-                    {!! $section?->content ?: ($page->body ?: '<p>Fundado com a missão de democratizar o acesso à advocacia de alto nível, o escritório Pujani Advogados reúne profissionais especializados com formação sólida e atuação estratégica.</p>') !!}
+                    {!! $section?->content ?: ($page->body ?: '<p>Fundado com a missão de democratizar o acesso à advocacia de alto nível, o escritório Pujani Advogados reúne profissionais especializados com formação nas melhores instituições do país.</p>') !!}
                 </div>
 
                 <div class="space-y-6 aos delay-300">
                     @foreach($timeline as $item)
                         <div class="flex gap-4 items-start">
-                            <div class="w-2.5 h-2.5 mt-1.5 rounded-full border-2 border-gold bg-ink flex-shrink-0"></div>
+                            <div class="timeline-dot mt-1.5"></div>
                             <div>
                                 <div class="text-xs text-gold/60 tracking-widest mb-1">{{ $item['year'] }}</div>
                                 <div class="text-cream/80 text-sm">{{ $item['text'] }}</div>
@@ -33,12 +32,6 @@
             </div>
 
             <div class="grid grid-cols-1 gap-4 aos-right delay-100">
-                @if($imageUrl)
-                    <div class="relative overflow-hidden card-glass" style="aspect-ratio:16/11;">
-                        <img src="{{ $imageUrl }}" alt="{{ $section?->title ?: $page->title }}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0" style="background:linear-gradient(180deg,transparent,rgba(11,12,16,.72));"></div>
-                    </div>
-                @endif
                 @foreach($valueCards as $card)
                     <div class="card-glass p-7">
                         <div class="text-gold mb-3">

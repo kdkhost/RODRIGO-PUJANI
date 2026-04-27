@@ -6,7 +6,7 @@
     <div class="absolute inset-0" style="background:radial-gradient(ellipse 60% 60% at 80% 50%, rgba(196,154,60,0.04), transparent);"></div>
     <div class="max-w-7xl mx-auto px-6 lg:px-16 relative">
         <div class="text-center mb-16">
-            <div class="section-label aos mb-4 inline-block">Vozes de Quem Confia</div>
+            <div class="section-label aos mb-4 inline-block">— Vozes de Quem Confia</div>
             <h2 class="font-display leading-tight aos delay-100" style="font-size:clamp(2.2rem,5vw,4rem);font-weight:300;">
                 {!! $section?->title ?: 'O que dizem nossos <span class="text-gold-gradient font-semibold">clientes</span>' !!}
             </h2>
@@ -46,7 +46,7 @@
         </div>
 
         <div class="mt-20 pt-12" style="border-top:1px solid rgba(196,154,60,0.12);">
-            <div class="text-center text-xs text-cream/25 tracking-widest uppercase mb-10">Reconhecimentos e certificações</div>
+            <div class="text-center text-xs text-cream/25 tracking-widest uppercase mb-10">Reconhecimentos & Certificações</div>
             <div class="flex flex-wrap items-center justify-center gap-12 lg:gap-16">
                 @foreach($recognitions as $recognition)
                     <div class="text-center">

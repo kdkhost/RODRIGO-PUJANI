@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleController extends AdminCrudController
 {
@@ -54,5 +55,11 @@ class RoleController extends AdminCrudController
     protected function afterSave(Model $record, Request $request, bool $created): void
     {
         $record->syncPermissions($request->input('permission_names', []));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    protected function beforeDelete(Model $record): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }
