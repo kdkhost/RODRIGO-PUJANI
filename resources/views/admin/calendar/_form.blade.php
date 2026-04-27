@@ -52,12 +52,15 @@
         </div>
         <div class="col-md-4">
             <label class="form-label">Responsável</label>
-            <select name="owner_id" class="form-select">
+            <select name="owner_id" class="form-select" @disabled(! $canChooseOwner)>
                 <option value="">Sem responsável</option>
                 @foreach ($users as $user)
                     <option value="{{ $user->id }}" @selected((string) old('owner_id', $record->owner_id) === (string) $user->id)>{{ $user->name }}</option>
                 @endforeach
             </select>
+            @if(! $canChooseOwner)
+                <input type="hidden" name="owner_id" value="{{ old('owner_id', $record->owner_id ?: auth()->id()) }}">
+            @endif
         </div>
 
         <div class="col-md-6">
@@ -91,7 +94,7 @@
             <input type="text" name="location" class="form-control" value="{{ old('location', $record->location) }}">
         </div>
         <div class="col-md-6">
-            <label class="form-label">URL externa</label>
+            <label class="form-label">Link relacionado</label>
             <input type="url" name="url" class="form-control" value="{{ old('url', $record->url) }}">
         </div>
 
@@ -122,9 +125,16 @@
     <div class="d-flex justify-content-between gap-2 mt-4">
         <div>
             @if($isEdit)
-                <button type="button" class="btn btn-outline-danger" data-delete-url="{{ route('admin.calendar.destroy', $record) }}" data-calendar-target="#admin-calendar">
+                <div class="d-flex gap-2">
+                    @if($record->url)
+                        <a href="{{ $record->url }}" class="btn btn-outline-primary" target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir link
+                        </a>
+                    @endif
+                    <button type="button" class="btn btn-outline-danger" data-delete-url="{{ route('admin.calendar.destroy', $record) }}" data-calendar-target="#admin-calendar" data-confirm-text="O evento será removido permanentemente da agenda.">
                     <i class="bi bi-trash me-1"></i>Excluir
-                </button>
+                    </button>
+                </div>
             @endif
         </div>
         <div class="d-flex gap-2">

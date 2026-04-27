@@ -3,9 +3,13 @@
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuthAppearanceController;
 use App\Http\Controllers\Admin\CalendarController;
+use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\LegalCaseController;
+use App\Http\Controllers\Admin\LegalDocumentController;
+use App\Http\Controllers\Admin\LegalTaskController;
 use App\Http\Controllers\Admin\MediaAssetController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PageSectionController;
@@ -105,6 +109,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     $crud('pages', 'pages', PageController::class, 'pages.manage');
     $crud('page-sections', 'page-sections', PageSectionController::class, 'page-sections.manage');
     $crud('practice-areas', 'practice-areas', PracticeAreaController::class, 'practice-areas.manage');
+    $crud('clients', 'clients', ClientController::class, 'clients.manage');
+    $crud('legal-cases', 'legal-cases', LegalCaseController::class, 'legal-cases.manage');
+    $crud('legal-tasks', 'legal-tasks', LegalTaskController::class, 'legal-tasks.manage');
+    $crud('legal-documents', 'legal-documents', LegalDocumentController::class, 'legal-documents.manage');
     $crud('team-members', 'team-members', TeamMemberController::class, 'team-members.manage');
     $crud('testimonials', 'testimonials', TestimonialController::class, 'testimonials.manage');
     $crud('contact-messages', 'contact-messages', AdminContactMessageController::class, 'contact-messages.manage');

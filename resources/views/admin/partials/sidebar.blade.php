@@ -3,8 +3,14 @@
         'Visão geral' => [
             ['label' => 'Painel', 'route' => 'admin.dashboard', 'active' => 'admin.dashboard', 'icon' => 'bi-speedometer2', 'permission' => 'admin.access'],
             ['label' => 'Análises', 'route' => 'admin.analytics.index', 'active' => 'admin.analytics.*', 'icon' => 'bi-bar-chart', 'permission' => 'analytics.view'],
-            ['label' => 'Agenda', 'route' => 'admin.calendar.index', 'active' => 'admin.calendar.*', 'icon' => 'bi-calendar3', 'permission' => 'calendar.manage'],
             ['label' => 'Meu Perfil', 'route' => 'profile.edit', 'active' => 'profile.*', 'icon' => 'bi-person-circle', 'permission' => null],
+        ],
+        'Jurídico' => [
+            ['label' => 'Agenda', 'route' => 'admin.calendar.index', 'active' => 'admin.calendar.*', 'icon' => 'bi-calendar3', 'permission' => 'calendar.manage'],
+            ['label' => 'Clientes', 'route' => 'admin.clients.index', 'active' => 'admin.clients.*', 'icon' => 'bi-person-vcard', 'permission' => 'clients.manage'],
+            ['label' => 'Processos', 'route' => 'admin.legal-cases.index', 'active' => 'admin.legal-cases.*', 'icon' => 'bi-briefcase', 'permission' => 'legal-cases.manage'],
+            ['label' => 'Tarefas e prazos', 'route' => 'admin.legal-tasks.index', 'active' => 'admin.legal-tasks.*', 'icon' => 'bi-list-check', 'permission' => 'legal-tasks.manage'],
+            ['label' => 'Documentos', 'route' => 'admin.legal-documents.index', 'active' => 'admin.legal-documents.*', 'icon' => 'bi-folder2-open', 'permission' => 'legal-documents.manage'],
         ],
         'Conteúdo' => [
             ['label' => 'Páginas', 'route' => 'admin.pages.index', 'active' => 'admin.pages.*', 'icon' => 'bi-window-stack', 'permission' => 'pages.manage'],
@@ -31,6 +37,7 @@
 
     $groupIcons = [
         'Visão geral' => 'bi-grid-1x2',
+        'Jurídico' => 'bi-bank',
         'Conteúdo' => 'bi-layout-text-sidebar-reverse',
         'Operação' => 'bi-briefcase',
         'Segurança' => 'bi-shield-lock',

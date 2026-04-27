@@ -9,7 +9,7 @@
         <div class="col-md-6"><label class="form-label">Arquivo</label><input type="file" name="file" class="form-control" data-filepond></div>
         <div class="col-md-6"><label class="form-label">Texto alternativo</label><input type="text" name="alt_text" class="form-control" value="{{ old('alt_text', $record->alt_text) }}"></div>
         <div class="col-md-6 form-check mt-5"><input type="checkbox" class="form-check-input" id="media_public" name="is_public" value="1" @checked(old('is_public', $record->is_public ?? true))><label class="form-check-label" for="media_public">Pública</label></div>
-        <div class="col-12"><label class="form-label">Legenda</label><textarea name="caption" class="form-control" rows="3">{{ old('caption', $record->caption) }}</textarea></div>
+        <div class="col-12"><label class="form-label">Legenda</label><textarea name="caption" class="form-control" rows="3" data-editor="summernote" data-editor-height="220">{{ old('caption', $record->caption) }}</textarea></div>
     </div>
     <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
 </form>

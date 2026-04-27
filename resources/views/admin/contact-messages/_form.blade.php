@@ -19,7 +19,7 @@
         <div class="col-md-6"><label class="form-label">Assunto</label><input type="text" name="subject" class="form-control" value="{{ old('subject', $record->subject) }}"></div>
         <div class="col-md-6"><label class="form-label">Status</label><select name="status" class="form-select">@foreach(['new', 'in_progress', 'answered', 'archived'] as $status)<option value="{{ $status }}" @selected(old('status', $record->status ?: 'new') === $status)>{{ $statusLabels[$status] ?? $status }}</option>@endforeach</select></div>
         <div class="col-12"><label class="form-label">Mensagem</label><textarea name="message" class="form-control" rows="4">{{ old('message', $record->message) }}</textarea></div>
-        <div class="col-12"><label class="form-label">Observações internas</label><textarea name="notes" class="form-control" rows="3">{{ old('notes', $record->notes) }}</textarea></div>
+        <div class="col-12"><label class="form-label">Observações internas</label><textarea name="notes" class="form-control" rows="3" data-editor="summernote" data-editor-height="220">{{ old('notes', $record->notes) }}</textarea></div>
         <div class="col-md-4"><label class="form-label">Contatado em</label><input type="datetime-local" name="contacted_at" class="form-control" value="{{ old('contacted_at', optional($record->contacted_at)->format('Y-m-d\TH:i')) }}"></div>
         <div class="col-md-4 form-check mt-5"><input type="checkbox" class="form-check-input" id="consent_contact" name="consent" value="1" @checked(old('consent', $record->consent))><label class="form-check-label" for="consent_contact">Consentimento LGPD</label></div>
     </div>

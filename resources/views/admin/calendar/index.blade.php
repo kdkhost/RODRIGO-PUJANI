@@ -21,7 +21,7 @@
                 <div>
                     <div class="admin-eyebrow">Operação completa</div>
                     <h1>{{ $pageTitle }}</h1>
-                    <p>Visualize, crie, arraste, redimensione, filtre e organize eventos com FullCalendar 4 integrado ao banco do sistema.</p>
+                    <p>Visualize, crie, edite, arraste, redimensione, filtre e organize compromissos com uma agenda premium integrada ao banco do sistema.</p>
                 </div>
                 <button class="btn btn-primary admin-action-button" type="button" data-modal-url="{{ route('admin.calendar.create') }}" data-modal-title="Novo evento">
                     <i class="bi bi-calendar-plus me-1"></i>Novo evento
@@ -32,6 +32,25 @@
 
     <div class="app-content">
         <div class="container-fluid">
+            <div class="admin-calendar-kpis mb-4">
+                <div class="admin-calendar-kpi">
+                    <span>Total na agenda</span>
+                    <strong>{{ number_format($eventStats['total'], 0, ',', '.') }}</strong>
+                </div>
+                <div class="admin-calendar-kpi">
+                    <span>Hoje</span>
+                    <strong>{{ number_format($eventStats['today'], 0, ',', '.') }}</strong>
+                </div>
+                <div class="admin-calendar-kpi">
+                    <span>Agendados</span>
+                    <strong>{{ number_format($eventStats['scheduled'], 0, ',', '.') }}</strong>
+                </div>
+                <div class="admin-calendar-kpi">
+                    <span>Confirmados</span>
+                    <strong>{{ number_format($eventStats['confirmed'], 0, ',', '.') }}</strong>
+                </div>
+            </div>
+
             <form class="admin-table-toolbar mb-3" data-calendar-toolbar="#admin-calendar">
                 <div class="admin-search-box">
                     <i class="bi bi-funnel"></i>
@@ -83,9 +102,9 @@
                         id="admin-calendar"
                         class="admin-calendar"
                         data-calendar
-                        data-calendar-height="640"
-                        data-calendar-content-height="560"
-                        data-calendar-aspect-ratio="1.72"
+                        data-calendar-height="610"
+                        data-calendar-content-height="520"
+                        data-calendar-aspect-ratio="1.64"
                         data-calendar-events-url="{{ route('admin.calendar.events') }}"
                         data-calendar-create-url="{{ route('admin.calendar.create') }}"
                         data-calendar-toolbar="[data-calendar-toolbar='#admin-calendar']"

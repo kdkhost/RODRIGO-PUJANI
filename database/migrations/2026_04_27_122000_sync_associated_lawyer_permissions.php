@@ -1,23 +1,23 @@
 <?php
 
-namespace Database\Seeders;
-
-use App\Models\User;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
-class PermissionsSeeder extends Seeder
+return new class extends Migration
 {
-    public function run(): void
+    public function up(): void
     {
+        if (! Schema::hasTable('roles') || ! Schema::hasTable('permissions')) {
+            return;
+        }
+
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $permissions = [
             'admin.access',
-            'clients.manage',
             'pages.manage',
             'page-sections.manage',
             'practice-areas.manage',
@@ -33,6 +33,7 @@ class PermissionsSeeder extends Seeder
             'analytics.view',
             'system-files.manage',
             'calendar.manage',
+            'clients.manage',
             'legal-cases.manage',
             'legal-tasks.manage',
             'legal-documents.manage',
@@ -40,36 +41,42 @@ class PermissionsSeeder extends Seeder
             'impersonate.users',
         ];
 
-        foreach ($permissions as $name) {
-            Permission::query()->firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        foreach ($permissions as $permission) {
+            Permission::query()->firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $superAdmin = Role::query()->firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
         $administrator = Role::query()->firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
-        $associatedLawyer = Role::query()->firstOrCreate(['name' => 'Advogado Associado', 'guard_name' => 'web']);
         $editor = Role::query()->firstOrCreate(['name' => 'Editor', 'guard_name' => 'web']);
+        $associatedLawyer = Role::query()->firstOrCreate(['name' => 'Advogado Associado', 'guard_name' => 'web']);
 
-        $superAdmin->syncPermissions(Permission::all());
-        $administrator->syncPermissions(
+        $superAdmin->syncPermissions(Permission::query()->pluck('name')->all());
+
+        $administrator->givePermissionTo(
             Permission::query()
                 ->where('name', '!=', 'system-files.manage')
                 ->pluck('name')
                 ->all()
         );
-        $editor->syncPermissions([
+
+        $systemFilesPermission = Permission::query()
+            ->where('name', 'system-files.manage')
+            ->where('guard_name', 'web')
+            ->first();
+
+        if ($systemFilesPermission) {
+            $administrator->revokePermissionTo($systemFilesPermission);
+        }
+
+        $editor->givePermissionTo([
             'admin.access',
-            'clients.manage',
-            'pages.manage',
-            'page-sections.manage',
-            'practice-areas.manage',
-            'team-members.manage',
-            'testimonials.manage',
-            'contact-messages.manage',
-            'media-assets.manage',
-            'seo-metas.manage',
             'calendar.manage',
+            'clients.manage',
             'legal-cases.manage',
             'legal-tasks.manage',
             'legal-documents.manage',
@@ -84,18 +91,25 @@ class PermissionsSeeder extends Seeder
             'legal-documents.manage',
         ]);
 
-        $admin = User::query()->updateOrCreate(
-            ['email' => env('APP_ADMIN_EMAIL', 'admin@pujani.adv.br')],
-            [
-                'name' => env('APP_ADMIN_NAME', 'Administrador Pujani'),
-                'password' => Hash::make(env('APP_ADMIN_PASSWORD', 'Admin@12345')),
-                'timezone' => 'America/Sao_Paulo',
-                'is_active' => true,
-            ]
-        );
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
 
-        $admin->syncRoles([$superAdmin->name]);
+    public function down(): void
+    {
+        if (! Schema::hasTable('roles') || ! Schema::hasTable('permissions')) {
+            return;
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        Role::query()->where('name', 'Advogado Associado')->delete();
+        Permission::query()->whereIn('name', [
+            'clients.manage',
+            'legal-cases.manage',
+            'legal-tasks.manage',
+            'legal-documents.manage',
+        ])->delete();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
-}
+};

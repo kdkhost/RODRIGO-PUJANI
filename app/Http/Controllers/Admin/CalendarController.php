@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -20,18 +21,26 @@ class CalendarController extends Controller
 
     public function index(): View
     {
+        $eventsQuery = $this->visibleEventsQuery();
+
         return view('admin.calendar.index', [
             'pageTitle' => 'Agenda',
-            'users' => User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'users' => $this->availableOwners(),
             'statuses' => self::STATUSES,
             'visibilities' => self::VISIBILITIES,
-            'categories' => CalendarEvent::query()
+            'categories' => (clone $eventsQuery)
                 ->select('category')
                 ->distinct()
                 ->orderBy('category')
                 ->pluck('category')
                 ->filter()
                 ->values(),
+            'eventStats' => [
+                'total' => (clone $eventsQuery)->count(),
+                'today' => (clone $eventsQuery)->whereDate('start_at', today())->count(),
+                'scheduled' => (clone $eventsQuery)->where('status', 'scheduled')->count(),
+                'confirmed' => (clone $eventsQuery)->where('status', 'confirmed')->count(),
+            ],
         ]);
     }
 
@@ -46,7 +55,7 @@ class CalendarController extends Controller
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
-        $query = CalendarEvent::query()->with(['owner:id,name', 'creator:id,name']);
+        $query = $this->visibleEventsQuery()->with(['owner:id,name', 'creator:id,name']);
 
         if (! empty($validated['start'])) {
             $query->where(function ($builder) use ($validated): void {
@@ -86,6 +95,7 @@ class CalendarController extends Controller
             'color' => '#c49a3c',
             'text_color' => '#111318',
             'display' => 'auto',
+            'owner_id' => Auth::user()?->isAssociatedLawyer() ? Auth::id() : null,
         ]);
 
         return $this->formResponse($event, 'Novo evento');
@@ -108,11 +118,15 @@ class CalendarController extends Controller
 
     public function edit(CalendarEvent $event): JsonResponse
     {
+        $this->guardVisibleEvent($event);
+
         return $this->formResponse($event, 'Editar evento');
     }
 
     public function update(Request $request, CalendarEvent $event): JsonResponse
     {
+        $this->guardVisibleEvent($event);
+
         $event->fill($this->validatedData($request));
         $event->save();
 
@@ -126,6 +140,8 @@ class CalendarController extends Controller
 
     public function move(Request $request, CalendarEvent $event): JsonResponse
     {
+        $this->guardVisibleEvent($event);
+
         $validated = $request->validate([
             'start_at' => ['required', 'date'],
             'end_at' => ['nullable', 'date', 'after_or_equal:start_at'],
@@ -149,6 +165,8 @@ class CalendarController extends Controller
 
     public function destroy(CalendarEvent $event): JsonResponse
     {
+        $this->guardVisibleEvent($event);
+
         $event->delete();
 
         activity_log('calendar', 'deleted', $event, [], 'Evento removido da agenda.');
@@ -165,7 +183,8 @@ class CalendarController extends Controller
             'title' => $title,
             'html' => view('admin.calendar._form', [
                 'record' => $event,
-                'users' => User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+                'users' => $this->availableOwners(),
+                'canChooseOwner' => ! Auth::user()?->isAssociatedLawyer(),
                 'statuses' => self::STATUSES,
                 'visibilities' => self::VISIBILITIES,
                 'displays' => self::DISPLAYS,
@@ -218,6 +237,10 @@ class CalendarController extends Controller
             ? json_decode((string) $validated['extended_props_text'], true)
             : null;
 
+        if (Auth::user()?->isAssociatedLawyer()) {
+            $validated['owner_id'] = Auth::id();
+        }
+
         unset($validated['extended_props_text']);
 
         return $validated;
@@ -254,13 +277,16 @@ class CalendarController extends Controller
             'start' => $event->start_at?->toIso8601String(),
             'end' => $event->end_at?->toIso8601String(),
             'allDay' => $event->all_day,
-            'url' => $event->url,
             'color' => $event->color ?: ($statusColors[$event->status] ?? '#c49a3c'),
             'textColor' => $event->text_color ?: '#111318',
             'editable' => $event->editable,
             'overlap' => $event->overlap,
             'display' => $event->display,
             'rendering' => in_array($event->display, ['background', 'inverse-background'], true) ? $event->display : null,
+            'classNames' => [
+                'admin-calendar-event-pill',
+                'admin-calendar-status-'.$event->status,
+            ],
             'extendedProps' => $extendedProps + [
                 'status' => $event->status,
                 'visibility' => $event->visibility,
@@ -269,10 +295,56 @@ class CalendarController extends Controller
                 'description' => strip_tags((string) $event->description),
                 'owner' => $event->owner?->name,
                 'createdBy' => $event->creator?->name,
+                'externalUrl' => $event->url,
                 'editUrl' => route('admin.calendar.edit', $event),
                 'moveUrl' => route('admin.calendar.move', $event),
                 'deleteUrl' => route('admin.calendar.destroy', $event),
             ],
         ] + $advancedProps;
+    }
+
+    private function availableOwners()
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->when(
+                Auth::user()?->isAssociatedLawyer(),
+                fn (Builder $query) => $query->whereKey(Auth::id())
+            )
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    private function visibleEventsQuery(): Builder
+    {
+        return CalendarEvent::query()
+            ->when(Auth::user()?->isAssociatedLawyer(), function (Builder $query): void {
+                $query->where(function (Builder $builder): void {
+                    $builder
+                        ->where('owner_id', Auth::id())
+                        ->orWhere(function (Builder $nested): void {
+                            $nested
+                                ->whereNull('owner_id')
+                                ->where('created_by', Auth::id());
+                        });
+                });
+            });
+    }
+
+    private function guardVisibleEvent(CalendarEvent $event): void
+    {
+        if (! Auth::user()?->isAssociatedLawyer()) {
+            return;
+        }
+
+        if ((int) $event->owner_id === (int) Auth::id()) {
+            return;
+        }
+
+        if ($event->owner_id === null && (int) $event->created_by === (int) Auth::id()) {
+            return;
+        }
+
+        abort(404);
     }
 }

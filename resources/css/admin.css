@@ -603,14 +603,58 @@ img.admin-avatar {
     height: 280px !important;
 }
 
+.admin-entity-title {
+    color: var(--admin-ink);
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.admin-entity-meta {
+    margin-top: 0.18rem;
+    color: var(--admin-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
 .admin-calendar-card .card-body {
     min-height: 0;
     padding: 1rem;
 }
 
+.admin-calendar-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.admin-calendar-kpi {
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.88rem;
+    background: var(--admin-card-bg);
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-calendar-kpi span {
+    color: var(--admin-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-calendar-kpi strong {
+    display: block;
+    margin-top: 0.32rem;
+    color: var(--admin-ink);
+    font-size: 1.6rem;
+    font-weight: 850;
+    line-height: 1;
+}
+
 .admin-calendar {
-    min-height: 560px;
-    max-height: 660px;
+    min-height: 520px;
+    max-height: 640px;
     overflow: hidden;
 }
 
@@ -624,6 +668,7 @@ img.admin-avatar {
     flex-wrap: wrap;
     gap: 0.75rem;
     align-items: center;
+    margin-bottom: 1rem;
 }
 
 .admin-calendar .fc-toolbar h2 {
@@ -638,6 +683,7 @@ img.admin-avatar {
     border-radius: 0.58rem;
     background: var(--admin-card-bg);
     color: var(--admin-ink);
+    font-weight: 800;
     box-shadow: none;
     text-transform: capitalize;
 }
@@ -647,6 +693,24 @@ img.admin-avatar {
     border-color: var(--admin-primary);
     background: var(--admin-primary);
     color: #111318;
+}
+
+.admin-calendar .fc-button:focus {
+    box-shadow: 0 0 0 0.22rem var(--admin-ring);
+}
+
+.admin-calendar .fc-toolbar > * > :not(:first-child) {
+    margin-left: 0.42rem;
+}
+
+.admin-calendar .fc-view-container,
+.admin-calendar .fc-list-view,
+.admin-calendar .fc-timeGrid-view,
+.admin-calendar .fc-dayGrid-view {
+    border: 1px solid var(--admin-border);
+    border-radius: 0.88rem;
+    overflow: hidden;
+    background: var(--admin-card-bg);
 }
 
 .admin-calendar .fc-day-header,
@@ -660,9 +724,105 @@ img.admin-avatar {
 
 .admin-calendar .fc-event {
     border: 0;
-    border-radius: 0.45rem;
-    padding: 0.12rem 0.25rem;
+    border-radius: 0.6rem;
+    padding: 0.15rem 0.28rem;
     box-shadow: 0 6px 16px rgba(15, 19, 24, 0.14);
+}
+
+.admin-calendar .fc-day-grid-event {
+    margin: 0.16rem 0.28rem;
+}
+
+.admin-calendar .fc-time-grid .fc-event,
+.admin-calendar .fc-list-item {
+    border-radius: 0.72rem;
+}
+
+.admin-calendar .fc-day-number,
+.admin-calendar .fc-axis,
+.admin-calendar .fc-time,
+.admin-calendar .fc-list-item-time {
+    color: var(--admin-muted);
+    font-weight: 700;
+}
+
+.admin-calendar .fc-day-top {
+    padding: 0.42rem 0.55rem 0.2rem;
+}
+
+.admin-calendar .fc-day-grid-event .fc-content,
+.admin-calendar .fc-time-grid-event .fc-content {
+    white-space: normal;
+}
+
+.admin-calendar-event-shell {
+    display: grid;
+    gap: 0.34rem;
+}
+
+.admin-calendar-event-heading {
+    display: flex;
+    gap: 0.42rem;
+    align-items: center;
+    min-width: 0;
+}
+
+.admin-calendar-event-time {
+    font-size: 0.7rem;
+    font-weight: 800;
+    opacity: 0.78;
+    white-space: nowrap;
+}
+
+.admin-calendar-event-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.admin-calendar-event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.admin-calendar-event-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+    padding: 0.12rem 0.34rem;
+    border-radius: 999px;
+    background: rgba(17, 19, 24, 0.16);
+    color: inherit;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.admin-calendar .fc-time-grid-event.admin-calendar-status-confirmed,
+.admin-calendar .fc-day-grid-event.admin-calendar-status-confirmed,
+.admin-calendar .fc-list-item.admin-calendar-status-confirmed {
+    box-shadow: 0 10px 24px rgba(25, 135, 84, 0.24);
+}
+
+.admin-calendar .fc-time-grid-event.admin-calendar-status-scheduled,
+.admin-calendar .fc-day-grid-event.admin-calendar-status-scheduled,
+.admin-calendar .fc-list-item.admin-calendar-status-scheduled {
+    box-shadow: 0 10px 24px rgba(196, 154, 60, 0.24);
+}
+
+.admin-calendar .fc-time-grid-event.admin-calendar-status-done,
+.admin-calendar .fc-day-grid-event.admin-calendar-status-done,
+.admin-calendar .fc-list-item.admin-calendar-status-done {
+    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.24);
+}
+
+.admin-calendar .fc-time-grid-event.admin-calendar-status-canceled,
+.admin-calendar .fc-day-grid-event.admin-calendar-status-canceled,
+.admin-calendar .fc-list-item.admin-calendar-status-canceled {
+    box-shadow: 0 10px 24px rgba(220, 53, 69, 0.24);
 }
 
 .admin-calendar .fc-today {
@@ -1336,6 +1496,26 @@ img.admin-avatar {
     overflow: hidden;
 }
 
+.note-editor.note-frame .note-toolbar,
+.note-editor.note-frame .note-statusbar {
+    border-color: var(--admin-border);
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .note-editor.note-frame .note-toolbar,
+[data-bs-theme="dark"] .note-editor.note-frame .note-statusbar {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.note-editor.note-frame .note-editing-area .note-editable {
+    color: var(--admin-ink);
+    background: var(--admin-card-bg);
+}
+
+.note-editor .note-btn {
+    border-radius: 0.5rem;
+}
+
 .filepond--root {
     margin-bottom: 0;
 }
@@ -1519,6 +1699,7 @@ img.admin-avatar {
 }
 
 @media (max-width: 767.98px) {
+    .admin-calendar-kpis,
     .admin-permission-kpis {
         grid-template-columns: 1fr;
     }

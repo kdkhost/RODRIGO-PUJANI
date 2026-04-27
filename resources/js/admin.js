@@ -46,6 +46,15 @@ const AdminUI = {
     modalInstance: null,
     summernoteWarningShown: false,
 
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
     boot() {
         this.ensureModal();
         this.ensureProgressCard();
@@ -601,6 +610,8 @@ const AdminUI = {
                 cep: { mask: '99999-999' },
                 cpf: { mask: '999.999.999-99' },
                 cnpj: { mask: '99.999.999/9999-99' },
+                'cpf-cnpj': { mask: ['999.999.999-99', '99.999.999/9999-99'] },
+                cnj: { mask: '9999999-99.9999.9.99.9999' },
                 time: { mask: '99:99' },
                 date: { mask: '99/99/9999' },
                 currency: { alias: 'currency', prefix: 'R$ ', groupSeparator: '.', radixPoint: ',', digits: 2, autoGroup: true },
@@ -804,6 +815,44 @@ const AdminUI = {
 
                     if (details) {
                         info.el.setAttribute('title', details);
+                    }
+
+                    if (info.event.rendering === 'background') {
+                        return;
+                    }
+
+                    const useInlineTime = !info.view.type.startsWith('list');
+                    const timeText = useInlineTime && info.timeText ? `<span class="admin-calendar-event-time">${this.escapeHtml(info.timeText)}</span>` : '';
+                    const titleText = `<span class="admin-calendar-event-title">${this.escapeHtml(info.event.title)}</span>`;
+                    const showMeta = info.view.type !== 'dayGridMonth';
+                    const meta = [];
+
+                    if (showMeta && props.category) {
+                        meta.push(`<span>${this.escapeHtml(props.category)}</span>`);
+                    }
+
+                    if (showMeta && props.owner) {
+                        meta.push(`<span>${this.escapeHtml(props.owner)}</span>`);
+                    }
+
+                    if (showMeta && props.location) {
+                        meta.push(`<span>${this.escapeHtml(props.location)}</span>`);
+                    }
+
+                    const customMarkup = `
+                        <div class="admin-calendar-event-shell">
+                            <div class="admin-calendar-event-heading">${timeText}${titleText}</div>
+                            ${meta.length ? `<div class="admin-calendar-event-meta">${meta.join('')}</div>` : ''}
+                        </div>
+                    `;
+
+                    if (info.view.type.startsWith('list')) {
+                        const titleCell = info.el.querySelector('.fc-list-item-title');
+                        if (titleCell) {
+                            titleCell.innerHTML = customMarkup;
+                        }
+                    } else {
+                        info.el.innerHTML = customMarkup;
                     }
 
                     if (props.status) {

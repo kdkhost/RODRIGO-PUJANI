@@ -54,8 +54,33 @@ class User extends Authenticatable
         return $this->hasRole('Super Admin');
     }
 
+    public function isAdministrator(): bool
+    {
+        return $this->hasRole('Administrador');
+    }
+
+    public function isAssociatedLawyer(): bool
+    {
+        return $this->hasRole('Advogado Associado');
+    }
+
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function assignedClients(): HasMany
+    {
+        return $this->hasMany(Client::class, 'assigned_lawyer_id');
+    }
+
+    public function primaryLegalCases(): HasMany
+    {
+        return $this->hasMany(LegalCase::class, 'primary_lawyer_id');
+    }
+
+    public function legalTasks(): HasMany
+    {
+        return $this->hasMany(LegalTask::class, 'assigned_user_id');
     }
 }
