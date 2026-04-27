@@ -133,7 +133,7 @@ class CalendarController extends Controller
         ]);
 
         if (! $event->editable) {
-            return response()->json(['message' => 'Este evento nao permite movimentacao.'], 422);
+            return response()->json(['message' => 'Este evento não permite movimentação.'], 422);
         }
 
         $event->fill([
@@ -203,7 +203,7 @@ class CalendarController extends Controller
                     json_decode((string) $value, true);
 
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        $fail('O JSON informado nao e valido.');
+                        $fail('O JSON informado não é válido.');
                     }
                 },
             ],

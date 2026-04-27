@@ -5,9 +5,9 @@
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Governanca tecnica</div>
+                    <div class="admin-eyebrow">Governança técnica</div>
                     <h1>{{ $pageTitle }}</h1>
-                    <p>Edicao controlada de arquivos criticos com backup automatico a cada alteracao.</p>
+                    <p>Edição controlada de arquivos críticos com backup automático a cada alteração.</p>
                 </div>
                 <div class="admin-hero-stamp">
                     <i class="bi bi-file-earmark-lock"></i>
@@ -22,10 +22,10 @@
             <div class="alert alert-warning d-flex gap-3 align-items-start">
                 <i class="bi bi-exclamation-triangle-fill fs-5"></i>
                 <div>
-                    <strong>Acesso restrito a administracao avancada.</strong>
+                    <strong>Acesso restrito à administração avançada.</strong>
                     <div class="small mt-1">
-                        Alteracoes no <code>.env</code> afetam conexoes, filas, cache e ambiente. Alteracoes no <code>.htaccess</code>
-                        podem indisponibilizar o site se as regras ficarem invalidas.
+                        Alterações no <code>.env</code> afetam conexões, filas, cache e ambiente. Alterações no <code>.htaccess</code>
+                        podem indisponibilizar o site se as regras ficarem inválidas.
                     </div>
                 </div>
             </div>
@@ -42,9 +42,9 @@
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 small text-muted text-end">
                                     <span><strong>Caminho:</strong> {{ $file['path'] }}</span>
-                                    <span><strong>Status:</strong> {{ $file['exists'] ? 'Existente' : 'Nao encontrado' }}</span>
-                                    <span><strong>Permissao:</strong> {{ $file['writable'] ? 'Gravavel' : 'Somente leitura' }}</span>
-                                    <span><strong>Atualizado:</strong> {{ $file['updated_at'] ?? 'Ainda nao criado' }}</span>
+                                    <span><strong>Status:</strong> {{ $file['exists'] ? 'Existente' : 'Não encontrado' }}</span>
+                                    <span><strong>Permissão:</strong> {{ $file['writable'] ? 'Gravável' : 'Somente leitura' }}</span>
+                                    <span><strong>Atualizado:</strong> {{ $file['updated_at'] ?? 'Ainda não criado' }}</span>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -52,7 +52,7 @@
                                     @csrf
                                     @method('PUT')
                                     <div class="mb-3">
-                                        <label class="form-label">Conteudo atual</label>
+                                        <label class="form-label">Conteúdo atual</label>
                                         <textarea
                                             name="content"
                                             rows="{{ $file['rows'] }}"
@@ -76,7 +76,7 @@
                                 </div>
 
                                 @if ($file['backups'] === [])
-                                    <div class="text-muted small">Nenhum backup disponivel para este arquivo.</div>
+                                    <div class="text-muted small">Nenhum backup disponível para este arquivo.</div>
                                 @else
                                     <div class="table-responsive">
                                         <table class="table table-sm align-middle mb-0">
@@ -85,7 +85,7 @@
                                                 <th>Backup</th>
                                                 <th>Tamanho</th>
                                                 <th>Data</th>
-                                                <th class="text-end">Acao</th>
+                                                <th class="text-end">Ação</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -103,7 +103,7 @@
                                                                 class="btn btn-sm btn-outline-secondary"
                                                                 data-confirm-submit="true"
                                                                 data-confirm-title="Restaurar backup?"
-                                                                data-confirm-text="O conteudo atual sera substituido pelo backup selecionado.">
+                                                                data-confirm-text="O conteúdo atual será substituído pelo backup selecionado.">
                                                                 Restaurar
                                                             </button>
                                                         </form>

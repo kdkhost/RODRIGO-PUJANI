@@ -61,7 +61,7 @@ if (! function_exists('preloader_config')) {
                     'scope' => (string) setting('preloader.scope', 'all'),
                     'style' => (string) setting('preloader.style', 'spinner'),
                     'brand' => (string) setting('preloader.brand', config('app.name')),
-                    'message' => (string) setting('preloader.message', 'Carregando experiencia segura...'),
+                    'message' => (string) setting('preloader.message', 'Carregando experiência segura...'),
                     'background_color' => (string) setting('preloader.background_color', '#0f1318'),
                     'accent_color' => (string) setting('preloader.accent_color', '#c49a3c'),
                     'text_color' => (string) setting('preloader.text_color', '#f4ead7'),

@@ -220,7 +220,7 @@ class InstallerService
             return;
         }
 
-        throw new \RuntimeException($output ?: 'Falha ao criar o link simbolico do storage.');
+        throw new \RuntimeException($output ?: 'Falha ao criar o link simbólico do storage.');
     }
 
     protected function hasInstallationMarker(): bool

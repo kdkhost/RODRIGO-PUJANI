@@ -2,10 +2,10 @@
     <table class="table table-hover align-middle">
         <thead>
             <tr>
-                <th>Funcao</th>
-                <th>Guard</th>
-                <th>Permissoes</th>
-                <th class="text-end">Acoes</th>
+                <th>Função</th>
+                <th>Contexto</th>
+                <th>Permissões</th>
+                <th class="text-end">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -13,7 +13,7 @@
             <tr>
                 <td>
                     <div class="admin-permission-name">{{ $item->name }}</div>
-                    <div class="admin-permission-meta">{{ $item->permissions->count() }} permissao(oes) vinculada(s)</div>
+                    <div class="admin-permission-meta">{{ $item->permissions->count() }} permissão(ões) vinculada(s)</div>
                 </td>
                 <td><span class="badge badge-soft-info">{{ $item->guard_name }}</span></td>
                 <td>
@@ -21,7 +21,7 @@
                         @forelse($item->permissions->take(8) as $permission)
                             <span class="admin-permission-badge">{{ $permission->name }}</span>
                         @empty
-                            <span class="text-muted small">Nenhuma permissao</span>
+                            <span class="text-muted small">Nenhuma permissão</span>
                         @endforelse
 
                         @if($item->permissions->count() > 8)
@@ -30,7 +30,7 @@
                     </div>
                 </td>
                 <td class="text-end">
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Acoes">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Ações">
                         <button class="btn btn-outline-primary" type="button" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}" data-modal-title="Editar {{ $singularLabel }}">
                             <i class="bi bi-pencil-square"></i>
                         </button>
@@ -41,7 +41,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="4" class="text-center py-4 text-muted">Nenhuma funcao encontrada.</td></tr>
+            <tr><td colspan="4" class="text-center py-4 text-muted">Nenhuma função encontrada.</td></tr>
         @endforelse
         </tbody>
     </table>

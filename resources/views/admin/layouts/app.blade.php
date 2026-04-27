@@ -20,11 +20,11 @@
         $userAvatarUrl = $currentUser?->avatar_path ? site_asset_url($currentUser->avatar_path) : null;
         $roleSummary = $currentUser && method_exists($currentUser, 'getRoleNames')
             ? $currentUser->getRoleNames()->implode(', ')
-            : 'Usuario';
+            : 'Usuário';
         $statusMessage = match (session('status')) {
             'profile-updated' => 'Perfil atualizado com sucesso.',
             'password-updated' => 'Senha atualizada com sucesso.',
-            'verification-link-sent' => 'Link de verificacao enviado para o e-mail cadastrado.',
+            'verification-link-sent' => 'Link de verificação enviado para o e-mail cadastrado.',
             default => session('status'),
         };
     @endphp
@@ -42,8 +42,8 @@
         @if(session('impersonator_id'))
             <div class="admin-impersonation-bar">
                 <div>
-                    <strong>Impersonate ativo</strong>
-                    <span>Voce esta acessando como {{ $currentUser?->name }}. Operador original: {{ session('impersonator_name') }}.</span>
+                    <strong>Acesso assistido ativo</strong>
+                    <span>Você está acessando como {{ $currentUser?->name }}. Operador original: {{ session('impersonator_name') }}.</span>
                 </div>
                 <form method="POST" action="{{ route('impersonate.stop') }}">
                     @csrf
@@ -90,7 +90,7 @@
                             @endif
                             <span class="admin-user-copy d-none d-sm-flex">
                                 <span>{{ $currentUser?->name }}</span>
-                                <small>{{ $roleSummary ?: 'Usuario' }}</small>
+                                <small>{{ $roleSummary ?: 'Usuário' }}</small>
                             </span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end admin-dropdown">
@@ -123,7 +123,7 @@
                     <span class="brand-mark">P</span>
                     <span class="brand-copy">
                         <span class="brand-text fw-semibold">Pujani</span>
-                        <small>Admin Suite</small>
+                        <small>Painel administrativo</small>
                     </span>
                 </a>
             </div>

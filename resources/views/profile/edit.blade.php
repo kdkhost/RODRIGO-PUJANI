@@ -16,7 +16,7 @@
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Conta e seguranca</div>
+                    <div class="admin-eyebrow">Conta e segurança</div>
                     <h1>{{ $pageTitle }}</h1>
                     <p>Mantenha seus dados administrativos atualizados e proteja o acesso ao painel.</p>
                 </div>
@@ -28,7 +28,7 @@
                     @endif
                     <div>
                         <strong>{{ $user->name }}</strong>
-                        <small>{{ $roleSummary ?: 'Usuario autenticado' }}</small>
+                        <small>{{ $roleSummary ?: 'Usuário autenticado' }}</small>
                     </div>
                 </div>
             </div>
@@ -51,21 +51,21 @@
                             <p>{{ $user->email }}</p>
 
                             <div class="admin-profile-tags">
-                                <span><i class="bi bi-shield-check"></i>{{ $roleSummary ?: 'Sem funcao definida' }}</span>
+                                <span><i class="bi bi-shield-check"></i>{{ $roleSummary ?: 'Sem função definida' }}</span>
                                 <span><i class="bi bi-circle-fill"></i>{{ $user->is_active ? 'Ativo' : 'Inativo' }}</span>
                             </div>
 
                             <div class="admin-profile-facts">
                                 <div>
                                     <span>Conta criada</span>
-                                    <strong>{{ $user->created_at?->format('d/m/Y') ?? 'Nao informado' }}</strong>
+                                    <strong>{{ $user->created_at?->format('d/m/Y') ?? 'Não informado' }}</strong>
                                 </div>
                                 <div>
-                                    <span>Ultimo acesso</span>
-                                    <strong>{{ $user->last_login_at?->format('d/m/Y H:i') ?? 'Nao registrado' }}</strong>
+                                    <span>Último acesso</span>
+                                    <strong>{{ $user->last_login_at?->format('d/m/Y H:i') ?? 'Não registrado' }}</strong>
                                 </div>
                                 <div>
-                                    <span>Fuso horario</span>
+                                    <span>Fuso horário</span>
                                     <strong>{{ $user->timezone ?: config('app.timezone') }}</strong>
                                 </div>
                             </div>
@@ -80,7 +80,7 @@
                                 <div class="card-header">
                                     <div>
                                         <div class="admin-card-kicker">Identidade</div>
-                                        <h3 class="card-title">Informacoes do perfil</h3>
+                                        <h3 class="card-title">Informações do perfil</h3>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -119,9 +119,9 @@
                                             <div class="alert alert-warning mt-3 mb-0 d-flex gap-3 align-items-start">
                                                 <i class="bi bi-exclamation-triangle-fill"></i>
                                                 <div>
-                                                    <strong>E-mail ainda nao verificado.</strong>
-                                                    <div class="small">Envie um novo link para concluir a verificacao da conta.</div>
-                                                    <button form="send-verification" class="btn btn-sm btn-outline-warning mt-2">Reenviar verificacao</button>
+                                                    <strong>E-mail ainda não verificado.</strong>
+                                                    <div class="small">Envie um novo link para concluir a verificação da conta.</div>
+                                                    <button form="send-verification" class="btn btn-sm btn-outline-warning mt-2">Reenviar verificação</button>
                                                 </div>
                                             </div>
                                         @endif
@@ -140,7 +140,7 @@
                             <div class="card admin-form-card">
                                 <div class="card-header">
                                     <div>
-                                        <div class="admin-card-kicker">Seguranca</div>
+                                        <div class="admin-card-kicker">Segurança</div>
                                         <h3 class="card-title">Atualizar senha</h3>
                                     </div>
                                 </div>
@@ -182,9 +182,9 @@
                         <div class="col-12">
                             <div class="admin-danger-zone">
                                 <div>
-                                    <div class="admin-card-kicker">Zona critica</div>
+                                    <div class="admin-card-kicker">Zona crítica</div>
                                     <h3>Excluir conta</h3>
-                                    <p>Esta acao encerra sua sessao e remove permanentemente seu usuario.</p>
+                                    <p>Esta ação encerra sua sessão e remove permanentemente seu usuário.</p>
                                 </div>
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-profile-modal">
                                     <i class="bi bi-trash3 me-1"></i>Excluir conta
@@ -205,18 +205,18 @@
                     @method('delete')
 
                     <div class="modal-header">
-                        <h5 class="modal-title" id="delete-profile-modal-title">Confirmar exclusao da conta</h5>
+                        <h5 class="modal-title" id="delete-profile-modal-title">Confirmar exclusão da conta</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="text-muted">Informe sua senha para confirmar a exclusao permanente deste usuario.</p>
+                        <p class="text-muted">Informe sua senha para confirmar a exclusão permanente deste usuário.</p>
                         <label for="delete_profile_password" class="form-label">Senha</label>
                         <input id="delete_profile_password" name="password" type="password" class="form-control @error('password', 'userDeletion') is-invalid @enderror" autocomplete="current-password">
                         @error('password', 'userDeletion')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger" data-confirm-submit="true" data-confirm-title="Excluir conta?" data-confirm-text="Esta acao nao podera ser desfeita." data-confirm-button="Excluir">
+                        <button type="submit" class="btn btn-danger" data-confirm-submit="true" data-confirm-title="Excluir conta?" data-confirm-text="Esta ação não poderá ser desfeita." data-confirm-button="Excluir">
                             Excluir definitivamente
                         </button>
                     </div>

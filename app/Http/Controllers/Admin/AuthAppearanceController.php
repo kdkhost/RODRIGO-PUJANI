@@ -12,15 +12,15 @@ use Illuminate\View\View;
 class AuthAppearanceController extends Controller
 {
     private const SETTINGS = [
-        'auth.panel_eyebrow' => ['label' => 'Tela de login - chamada curta', 'default' => 'Admin Suite', 'sort' => 400],
-        'auth.panel_title' => ['label' => 'Tela de login - titulo', 'default' => 'Gestao juridica com acesso seguro.', 'sort' => 401],
-        'auth.panel_description' => ['label' => 'Tela de login - descricao', 'default' => 'Painel administrativo para conteudo, agenda, midias, usuarios e permissoes do escritorio.', 'sort' => 402],
-        'auth.metric_1_title' => ['label' => 'Tela de login - metrica 1 titulo', 'default' => 'Laravel 13', 'sort' => 410],
-        'auth.metric_1_subtitle' => ['label' => 'Tela de login - metrica 1 subtitulo', 'default' => 'Base atual', 'sort' => 411],
-        'auth.metric_2_title' => ['label' => 'Tela de login - metrica 2 titulo', 'default' => 'ACL', 'sort' => 412],
-        'auth.metric_2_subtitle' => ['label' => 'Tela de login - metrica 2 subtitulo', 'default' => 'Permissoes', 'sort' => 413],
-        'auth.metric_3_title' => ['label' => 'Tela de login - metrica 3 titulo', 'default' => 'PWA', 'sort' => 414],
-        'auth.metric_3_subtitle' => ['label' => 'Tela de login - metrica 3 subtitulo', 'default' => 'Experiencia app', 'sort' => 415],
+        'auth.panel_eyebrow' => ['label' => 'Tela de login - chamada curta', 'default' => 'Painel administrativo', 'sort' => 400],
+        'auth.panel_title' => ['label' => 'Tela de login - título', 'default' => 'Gestão jurídica com acesso seguro.', 'sort' => 401],
+        'auth.panel_description' => ['label' => 'Tela de login - descrição', 'default' => 'Painel administrativo para conteúdo, agenda, mídias, usuários e permissões do escritório.', 'sort' => 402],
+        'auth.metric_1_title' => ['label' => 'Tela de login - métrica 1 título', 'default' => 'Laravel 13', 'sort' => 410],
+        'auth.metric_1_subtitle' => ['label' => 'Tela de login - métrica 1 subtítulo', 'default' => 'Base atual', 'sort' => 411],
+        'auth.metric_2_title' => ['label' => 'Tela de login - métrica 2 título', 'default' => 'ACL', 'sort' => 412],
+        'auth.metric_2_subtitle' => ['label' => 'Tela de login - métrica 2 subtítulo', 'default' => 'Permissões', 'sort' => 413],
+        'auth.metric_3_title' => ['label' => 'Tela de login - métrica 3 título', 'default' => 'PWA', 'sort' => 414],
+        'auth.metric_3_subtitle' => ['label' => 'Tela de login - métrica 3 subtítulo', 'default' => 'Experiência em app', 'sort' => 415],
     ];
 
     public function index(): View

@@ -16,7 +16,7 @@ class PreloaderController extends Controller
 {
     private const SETTINGS = [
         'preloader.enabled' => ['label' => 'Ativar preloader', 'type' => 'boolean', 'public' => true],
-        'preloader.scope' => ['label' => 'Exibicao', 'type' => 'text', 'public' => true],
+        'preloader.scope' => ['label' => 'Exibição', 'type' => 'text', 'public' => true],
         'preloader.style' => ['label' => 'Estilo', 'type' => 'text', 'public' => true],
         'preloader.brand' => ['label' => 'Marca', 'type' => 'text', 'public' => true],
         'preloader.message' => ['label' => 'Mensagem', 'type' => 'text', 'public' => true],
@@ -24,14 +24,14 @@ class PreloaderController extends Controller
         'preloader.accent_color' => ['label' => 'Cor principal', 'type' => 'text', 'public' => true],
         'preloader.text_color' => ['label' => 'Cor do texto', 'type' => 'text', 'public' => true],
         'preloader.logo_path' => ['label' => 'Logo', 'type' => 'text', 'public' => true],
-        'preloader.min_duration' => ['label' => 'Duracao minima', 'type' => 'text', 'public' => true],
+        'preloader.min_duration' => ['label' => 'Duração mínima', 'type' => 'text', 'public' => true],
         'preloader.custom_css' => ['label' => 'CSS personalizado', 'type' => 'textarea', 'public' => false],
     ];
 
     public function index(): View
     {
         return view('admin.preloader.index', [
-            'pageTitle' => 'Preloader',
+            'pageTitle' => 'Pré-carregador',
             'config' => preloader_config('admin', false),
         ]);
     }

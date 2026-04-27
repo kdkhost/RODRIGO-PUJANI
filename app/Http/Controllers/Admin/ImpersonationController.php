@@ -15,11 +15,11 @@ class ImpersonationController extends Controller
         $impersonator = $request->user();
 
         if (! $impersonator || $impersonator->is($user)) {
-            return back()->with('error', 'Nao e possivel impersonar o proprio usuario.');
+            return back()->with('error', 'Não é possível assumir o próprio usuário.');
         }
 
         if (! $user->is_active) {
-            return back()->with('error', 'Este usuario esta inativo.');
+            return back()->with('error', 'Este usuário está inativo.');
         }
 
         $request->session()->put([
@@ -33,9 +33,9 @@ class ImpersonationController extends Controller
         activity_log('users', 'impersonate.started', $user, [
             'impersonator_id' => $impersonator->id,
             'target_id' => $user->id,
-        ], 'Acesso impersonate iniciado.');
+        ], 'Acesso assistido iniciado.');
 
-        return redirect()->route('admin.dashboard')->with('status', 'Acesso impersonate iniciado.');
+        return redirect()->route('admin.dashboard')->with('status', 'Acesso assistido iniciado.');
     }
 
     public function stop(Request $request): RedirectResponse
@@ -54,8 +54,8 @@ class ImpersonationController extends Controller
         activity_log('users', 'impersonate.stopped', $target, [
             'impersonator_id' => $impersonatorId,
             'target_id' => $target?->id,
-        ], 'Acesso impersonate encerrado.');
+        ], 'Acesso assistido encerrado.');
 
-        return redirect()->route('admin.users.index')->with('status', 'Acesso impersonate encerrado.');
+        return redirect()->route('admin.users.index')->with('status', 'Acesso assistido encerrado.');
     }
 }

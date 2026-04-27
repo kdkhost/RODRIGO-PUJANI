@@ -38,7 +38,7 @@ class PageSectionController extends AdminCrudController
                     json_decode((string) $value, true);
 
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        $fail('O JSON informado nao e valido.');
+                        $fail('O JSON informado não é válido.');
                     }
                 },
             ],

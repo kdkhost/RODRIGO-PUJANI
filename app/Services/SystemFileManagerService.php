@@ -61,7 +61,7 @@ class SystemFileManagerService
 
         if (! File::exists($backupPath)) {
             throw ValidationException::withMessages([
-                'backup_name' => 'Backup nao encontrado para restauracao.',
+                'backup_name' => 'Backup não encontrado para restauração.',
             ]);
         }
 
@@ -80,14 +80,14 @@ class SystemFileManagerService
         return [
             'env' => [
                 'label' => 'Arquivo .env',
-                'description' => 'Variaveis de ambiente, credenciais e parametros do sistema.',
+                'description' => 'Variáveis de ambiente, credenciais e parâmetros do sistema.',
                 'path' => base_path('.env'),
                 'fallback_path' => base_path('.env.example'),
                 'rows' => 18,
             ],
             'htaccess' => [
                 'label' => 'Arquivo .htaccess',
-                'description' => 'Regras da raiz para reescrita de URL, seguranca e publicacao sem /public.',
+                'description' => 'Regras da raiz para reescrita de URL, segurança e publicação sem /public.',
                 'path' => base_path('.htaccess'),
                 'fallback_path' => null,
                 'rows' => 16,
@@ -101,7 +101,7 @@ class SystemFileManagerService
 
         if (! $definition) {
             throw ValidationException::withMessages([
-                'file' => 'Arquivo do sistema nao permitido.',
+                'file' => 'Arquivo do sistema não permitido.',
             ]);
         }
 
@@ -125,13 +125,13 @@ class SystemFileManagerService
     {
         if (str_contains($content, "\0")) {
             throw ValidationException::withMessages([
-                'content' => 'O arquivo contem caracteres invalidos.',
+                'content' => 'O arquivo contém caracteres inválidos.',
             ]);
         }
 
         if (trim($content) === '') {
             throw ValidationException::withMessages([
-                'content' => 'O conteudo nao pode ficar vazio.',
+                'content' => 'O conteúdo não pode ficar vazio.',
             ]);
         }
 
@@ -148,7 +148,7 @@ class SystemFileManagerService
 
             if ($invalidLine) {
                 throw ValidationException::withMessages([
-                    'content' => 'Linha '.$invalidLine['number'].' do .env esta fora do formato CHAVE=valor.',
+                    'content' => 'Linha '.$invalidLine['number'].' do .env está fora do formato CHAVE=valor.',
                 ]);
             }
         }

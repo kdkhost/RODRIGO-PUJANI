@@ -7,11 +7,11 @@
                 <div>
                     <div class="admin-eyebrow">Acesso administrativo</div>
                     <h1>{{ $pageTitle }}</h1>
-                    <p>Personalize os textos exibidos na coluna visual das telas de login, recuperacao e redefinicao de senha.</p>
+                    <p>Personalize os textos exibidos na coluna visual das telas de login, recuperação e redefinição de senha.</p>
                 </div>
                 <div class="admin-hero-stamp">
                     <i class="bi bi-window-sidebar"></i>
-                    <span>Editavel</span>
+                    <span>Editável</span>
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@
                     <div class="card admin-table-card h-100">
                         <div class="card-header">
                             <div>
-                                <div class="admin-card-kicker">Conteudo</div>
+                                <div class="admin-card-kicker">Conteúdo</div>
                                 <h3 class="card-title">Textos da coluna premium</h3>
                             </div>
                         </div>
@@ -38,21 +38,21 @@
                                     <input type="text" name="panel_eyebrow" class="form-control" maxlength="80" value="{{ old('panel_eyebrow', $config['auth.panel_eyebrow']) }}" data-auth-preview-source="panel_eyebrow">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Titulo principal</label>
+                                    <label class="form-label">Título principal</label>
                                     <input type="text" name="panel_title" class="form-control" maxlength="120" value="{{ old('panel_title', $config['auth.panel_title']) }}" data-auth-preview-source="panel_title">
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Descricao</label>
+                                    <label class="form-label">Descrição</label>
                                     <textarea name="panel_description" class="form-control" rows="3" maxlength="220" data-auth-preview-source="panel_description">{{ old('panel_description', $config['auth.panel_description']) }}</textarea>
                                 </div>
 
                                 @foreach ([1, 2, 3] as $index)
                                     <div class="col-md-6">
-                                        <label class="form-label">Bloco {{ $index }} - titulo</label>
+                                        <label class="form-label">Bloco {{ $index }} - título</label>
                                         <input type="text" name="metric_{{ $index }}_title" class="form-control" maxlength="40" value="{{ old("metric_{$index}_title", $config["auth.metric_{$index}_title"]) }}" data-auth-preview-source="metric_{{ $index }}_title">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Bloco {{ $index }} - subtitulo</label>
+                                        <label class="form-label">Bloco {{ $index }} - subtítulo</label>
                                         <input type="text" name="metric_{{ $index }}_subtitle" class="form-control" maxlength="60" value="{{ old("metric_{$index}_subtitle", $config["auth.metric_{$index}_subtitle"]) }}" data-auth-preview-source="metric_{{ $index }}_subtitle">
                                     </div>
                                 @endforeach
@@ -70,7 +70,7 @@
                     <div class="card admin-table-card h-100">
                         <div class="card-header">
                             <div>
-                                <div class="admin-card-kicker">Preview</div>
+                                <div class="admin-card-kicker">Prévia</div>
                                 <h3 class="card-title">Como aparece no login</h3>
                             </div>
                         </div>

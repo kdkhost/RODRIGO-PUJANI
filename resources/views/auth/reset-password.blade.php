@@ -1,6 +1,6 @@
 <x-guest-layout title="Nova senha | Pujani Admin">
     <div class="auth-form-heading">
-        <span>Seguranca da conta</span>
+        <span>Segurança da conta</span>
         <h2>Criar nova senha</h2>
         <p>Defina uma senha forte para restaurar o acesso ao painel.</p>
     </div>

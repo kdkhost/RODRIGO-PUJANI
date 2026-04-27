@@ -1,8 +1,8 @@
 <x-guest-layout title="Confirmar senha | Pujani Admin">
     <div class="auth-form-heading">
-        <span>Area segura</span>
+        <span>Área segura</span>
         <h2>Confirme sua senha</h2>
-        <p>Esta etapa protege operacoes sensiveis dentro do painel.</p>
+        <p>Esta etapa protege operações sensíveis dentro do painel.</p>
     </div>
 
     <form method="POST" action="{{ route('password.confirm') }}" class="auth-form">

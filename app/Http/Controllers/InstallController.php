@@ -74,7 +74,7 @@ class InstallController extends Controller
             return back()
                 ->withInput($request->except(['admin_password', 'admin_password_confirmation']))
                 ->withErrors([
-                    'installer' => 'Nao foi possivel concluir a instalacao. Revise os dados do banco, as permissoes de escrita e tente novamente.',
+                    'installer' => 'Não foi possível concluir a instalação. Revise os dados do banco, as permissões de escrita e tente novamente.',
                 ]);
         }
     }

@@ -5,7 +5,7 @@
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Gestao operacional</div>
+                    <div class="admin-eyebrow">Gestão operacional</div>
                     <h1>{{ $pageTitle }}</h1>
                     <p>Organize, revise e publique registros com uma rotina administrativa objetiva.</p>
                 </div>
@@ -31,7 +31,7 @@
                 </div>
                 <select name="per_page" class="form-select" data-table-filter data-table-target="#{{ $tableId }}">
                     @foreach ([10, 15, 25, 50] as $size)
-                        <option value="{{ $size }}" @selected(request('per_page', 10) == $size)>{{ $size }} por pagina</option>
+                        <option value="{{ $size }}" @selected(request('per_page', 10) == $size)>{{ $size }} por página</option>
                     @endforeach
                 </select>
             </form>

@@ -1,3 +1,17 @@
+@php
+    $statusLabels = [
+        'scheduled' => 'Agendado',
+        'confirmed' => 'Confirmado',
+        'done' => 'Concluído',
+        'canceled' => 'Cancelado',
+    ];
+    $visibilityLabels = [
+        'private' => 'Privado',
+        'team' => 'Equipe',
+        'public' => 'Público',
+    ];
+@endphp
+
 @extends('admin.layouts.app')
 
 @section('content')
@@ -5,7 +19,7 @@
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Operacao completa</div>
+                    <div class="admin-eyebrow">Operação completa</div>
                     <h1>{{ $pageTitle }}</h1>
                     <p>Visualize, crie, arraste, redimensione, filtre e organize eventos com FullCalendar 4 integrado ao banco do sistema.</p>
                 </div>
@@ -31,17 +45,17 @@
                 <select name="status" class="form-select" data-calendar-filter>
                     <option value="">Todos os status</option>
                     @foreach ($statuses as $status)
-                        <option value="{{ $status }}">{{ ucfirst($status) }}</option>
+                        <option value="{{ $status }}">{{ $statusLabels[$status] ?? ucfirst($status) }}</option>
                     @endforeach
                 </select>
                 <select name="visibility" class="form-select" data-calendar-filter>
-                    <option value="">Todas visibilidades</option>
+                    <option value="">Todas as visibilidades</option>
                     @foreach ($visibilities as $visibility)
-                        <option value="{{ $visibility }}">{{ ucfirst($visibility) }}</option>
+                        <option value="{{ $visibility }}">{{ $visibilityLabels[$visibility] ?? ucfirst($visibility) }}</option>
                     @endforeach
                 </select>
                 <select name="owner_id" class="form-select" data-calendar-filter>
-                    <option value="">Todos responsaveis</option>
+                    <option value="">Todos os responsáveis</option>
                     @foreach ($users as $user)
                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                     @endforeach
@@ -60,7 +74,7 @@
                     <div class="admin-calendar-legend">
                         <span><i style="background:#c49a3c"></i>Agendado</span>
                         <span><i style="background:#198754"></i>Confirmado</span>
-                        <span><i style="background:#3b82f6"></i>Concluido</span>
+                        <span><i style="background:#3b82f6"></i>Concluído</span>
                         <span><i style="background:#dc3545"></i>Cancelado</span>
                     </div>
                 </div>

@@ -1,8 +1,8 @@
-<x-guest-layout title="Login | Pujani Admin">
+<x-guest-layout title="Entrar | Pujani Admin">
     <div class="auth-form-heading">
         <span>Acesso administrativo</span>
         <h2>Entrar no painel</h2>
-        <p>Use suas credenciais para continuar para a area administrativa.</p>
+        <p>Use suas credenciais para continuar para a área administrativa.</p>
     </div>
 
     @if (session('status'))

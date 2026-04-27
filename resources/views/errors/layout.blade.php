@@ -10,7 +10,7 @@
         body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:
             radial-gradient(circle at top, rgba(196,154,60,.18), transparent 28%),
             linear-gradient(160deg, #0b1020 0%, #141b30 100%);
-            color:#f6f2e8;font-family:Arial,sans-serif}
+            color:#f6f2e8;font-family:"Segoe UI",Arial,sans-serif}
         .panel{width:min(720px,100%);padding:40px;border-radius:20px;border:1px solid rgba(196,154,60,.24);background:rgba(10,15,28,.88);backdrop-filter:blur(10px);box-shadow:0 30px 80px rgba(0,0,0,.34)}
         .code{display:inline-flex;align-items:center;justify-content:center;min-width:74px;height:36px;padding:0 12px;border-radius:999px;background:rgba(196,154,60,.14);color:#f4ca73;font-weight:700;margin-bottom:18px}
         h1{margin:0 0 14px;font-size:2rem}

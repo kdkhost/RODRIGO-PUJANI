@@ -18,9 +18,9 @@
                                     type="submit"
                                     data-confirm-submit="true"
                                     data-confirm-title="Acessar sem senha?"
-                                    data-confirm-text="Voce sera autenticado temporariamente como {{ $item->name }}."
+                                    data-confirm-text="Você será autenticado temporariamente como {{ $item->name }}."
                                     data-confirm-button="Acessar"
-                                >Impersonar</button>
+                                >Assumir acesso</button>
                             </form>
                         @endif
                     @endcan

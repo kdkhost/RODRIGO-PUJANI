@@ -160,8 +160,8 @@ const AdminUI = {
                 event.preventDefault();
 
                 const result = await Swal.fire({
-                    title: submitter.dataset.confirmTitle || 'Confirmar acao?',
-                    text: submitter.dataset.confirmText || 'Deseja continuar com esta operacao?',
+                    title: submitter.dataset.confirmTitle || 'Confirmar ação?',
+                    text: submitter.dataset.confirmText || 'Deseja continuar com esta operação?',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: submitter.dataset.confirmButton || 'Confirmar',
@@ -255,7 +255,7 @@ const AdminUI = {
             table.dataset.loaded = 'true';
             this.initPlugins(table);
         } catch (error) {
-            this.showToast('error', error.response?.data?.message || 'Nao foi possivel carregar a listagem.');
+            this.showToast('error', error.response?.data?.message || 'Não foi possível carregar a listagem.');
         } finally {
             table.classList.remove('opacity-50');
         }
@@ -274,14 +274,14 @@ const AdminUI = {
             this.initPlugins(modal);
         } catch (error) {
             console.error('Admin modal load failed.', error);
-            modal.querySelector('.modal-body').innerHTML = `<div class="alert alert-danger mb-0">${error.response?.data?.message || 'Falha ao carregar o formulario.'}</div>`;
+            modal.querySelector('.modal-body').innerHTML = `<div class="alert alert-danger mb-0">${error.response?.data?.message || 'Falha ao carregar o formulário.'}</div>`;
         }
     },
 
     async confirmDelete(trigger) {
         const confirmResult = await Swal.fire({
-            title: 'Confirmar exclusao?',
-            text: trigger.dataset.confirmText || 'Essa acao nao podera ser desfeita.',
+            title: 'Confirmar exclusão?',
+            text: trigger.dataset.confirmText || 'Essa ação não poderá ser desfeita.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Excluir',
@@ -365,7 +365,7 @@ const AdminUI = {
                 return;
             }
 
-            this.showToast('error', error.response?.data?.message || 'Falha ao processar a solicitacao.');
+            this.showToast('error', error.response?.data?.message || 'Falha ao processar a solicitação.');
         } finally {
             delete form._uploadStartedAt;
             if (submitButton) {
@@ -631,7 +631,7 @@ const AdminUI = {
                         }
                     });
                 } catch (error) {
-                    this.showToast('warning', 'Nao foi possivel consultar o CEP automaticamente.');
+                    this.showToast('warning', 'Não foi possível consultar o CEP automaticamente.');
                 }
             });
 
@@ -659,7 +659,7 @@ const AdminUI = {
                 canvas._adminChart = chart;
                 canvas.dataset.chartReady = 'true';
             } catch (error) {
-                this.showToast('warning', 'Nao foi possivel inicializar um grafico do painel.');
+                this.showToast('warning', 'Não foi possível inicializar um gráfico do painel.');
             }
         });
     },
@@ -705,7 +705,7 @@ const AdminUI = {
                     this.showToast('success', 'Agenda atualizada.');
                 } catch (error) {
                     info.revert();
-                    this.showToast('error', error.response?.data?.message || 'Nao foi possivel mover o evento.');
+                    this.showToast('error', error.response?.data?.message || 'Não foi possível mover o evento.');
                 }
             };
 
@@ -744,7 +744,7 @@ const AdminUI = {
                 },
                 buttonText: {
                     today: 'Hoje',
-                    month: 'Mes',
+                    month: 'Mês',
                     week: 'Semana',
                     day: 'Dia',
                     list: 'Lista',
@@ -758,7 +758,7 @@ const AdminUI = {
                     url: element.dataset.calendarEventsUrl,
                     method: 'GET',
                     extraParams: readFilters,
-                    failure: () => this.showToast('error', 'Nao foi possivel carregar a agenda.'),
+                    failure: () => this.showToast('error', 'Não foi possível carregar a agenda.'),
                 }],
                 loading: (isLoading) => element.classList.toggle('is-loading', isLoading),
                 select: (info) => {
@@ -784,7 +784,7 @@ const AdminUI = {
                     const details = [
                         info.event.title,
                         props.status ? `Status: ${props.status}` : '',
-                        props.owner ? `Responsavel: ${props.owner}` : '',
+                        props.owner ? `Responsável: ${props.owner}` : '',
                         props.location ? `Local: ${props.location}` : '',
                         props.description || '',
                     ].filter(Boolean).join('\n');

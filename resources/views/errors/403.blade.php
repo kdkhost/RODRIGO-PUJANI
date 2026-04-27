@@ -1,5 +1,5 @@
 @include('errors.layout', [
     'code' => '403',
     'title' => 'Acesso negado',
-    'message' => 'Voce nao possui permissao para acessar esta area do sistema.',
+    'message' => 'Você não possui permissão para acessar esta área do sistema.',
 ])

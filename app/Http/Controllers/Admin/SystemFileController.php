@@ -46,7 +46,7 @@ class SystemFileController extends Controller
             report($exception);
 
             return response()->json([
-                'message' => 'Nao foi possivel salvar o arquivo solicitado.',
+                'message' => 'Não foi possível salvar o arquivo solicitado.',
             ], 500);
         }
     }
@@ -75,7 +75,7 @@ class SystemFileController extends Controller
             report($exception);
 
             return response()->json([
-                'message' => 'Nao foi possivel restaurar o backup selecionado.',
+                'message' => 'Não foi possível restaurar o backup selecionado.',
             ], 500);
         }
     }

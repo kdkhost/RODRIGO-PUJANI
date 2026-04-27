@@ -23,5 +23,5 @@ Artisan::command('system:install {--fresh : Recria o banco do zero antes de popu
         'admin_password' => env('APP_ADMIN_PASSWORD', 'Admin@12345'),
     ], $this->option('fresh'));
 
-    $this->info('Instalacao concluida.');
+    $this->info('Instalação concluída.');
 })->purpose('Instala e prepara o sistema para uso em hospedagem compartilhada');

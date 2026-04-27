@@ -15,9 +15,9 @@
     <body class="font-sans text-gray-900 antialiased">
         @php
             $authPanel = [
-                'eyebrow' => (string) setting('auth.panel_eyebrow', 'Admin Suite'),
-                'title' => (string) setting('auth.panel_title', 'Gestao juridica com acesso seguro.'),
-                'description' => (string) setting('auth.panel_description', 'Painel administrativo para conteudo, agenda, midias, usuarios e permissoes do escritorio.'),
+                'eyebrow' => (string) setting('auth.panel_eyebrow', 'Painel administrativo'),
+                'title' => (string) setting('auth.panel_title', 'Gestão jurídica com acesso seguro.'),
+                'description' => (string) setting('auth.panel_description', 'Painel administrativo para conteúdo, agenda, mídias, usuários e permissões do escritório.'),
             ];
 
             $authMetrics = collect([1, 2, 3])
@@ -29,8 +29,8 @@
                     }),
                     'subtitle' => (string) setting("auth.metric_{$index}_subtitle", match ($index) {
                         1 => 'Base atual',
-                        2 => 'Permissoes',
-                        default => 'Experiencia app',
+                        2 => 'Permissões',
+                        default => 'Experiência em app',
                     }),
                 ])
                 ->filter(fn (array $metric): bool => filled($metric['title']) || filled($metric['subtitle']))

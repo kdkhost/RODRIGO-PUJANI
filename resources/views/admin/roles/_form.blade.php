@@ -9,20 +9,20 @@
 
     <div class="row g-3">
         <div class="col-md-7">
-            <label class="form-label">Nome da funcao</label>
+            <label class="form-label">Nome da função</label>
             <input type="text" name="name" class="form-control" value="{{ old('name', $record->name) }}" placeholder="Ex.: Editor, Financeiro, Atendimento" required>
             <div class="invalid-feedback" data-error-for="name"></div>
         </div>
 
         <div class="col-md-5">
-            <label class="form-label">Guard</label>
+            <label class="form-label">Contexto de autenticação</label>
             <input type="text" name="guard_name" class="form-control" value="{{ old('guard_name', $record->guard_name ?? 'web') }}" required>
             <div class="invalid-feedback" data-error-for="guard_name"></div>
         </div>
 
         <div class="col-12">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                <label class="form-label mb-0">Permissoes granulares</label>
+                <label class="form-label mb-0">Permissões granulares</label>
                 <span class="admin-permission-meta">{{ count($selectedPermissions) }} selecionada(s)</span>
             </div>
 
@@ -30,7 +30,7 @@
                 @foreach($permissions as $permission)
                     @php
                         $permissionId = 'role-permission-'.\Illuminate\Support\Str::slug($permission->name);
-                        $friendlyName = \Illuminate\Support\Str::of($permission->name)->replace(['-', '.'], ' ')->title();
+                        $friendlyName = \Illuminate\Support\Str::of($permission->name)->replace(['-', '.'], ' ')->headline();
                     @endphp
                     <label class="admin-permission-option" for="{{ $permissionId }}">
                         <input
@@ -55,7 +55,7 @@
     <div class="d-flex justify-content-end gap-2 mt-4">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check2-circle me-1"></i>Salvar funcao
+            <i class="bi bi-check2-circle me-1"></i>Salvar função
         </button>
     </div>
 </form>

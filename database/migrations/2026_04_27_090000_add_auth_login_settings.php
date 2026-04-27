@@ -60,14 +60,14 @@ return new class extends Migration
     {
         return [
             ['group' => 'auth', 'key' => 'auth.panel_eyebrow', 'label' => 'Tela de login - chamada curta', 'type' => 'text', 'value' => 'Admin Suite', 'is_public' => true, 'sort_order' => 400],
-            ['group' => 'auth', 'key' => 'auth.panel_title', 'label' => 'Tela de login - titulo', 'type' => 'text', 'value' => 'Gestao juridica com acesso seguro.', 'is_public' => true, 'sort_order' => 401],
-            ['group' => 'auth', 'key' => 'auth.panel_description', 'label' => 'Tela de login - descricao', 'type' => 'text', 'value' => 'Painel administrativo para conteudo, agenda, midias, usuarios e permissoes do escritorio.', 'is_public' => true, 'sort_order' => 402],
-            ['group' => 'auth', 'key' => 'auth.metric_1_title', 'label' => 'Tela de login - metrica 1 titulo', 'type' => 'text', 'value' => 'Laravel 13', 'is_public' => true, 'sort_order' => 410],
-            ['group' => 'auth', 'key' => 'auth.metric_1_subtitle', 'label' => 'Tela de login - metrica 1 subtitulo', 'type' => 'text', 'value' => 'Base atual', 'is_public' => true, 'sort_order' => 411],
-            ['group' => 'auth', 'key' => 'auth.metric_2_title', 'label' => 'Tela de login - metrica 2 titulo', 'type' => 'text', 'value' => 'ACL', 'is_public' => true, 'sort_order' => 412],
-            ['group' => 'auth', 'key' => 'auth.metric_2_subtitle', 'label' => 'Tela de login - metrica 2 subtitulo', 'type' => 'text', 'value' => 'Permissoes', 'is_public' => true, 'sort_order' => 413],
-            ['group' => 'auth', 'key' => 'auth.metric_3_title', 'label' => 'Tela de login - metrica 3 titulo', 'type' => 'text', 'value' => 'PWA', 'is_public' => true, 'sort_order' => 414],
-            ['group' => 'auth', 'key' => 'auth.metric_3_subtitle', 'label' => 'Tela de login - metrica 3 subtitulo', 'type' => 'text', 'value' => 'Experiencia app', 'is_public' => true, 'sort_order' => 415],
+            ['group' => 'auth', 'key' => 'auth.panel_title', 'label' => 'Tela de login - título', 'type' => 'text', 'value' => 'Gestão jurídica com acesso seguro.', 'is_public' => true, 'sort_order' => 401],
+            ['group' => 'auth', 'key' => 'auth.panel_description', 'label' => 'Tela de login - descrição', 'type' => 'text', 'value' => 'Painel administrativo para conteúdo, agenda, mídias, usuários e permissões do escritório.', 'is_public' => true, 'sort_order' => 402],
+            ['group' => 'auth', 'key' => 'auth.metric_1_title', 'label' => 'Tela de login - métrica 1 título', 'type' => 'text', 'value' => 'Laravel 13', 'is_public' => true, 'sort_order' => 410],
+            ['group' => 'auth', 'key' => 'auth.metric_1_subtitle', 'label' => 'Tela de login - métrica 1 subtítulo', 'type' => 'text', 'value' => 'Base atual', 'is_public' => true, 'sort_order' => 411],
+            ['group' => 'auth', 'key' => 'auth.metric_2_title', 'label' => 'Tela de login - métrica 2 título', 'type' => 'text', 'value' => 'ACL', 'is_public' => true, 'sort_order' => 412],
+            ['group' => 'auth', 'key' => 'auth.metric_2_subtitle', 'label' => 'Tela de login - métrica 2 subtítulo', 'type' => 'text', 'value' => 'Permissões', 'is_public' => true, 'sort_order' => 413],
+            ['group' => 'auth', 'key' => 'auth.metric_3_title', 'label' => 'Tela de login - métrica 3 título', 'type' => 'text', 'value' => 'PWA', 'is_public' => true, 'sort_order' => 414],
+            ['group' => 'auth', 'key' => 'auth.metric_3_subtitle', 'label' => 'Tela de login - métrica 3 subtítulo', 'type' => 'text', 'value' => 'Experiência em app', 'is_public' => true, 'sort_order' => 415],
         ];
     }
 };

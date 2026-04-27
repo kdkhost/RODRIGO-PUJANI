@@ -39,7 +39,7 @@
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Inteligencia do site</div>
+                    <div class="admin-eyebrow">Inteligência do site</div>
                     <h1>{{ $pageTitle }}</h1>
                     <p>Monitore acessos, dispositivos, origem de interesse e comportamento recente dos visitantes.</p>
                 </div>
@@ -58,7 +58,7 @@
                     <div class="card admin-chart-card h-100">
                         <div class="card-header">
                             <div>
-                                <div class="admin-card-kicker">Distribuicao</div>
+                                <div class="admin-card-kicker">Distribuição</div>
                                 <h3 class="card-title">Dispositivos</h3>
                             </div>
                         </div>
@@ -87,12 +87,12 @@
             </div>
 
             <div class="card admin-table-card mb-4">
-                <div class="card-header">
-                    <div>
-                        <div class="admin-card-kicker">Ranking</div>
-                        <h3 class="card-title">Paginas mais acessadas</h3>
-                    </div>
-                </div>
+                        <div class="card-header">
+                            <div>
+                                <div class="admin-card-kicker">Ranking</div>
+                                <h3 class="card-title">Páginas mais acessadas</h3>
+                            </div>
+                        </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
@@ -119,12 +119,12 @@
             </div>
 
             <div class="card admin-table-card">
-                <div class="card-header">
-                    <div>
-                        <div class="admin-card-kicker">Tempo real</div>
-                        <h3 class="card-title">Ultimas visitas</h3>
-                    </div>
-                </div>
+                        <div class="card-header">
+                            <div>
+                                <div class="admin-card-kicker">Tempo real</div>
+                                <h3 class="card-title">Últimas visitas</h3>
+                            </div>
+                        </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">

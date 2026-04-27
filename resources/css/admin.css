@@ -686,6 +686,206 @@ img.admin-avatar {
     gap: 0.75rem;
 }
 
+.admin-permission-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.admin-permission-kpi-card,
+.admin-insight-card,
+.admin-permission-card {
+    border: 1px solid var(--admin-border);
+    border-radius: 0.9rem;
+    background: var(--admin-card-bg);
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-permission-kpi-card {
+    padding: 1.1rem 1.15rem;
+}
+
+.admin-permission-kpi-card span,
+.admin-table-inline-summary {
+    color: var(--admin-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-permission-kpi-card strong {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--admin-ink);
+    font-size: 1.65rem;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.admin-permission-kpi-card small {
+    display: block;
+    margin-top: 0.55rem;
+    color: var(--admin-muted);
+    line-height: 1.45;
+}
+
+.admin-table-inline-summary {
+    margin-bottom: 1rem;
+}
+
+.admin-insight-copy p {
+    margin-bottom: 1rem;
+    color: var(--admin-muted);
+    line-height: 1.6;
+}
+
+.admin-insight-stack {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.admin-insight-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.75rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-insight-row {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-insight-row span {
+    color: var(--admin-ink);
+    font-weight: 700;
+}
+
+.admin-insight-row strong {
+    color: var(--admin-muted);
+    font-size: 0.82rem;
+}
+
+.admin-permission-patterns {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.admin-permission-patterns div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0.95rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.78rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-permission-patterns div {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-permission-patterns strong {
+    color: var(--admin-ink);
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.admin-permission-patterns code,
+.admin-permission-code {
+    color: var(--admin-primary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.78rem;
+}
+
+.admin-permission-list {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.admin-permission-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.05rem;
+}
+
+.admin-permission-card-main {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.admin-permission-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.admin-permission-card-title {
+    color: var(--admin-ink);
+    font-size: 1rem;
+    font-weight: 850;
+    line-height: 1.2;
+}
+
+.admin-permission-code {
+    display: inline-flex;
+    max-width: 100%;
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.55rem;
+    background: rgba(196, 154, 60, 0.12);
+    overflow-wrap: anywhere;
+}
+
+.admin-permission-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex: 0 0 auto;
+}
+
+.admin-permission-card-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 104px;
+    justify-content: center;
+}
+
+.admin-permission-empty {
+    display: grid;
+    justify-items: center;
+    gap: 0.55rem;
+    padding: 2.6rem 1.5rem;
+    border: 1px dashed var(--admin-border);
+    border-radius: 0.9rem;
+    text-align: center;
+}
+
+.admin-permission-empty i {
+    color: var(--admin-primary);
+    font-size: 2rem;
+}
+
+.admin-permission-empty strong {
+    color: var(--admin-ink);
+    font-size: 1rem;
+    font-weight: 850;
+}
+
+.admin-permission-empty span {
+    max-width: 26rem;
+    color: var(--admin-muted);
+}
+
 .admin-permission-option {
     display: flex;
     gap: 0.65rem;
@@ -1084,6 +1284,26 @@ img.admin-avatar {
 }
 
 @media (max-width: 767.98px) {
+    .admin-permission-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-permission-card,
+    .admin-permission-card-header,
+    .admin-permission-patterns div {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-permission-card-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .admin-permission-card-actions .btn {
+        flex: 1 1 0;
+    }
+
     .admin-page-hero-inner,
     .admin-danger-zone {
         align-items: stretch;

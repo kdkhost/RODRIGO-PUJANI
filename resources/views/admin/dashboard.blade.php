@@ -3,8 +3,8 @@
 @section('content')
     @php
         $statMeta = [
-            'pages' => ['label' => 'Paginas', 'icon' => 'bi-window-stack', 'tone' => 'gold'],
-            'areas' => ['label' => 'Areas', 'icon' => 'bi-briefcase', 'tone' => 'blue'],
+            'pages' => ['label' => 'Páginas', 'icon' => 'bi-window-stack', 'tone' => 'gold'],
+            'areas' => ['label' => 'Áreas', 'icon' => 'bi-briefcase', 'tone' => 'blue'],
             'team' => ['label' => 'Equipe', 'icon' => 'bi-people', 'tone' => 'green'],
             'testimonials' => ['label' => 'Depoimentos', 'icon' => 'bi-chat-square-quote', 'tone' => 'purple'],
             'contacts' => ['label' => 'Mensagens', 'icon' => 'bi-envelope', 'tone' => 'red'],
@@ -42,7 +42,7 @@
                 <div>
                     <div class="admin-eyebrow">Centro de comando</div>
                     <h1>{{ $pageTitle }}</h1>
-                    <p>Acompanhe o conteudo, os contatos e os principais sinais de atividade do site.</p>
+                    <p>Acompanhe o conteúdo, os contatos e os principais sinais de atividade do site.</p>
                 </div>
                 <div class="admin-hero-stamp">
                     <i class="bi bi-calendar2-check"></i>
@@ -76,8 +76,8 @@
                     <div class="card admin-chart-card h-100">
                         <div class="card-header">
                             <div>
-                                <div class="admin-card-kicker">Audiencia</div>
-                                <h3 class="card-title">Visitas dos ultimos 7 dias</h3>
+                                <div class="admin-card-kicker">Audiência</div>
+                                <h3 class="card-title">Visitas dos últimos 7 dias</h3>
                             </div>
                         </div>
                         <div class="card-body">
@@ -93,7 +93,7 @@
                         <div class="card-header">
                             <div>
                                 <div class="admin-card-kicker">Atendimento</div>
-                                <h3 class="card-title">Ultimas mensagens</h3>
+                                <h3 class="card-title">Últimas mensagens</h3>
                             </div>
                         </div>
                         <div class="card-body p-0">

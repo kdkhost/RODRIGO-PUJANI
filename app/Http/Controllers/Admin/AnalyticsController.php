@@ -15,7 +15,7 @@ class AnalyticsController extends \App\Http\Controllers\Controller
             ->groupBy('device_type')
             ->get()
             ->map(fn ($row): array => [
-                'device_type' => $row->device_type ?: 'Nao identificado',
+                'device_type' => $row->device_type ?: 'Não identificado',
                 'total' => (int) $row->total,
             ]);
 
@@ -29,7 +29,7 @@ class AnalyticsController extends \App\Http\Controllers\Controller
             ]);
 
         return view('admin.analytics.index', [
-            'pageTitle' => 'Analytics',
+            'pageTitle' => 'Análises',
             'visitsByPage' => PageVisit::query()
                 ->selectRaw('path, COUNT(*) as total')
                 ->groupBy('path')

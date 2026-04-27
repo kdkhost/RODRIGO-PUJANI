@@ -170,7 +170,7 @@
 <body>
     <div class="page">
         <aside class="panel">
-            <div class="badge">Instalador automatico para hospedagem compartilhada</div>
+            <div class="badge">Instalador automático para hospedagem compartilhada</div>
             <h1>Configurar sistema</h1>
             <p class="lead">
                 Este assistente grava o arquivo de ambiente, valida a conexao com MariaDB/MySQL,
@@ -180,25 +180,25 @@
             <h2>Checklist do ambiente</h2>
             <div class="checklist">
                 <div class="check">
-                    <strong>.env disponivel para escrita</strong>
+                    <strong>.env disponível para escrita</strong>
                     <span class="{{ $status['env_writable'] ? 'status-ok' : 'status-error' }}">
                         {{ $status['env_writable'] ? 'OK' : 'Revisar' }}
                     </span>
                 </div>
                 <div class="check">
-                    <strong>storage/ com permissao de escrita</strong>
+                    <strong>storage/ com permissão de escrita</strong>
                     <span class="{{ $status['storage_writable'] ? 'status-ok' : 'status-error' }}">
                         {{ $status['storage_writable'] ? 'OK' : 'Revisar' }}
                     </span>
                 </div>
                 <div class="check">
-                    <strong>bootstrap/cache com permissao</strong>
+                    <strong>bootstrap/cache com permissão</strong>
                     <span class="{{ $status['bootstrap_writable'] ? 'status-ok' : 'status-error' }}">
                         {{ $status['bootstrap_writable'] ? 'OK' : 'Revisar' }}
                     </span>
                 </div>
                 <div class="check">
-                    <strong>public/ com permissao para link simbolico</strong>
+                    <strong>public/ com permissão para link simbólico</strong>
                     <span class="{{ $status['public_writable'] ? 'status-ok' : 'status-error' }}">
                         {{ $status['public_writable'] ? 'OK' : 'Revisar' }}
                     </span>
@@ -207,7 +207,7 @@
         </aside>
 
         <main class="panel">
-            <h2>Dados da instalacao</h2>
+            <h2>Dados da instalação</h2>
 
             @if ($errors->any())
                 <div class="errors">
@@ -224,8 +224,8 @@
 
                 <section class="section">
                     <div>
-                        <h3>Aplicacao</h3>
-                        <p class="help">Use a URL final do dominio principal ja apontando para a raiz publica configurada via .htaccess.</p>
+                        <h3>Aplicação</h3>
+                        <p class="help">Use a URL final do domínio principal já apontando para a raiz pública configurada via .htaccess.</p>
                     </div>
                     <div class="section-grid">
                         <div class="field">
@@ -242,7 +242,7 @@
                 <section class="section">
                     <div>
                         <h3>Banco de dados</h3>
-                        <p class="help">Compatível com MariaDB e MySQL. Em cPanel, normalmente o host e o banco sao informados pelo provedor.</p>
+                        <p class="help">Compatível com MariaDB e MySQL. Em cPanel, normalmente o host e o banco são informados pelo provedor.</p>
                     </div>
                     <div class="section-grid">
                         <div class="field">
@@ -266,7 +266,7 @@
                             <input id="db_database" name="db_database" type="text" value="{{ old('db_database', $defaults['db_database']) }}" required>
                         </div>
                         <div class="field">
-                            <label for="db_username">Usuario</label>
+                            <label for="db_username">Usuário</label>
                             <input id="db_username" name="db_username" type="text" value="{{ old('db_username', $defaults['db_username']) }}" required>
                         </div>
                         <div class="field">
@@ -279,7 +279,7 @@
                 <section class="section">
                     <div>
                         <h3>Primeiro administrador</h3>
-                        <p class="help">Esse usuario ja sai com perfil Super Admin e acesso completo ao painel.</p>
+                        <p class="help">Esse usuário já sai com perfil Super Admin e acesso completo ao painel.</p>
                     </div>
                     <div class="section-grid">
                         <div class="field">
@@ -295,7 +295,7 @@
                             <input id="admin_password" name="admin_password" type="password" autocomplete="new-password" required>
                         </div>
                         <div class="field">
-                            <label for="admin_password_confirmation">Confirmacao da senha</label>
+                            <label for="admin_password_confirmation">Confirmação da senha</label>
                             <input id="admin_password_confirmation" name="admin_password_confirmation" type="password" autocomplete="new-password" required>
                         </div>
                         <label class="switch full">

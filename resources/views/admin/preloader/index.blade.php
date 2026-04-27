@@ -5,9 +5,9 @@
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Experiencia de carregamento</div>
+                    <div class="admin-eyebrow">Experiência de carregamento</div>
                     <h1>{{ $pageTitle }}</h1>
-                    <p>Ative, desative e personalize o preloader do site e do painel com cores, logo, duracao, estilo e CSS proprio.</p>
+                    <p>Ative, desative e personalize o pré-carregador do site e do painel com cores, logo, duração, estilo e CSS próprio.</p>
                 </div>
                 <div class="admin-hero-stamp">
                     <i class="bi bi-hourglass-split"></i>
@@ -27,8 +27,8 @@
                     <div class="card admin-table-card h-100">
                         <div class="card-header">
                             <div>
-                                <div class="admin-card-kicker">Configuracao</div>
-                                <h3 class="card-title">Personalizacao completa</h3>
+                                <div class="admin-card-kicker">Configuração</div>
+                                <h3 class="card-title">Personalização completa</h3>
                             </div>
                         </div>
                         <div class="card-body p-4">
@@ -38,7 +38,7 @@
                                     <label class="form-check-label" for="preloader_enabled">Ativar preloader</label>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Exibicao</label>
+                                    <label class="form-label">Exibição</label>
                                     <select name="scope" class="form-select">
                                         @foreach (['all' => 'Site e painel', 'site' => 'Somente site', 'admin' => 'Somente painel'] as $value => $label)
                                             <option value="{{ $value }}" @selected($config['scope'] === $value)>{{ $label }}</option>
@@ -77,7 +77,7 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Duracao minima (ms)</label>
+                                    <label class="form-label">Duração mínima (ms)</label>
                                     <input type="number" name="min_duration" class="form-control" min="0" max="6000" value="{{ $config['min_duration'] }}">
                                 </div>
                                 <div class="col-md-6">
@@ -99,7 +99,7 @@
                         </div>
                         <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-1"></i>Salvar preloader
+                                <i class="bi bi-save me-1"></i>Salvar pré-carregador
                             </button>
                         </div>
                     </div>
@@ -109,8 +109,8 @@
                     <div class="card admin-preloader-preview-card h-100">
                         <div class="card-header">
                             <div>
-                                <div class="admin-card-kicker">Preview</div>
-                                <h3 class="card-title">Aparencia atual</h3>
+                                <div class="admin-card-kicker">Prévia</div>
+                                <h3 class="card-title">Aparência atual</h3>
                             </div>
                         </div>
                         <div class="card-body">
