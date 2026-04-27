@@ -103,6 +103,41 @@
         </div>
 
         <div class="col-12">
+            <div class="admin-premium-surface p-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div>
+                        <div class="admin-card-kicker">Portal do cliente</div>
+                        <h3 class="h6 mb-0">Acesso individual ao acompanhamento</h3>
+                    </div>
+                    <span class="badge {{ old('portal_enabled', $record->portal_enabled) ? 'badge-soft-success' : 'badge-soft-secondary' }}">
+                        {{ old('portal_enabled', $record->portal_enabled) ? 'Liberado' : 'Desativado' }}
+                    </span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4 form-check ps-5">
+                        <input type="checkbox" class="form-check-input" id="client_portal_enabled" name="portal_enabled" value="1" @checked(old('portal_enabled', $record->portal_enabled))>
+                        <label class="form-check-label" for="client_portal_enabled">Permitir acesso ao portal</label>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Código de acesso</label>
+                        <div class="input-group">
+                            <input type="text" name="portal_access_code" class="form-control" value="{{ old('portal_access_code') }}" placeholder="{{ $record->portal_access_code ? 'Deixe em branco para manter o código atual' : 'Informe ou gere um código de acesso' }}">
+                            <button class="btn btn-outline-secondary" type="button" data-generate-client-code>Gerar</button>
+                        </div>
+                        <div class="form-text">
+                            @if($record->portal_access_code)
+                                Última alteração: {{ $record->portal_access_code_updated_at?->format('d/m/Y H:i') ?: 'não registrada' }}.
+                            @else
+                                Defina um código com no mínimo 6 caracteres para o primeiro acesso.
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
             <label class="form-label">Notas internas</label>
             <textarea name="notes" class="form-control" data-editor="summernote" data-editor-height="260">{{ old('notes', $record->notes) }}</textarea>
         </div>

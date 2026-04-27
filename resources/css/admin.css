@@ -1461,6 +1461,16 @@ img.admin-avatar {
     text-transform: uppercase;
 }
 
+.admin-premium-surface {
+    border: 1px solid var(--admin-border);
+    border-radius: 0.8rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-premium-surface {
+    background: rgba(255, 255, 255, 0.03);
+}
+
 .admin-form-actions {
     display: flex;
     justify-content: flex-end;
@@ -1696,6 +1706,11 @@ img.admin-avatar {
 .badge-soft-info {
     background: rgba(13, 110, 253, 0.12);
     color: #0d6efd;
+}
+
+.badge-soft-secondary {
+    background: rgba(108, 117, 125, 0.14);
+    color: #6c757d;
 }
 
 @media (max-width: 767.98px) {

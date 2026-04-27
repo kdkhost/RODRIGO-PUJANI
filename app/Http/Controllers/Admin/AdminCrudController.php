@@ -76,7 +76,7 @@ abstract class AdminCrudController extends Controller
 
     public function create(): JsonResponse
     {
-        return $this->formResponse($this->newModel(), 'Nova '.$this->singularLabel);
+        return $this->formResponse($this->newModel(), 'Cadastrar '.$this->singularLabel);
     }
 
     public function store(Request $request): JsonResponse
@@ -92,7 +92,7 @@ abstract class AdminCrudController extends Controller
         activity_log($this->module, 'created', $record, $record->toArray(), $this->singularLabel.' criada.');
 
         return response()->json([
-            'message' => $this->singularLabel.' criada com sucesso.',
+            'message' => 'Cadastro realizado com sucesso.',
             'tableTarget' => '#admin-resource-table',
         ]);
     }
@@ -115,7 +115,7 @@ abstract class AdminCrudController extends Controller
         activity_log($this->module, 'updated', $entity, $entity->toArray(), $this->singularLabel.' atualizada.');
 
         return response()->json([
-            'message' => $this->singularLabel.' atualizada com sucesso.',
+            'message' => 'Registro atualizado com sucesso.',
             'tableTarget' => '#admin-resource-table',
         ]);
     }
@@ -131,7 +131,7 @@ abstract class AdminCrudController extends Controller
         activity_log($this->module, 'deleted', $entity, [], $this->singularLabel.' removida.');
 
         return response()->json([
-            'message' => $this->singularLabel.' removida com sucesso.',
+            'message' => 'Registro removido com sucesso.',
         ]);
     }
 

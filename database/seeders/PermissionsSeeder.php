@@ -34,8 +34,10 @@ class PermissionsSeeder extends Seeder
             'system-files.manage',
             'calendar.manage',
             'legal-cases.manage',
+            'legal-case-updates.manage',
             'legal-tasks.manage',
             'legal-documents.manage',
+            'client-portal.manage',
             'preloader.manage',
             'impersonate.users',
         ];
@@ -71,8 +73,10 @@ class PermissionsSeeder extends Seeder
             'seo-metas.manage',
             'calendar.manage',
             'legal-cases.manage',
+            'legal-case-updates.manage',
             'legal-tasks.manage',
             'legal-documents.manage',
+            'client-portal.manage',
         ]);
 
         $associatedLawyer->syncPermissions([
@@ -80,6 +84,7 @@ class PermissionsSeeder extends Seeder
             'calendar.manage',
             'clients.manage',
             'legal-cases.manage',
+            'legal-case-updates.manage',
             'legal-tasks.manage',
             'legal-documents.manage',
         ]);

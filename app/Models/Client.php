@@ -30,6 +30,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'assigned_lawyer_id',
     'created_by',
     'is_active',
+    'portal_enabled',
+    'portal_access_code',
+    'portal_access_code_updated_at',
+    'portal_last_login_at',
+    'portal_last_login_ip',
 ])]
 class Client extends Model
 {
@@ -39,6 +44,9 @@ class Client extends Model
             'birth_date' => 'date',
             'metadata' => 'array',
             'is_active' => 'boolean',
+            'portal_enabled' => 'boolean',
+            'portal_access_code_updated_at' => 'datetime',
+            'portal_last_login_at' => 'datetime',
         ];
     }
 
@@ -65,5 +73,10 @@ class Client extends Model
     public function legalDocuments(): HasMany
     {
         return $this->hasMany(LegalDocument::class);
+    }
+
+    public function legalCaseUpdates(): HasMany
+    {
+        return $this->hasMany(LegalCaseUpdate::class);
     }
 }

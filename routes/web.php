@@ -4,10 +4,12 @@ use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuthAppearanceController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\ClientPortalController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LegalCaseController;
+use App\Http\Controllers\Admin\LegalCaseUpdateController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\LegalTaskController;
 use App\Http\Controllers\Admin\MediaAssetController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Portal\ClientPortalController as PortalClientPortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Http\RedirectResponse;
@@ -50,6 +53,17 @@ Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
     Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('site.sitemap');
     Route::get('/robots.txt', [SiteController::class, 'robots'])->name('site.robots');
     Route::post('/contato/enviar', [SiteController::class, 'submitContact'])->name('site.contact.submit');
+    Route::prefix('portal-cliente')->name('portal.')->group(function (): void {
+        Route::get('/', [PortalClientPortalController::class, 'login'])->name('login');
+        Route::post('/entrar', [PortalClientPortalController::class, 'authenticate'])->name('authenticate');
+        Route::post('/sair', [PortalClientPortalController::class, 'logout'])->name('logout');
+
+        Route::middleware('portal.client')->group(function (): void {
+            Route::get('/painel', [PortalClientPortalController::class, 'dashboard'])->name('dashboard');
+            Route::get('/processos/{case}', [PortalClientPortalController::class, 'showCase'])->name('cases.show');
+            Route::get('/documentos/{document}', [PortalClientPortalController::class, 'downloadDocument'])->name('documents.download');
+        });
+    });
     Route::get('/', [SiteController::class, 'home'])->name('site.home');
 });
 
@@ -89,6 +103,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::put('/', [AuthAppearanceController::class, 'update'])->name('update');
         });
 
+    Route::middleware('permission:client-portal.manage')
+        ->prefix('client-portal')
+        ->name('client-portal.')
+        ->group(function (): void {
+            Route::get('/', [ClientPortalController::class, 'index'])->name('index');
+            Route::put('/', [ClientPortalController::class, 'update'])->name('update');
+        });
+
     Route::post('/users/{user}/impersonate', [ImpersonationController::class, 'start'])
         ->middleware('permission:impersonate.users')
         ->name('users.impersonate');
@@ -111,6 +133,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     $crud('practice-areas', 'practice-areas', PracticeAreaController::class, 'practice-areas.manage');
     $crud('clients', 'clients', ClientController::class, 'clients.manage');
     $crud('legal-cases', 'legal-cases', LegalCaseController::class, 'legal-cases.manage');
+    Route::middleware('permission:legal-cases.manage')
+        ->post('legal-cases/{record}/sync-datajud', [LegalCaseController::class, 'syncDataJud'])
+        ->name('legal-cases.sync-datajud');
+    $crud('legal-case-updates', 'legal-case-updates', LegalCaseUpdateController::class, 'legal-case-updates.manage');
     $crud('legal-tasks', 'legal-tasks', LegalTaskController::class, 'legal-tasks.manage');
     $crud('legal-documents', 'legal-documents', LegalDocumentController::class, 'legal-documents.manage');
     $crud('team-members', 'team-members', TeamMemberController::class, 'team-members.manage');
@@ -146,5 +172,5 @@ require __DIR__.'/auth.php';
 
 Route::middleware(['check.maintenance', 'track.visit'])
     ->get('/{slug}', [SiteController::class, 'show'])
-    ->where('slug', '^(?!admin|instalar|login|logout|forgot-password|reset-password|register|dashboard|profile|verify-email|email|confirm-password|password|manifest\.webmanifest|sw\.js|offline|sitemap\.xml|robots\.txt|up).*$')
+    ->where('slug', '^(?!admin|instalar|login|logout|forgot-password|reset-password|register|dashboard|profile|verify-email|email|confirm-password|password|manifest\.webmanifest|sw\.js|offline|sitemap\.xml|robots\.txt|portal-cliente|up).*$')
     ->name('site.show');

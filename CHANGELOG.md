@@ -2,6 +2,24 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.5] - 2026-04-27
+
+### Adicionado
+- Portal do cliente em `/portal-cliente` com login por documento e codigo de acesso, painel de acompanhamento, visao individual de processos e download de documentos compartilhados.
+- Modulo administrativo de andamentos processuais com permissao granular propria e exibicao opcional no portal do cliente.
+- Integracao opcional com a API publica do DataJud/CNJ para importar movimentacoes oficiais por numero CNJ e alias do tribunal.
+- Pagina administrativa premium para personalizacao do portal do cliente e configuracao da chave publica do DataJud.
+
+### Alterado
+- Cadastros de clientes agora permitem ativar ou bloquear o portal individualmente e redefinir o codigo de acesso.
+- Cadastros de processos passaram a controlar resumo do portal, visibilidade ao cliente, alias do tribunal e monitoramento CNJ.
+- Sidebar administrativa e dicionario de permissoes foram ampliados para refletir os novos modulos juridicos.
+- Formularios e listagens juridicas tocadas nesta entrega foram padronizados em PT-BR com acentuacao corrigida.
+
+### Corrigido
+- Frontend do portal do cliente saiu do estado inexistente para um fluxo funcional e responsivo no padrao premium do sistema.
+- Mascaras em tempo real no frontend agora cobrem CPF/CNPJ alem do telefone para acessos publicos como o portal do cliente.
+
 ## [1.0.4] - 2026-04-26
 
 ### Adicionado

@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class ClientController extends AdminCrudController
 {
@@ -70,16 +72,37 @@ class ClientController extends AdminCrudController
             'address_state' => ['nullable', 'string', 'max:8'],
             'notes' => ['nullable', 'string'],
             'assigned_lawyer_id' => ['nullable', 'integer', 'exists:users,id'],
+            'portal_access_code' => [
+                Rule::requiredIf(fn () => $request->boolean('portal_enabled') && blank($record?->portal_access_code)),
+                'nullable',
+                'string',
+                'min:6',
+                'max:32',
+            ],
         ];
     }
 
     protected function mutateData(array $validated, Request $request, ?Model $record = null): array
     {
-        $validated += $this->booleanData($request, ['is_active']);
+        $validated += $this->booleanData($request, ['is_active', 'portal_enabled']);
         $validated['created_by'] ??= $record?->created_by ?: $request->user()?->id;
 
         if ($request->user()?->isAssociatedLawyer()) {
             $validated['assigned_lawyer_id'] = $request->user()->id;
+        }
+
+        if (filled($validated['portal_access_code'] ?? null)) {
+            $validated['portal_access_code'] = Hash::make((string) $validated['portal_access_code']);
+            $validated['portal_access_code_updated_at'] = now();
+        } else {
+            unset($validated['portal_access_code']);
+        }
+
+        if (! $validated['portal_enabled']) {
+            $validated['portal_access_code'] = null;
+            $validated['portal_access_code_updated_at'] = null;
+            $validated['portal_last_login_at'] = null;
+            $validated['portal_last_login_ip'] = null;
         }
 
         return $validated;

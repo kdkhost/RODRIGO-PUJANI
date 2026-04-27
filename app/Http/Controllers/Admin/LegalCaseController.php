@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\User;
+use App\Services\LegalCaseDataJudSyncService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class LegalCaseController extends AdminCrudController
 {
@@ -24,7 +27,9 @@ class LegalCaseController extends AdminCrudController
 
     protected function indexQuery(Request $request): Builder
     {
-        $query = LegalCase::query()->with(['client:id,name', 'primaryLawyer:id,name']);
+        $query = LegalCase::query()
+            ->with(['client:id,name', 'primaryLawyer:id,name'])
+            ->withCount(['updates', 'legalDocuments']);
 
         if ($request->user()?->isAssociatedLawyer()) {
             $query->where('primary_lawyer_id', $request->user()->id);
@@ -72,13 +77,30 @@ class LegalCaseController extends AdminCrudController
                 'hearing' => 'Audiência',
                 'sentence' => 'Sentença',
                 'appeal' => 'Recurso',
-                'execution' => 'Cumprimento/execução',
+                'execution' => 'Cumprimento / execução',
             ],
             'priorities' => [
                 'low' => 'Baixa',
                 'medium' => 'Média',
                 'high' => 'Alta',
                 'urgent' => 'Urgente',
+            ],
+            'tribunalSuggestions' => [
+                'tjsp' => 'TJSP',
+                'tjrj' => 'TJRJ',
+                'tjmg' => 'TJMG',
+                'tjrs' => 'TJRS',
+                'tjpr' => 'TJPR',
+                'tjba' => 'TJBA',
+                'trf1' => 'TRF1',
+                'trf2' => 'TRF2',
+                'trf3' => 'TRF3',
+                'trf4' => 'TRF4',
+                'trf5' => 'TRF5',
+                'trt2' => 'TRT2',
+                'trt15' => 'TRT15',
+                'stj' => 'STJ',
+                'tst' => 'TST',
             ],
         ];
     }
@@ -116,19 +138,28 @@ class LegalCaseController extends AdminCrudController
             'success_fee_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'summary' => ['nullable', 'string'],
             'strategy_notes' => ['nullable', 'string'],
+            'portal_summary' => ['nullable', 'string'],
+            'tribunal_alias' => ['nullable', 'string', 'max:40', 'regex:/^[a-z0-9-]+$/i'],
         ];
     }
 
     protected function mutateData(array $validated, Request $request, ?Model $record = null): array
     {
-        $validated += $this->booleanData($request, ['is_confidential', 'is_active']);
+        $validated += $this->booleanData($request, ['is_confidential', 'is_active', 'portal_visible', 'datajud_sync_enabled']);
         $validated['created_by'] ??= $record?->created_by ?: $request->user()?->id;
         $validated['claim_amount'] = $this->normalizeMoney($validated['claim_amount'] ?? null);
         $validated['contract_value'] = $this->normalizeMoney($validated['contract_value'] ?? null);
+        $validated['tribunal_alias'] = filled($validated['tribunal_alias'] ?? null)
+            ? strtolower(trim((string) $validated['tribunal_alias']))
+            : null;
 
         if ($request->user()?->isAssociatedLawyer()) {
             $validated['primary_lawyer_id'] = $request->user()->id;
             $validated['supervising_lawyer_id'] = $record?->supervising_lawyer_id;
+        }
+
+        if (! $validated['datajud_sync_enabled']) {
+            $validated['tribunal_alias'] = $validated['tribunal_alias'] ?: $record?->tribunal_alias;
         }
 
         return $validated;
@@ -138,11 +169,34 @@ class LegalCaseController extends AdminCrudController
     {
         return LegalCase::query()
             ->with(['client:id,name', 'primaryLawyer:id,name'])
+            ->withCount(['updates', 'legalDocuments'])
             ->when(
                 auth()->user()?->isAssociatedLawyer(),
                 fn (Builder $query) => $query->where('primary_lawyer_id', auth()->id())
             )
             ->findOrFail($record);
+    }
+
+    public function syncDataJud(string $record, Request $request, LegalCaseDataJudSyncService $service): JsonResponse
+    {
+        /** @var LegalCase $legalCase */
+        $legalCase = $this->resolveRecord($record);
+
+        try {
+            $result = $service->sync($legalCase, $request->user()?->id);
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        activity_log('legal_cases', 'synced', $legalCase, $result, 'Processo sincronizado com o DataJud.');
+
+        return response()->json([
+            'message' => "Sincronização concluída. {$result['created']} andamento(s) novo(s) e {$result['updated']} atualizado(s).",
+            'tableTarget' => '#admin-resource-table',
+            'closeModal' => false,
+        ]);
     }
 
     private function normalizeMoney(?string $value): ?string

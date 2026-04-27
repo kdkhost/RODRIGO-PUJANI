@@ -138,6 +138,45 @@
             <textarea name="strategy_notes" class="form-control" data-editor="summernote" data-editor-height="260">{{ old('strategy_notes', $record->strategy_notes) }}</textarea>
         </div>
 
+        <div class="col-12">
+            <div class="admin-premium-surface p-3">
+                <div class="row g-3">
+                    <div class="col-lg-8">
+                        <div class="admin-card-kicker">Portal do cliente</div>
+                        <h3 class="h6 mb-2">Resumo e visibilidade para o cliente</h3>
+                        <textarea name="portal_summary" class="form-control" data-editor="summernote" data-editor-height="220">{{ old('portal_summary', $record->portal_summary) }}</textarea>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="admin-card-kicker">DataJud / CNJ</div>
+                        <h3 class="h6 mb-2">Monitoramento público</h3>
+                        <label class="form-label">Alias do tribunal</label>
+                        <input type="text" name="tribunal_alias" class="form-control" list="tribunal-aliases" value="{{ old('tribunal_alias', $record->tribunal_alias) }}" placeholder="Ex.: tjsp, trf3, trt2">
+                        <datalist id="tribunal-aliases">
+                            @foreach($tribunalSuggestions as $alias => $label)
+                                <option value="{{ $alias }}">{{ $label }}</option>
+                            @endforeach
+                        </datalist>
+                        <div class="form-text mb-3">Use o alias oficial do DataJud para este tribunal.</div>
+
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" id="legal_case_portal_visible" name="portal_visible" value="1" @checked(old('portal_visible', $record->portal_visible ?? true))>
+                            <label class="form-check-label" for="legal_case_portal_visible">Exibir no portal do cliente</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" id="legal_case_datajud_sync_enabled" name="datajud_sync_enabled" value="1" @checked(old('datajud_sync_enabled', $record->datajud_sync_enabled))>
+                            <label class="form-check-label" for="legal_case_datajud_sync_enabled">Habilitar sincronização CNJ</label>
+                        </div>
+                        @if($record->exists)
+                            <div class="small text-muted mt-3">
+                                Última sincronização: {{ $record->datajud_last_synced_at?->format('d/m/Y H:i') ?: 'não realizada' }}<br>
+                                Última movimentação do tribunal: {{ $record->latest_court_update_at?->format('d/m/Y H:i') ?: 'não informada' }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="col-md-4 form-check ps-5">
             <input type="checkbox" class="form-check-input" id="legal_case_confidential" name="is_confidential" value="1" @checked(old('is_confidential', $record->is_confidential ?? true))>
             <label class="form-check-label" for="legal_case_confidential">Caso confidencial</label>

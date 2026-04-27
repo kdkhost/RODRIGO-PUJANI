@@ -34,7 +34,12 @@
                         <div class="admin-entity-meta">{{ $item->whatsapp ?: ($item->phone ?: 'Sem telefone') }}</div>
                     </td>
                     <td>{{ $item->address_city ? $item->address_city.($item->address_state ? '/'.$item->address_state : '') : 'Não informado' }}</td>
-                    <td><span class="badge {{ $item->is_active ? 'badge-soft-success' : 'badge-soft-danger' }}">{{ $item->is_active ? 'Ativo' : 'Inativo' }}</span></td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge {{ $item->is_active ? 'badge-soft-success' : 'badge-soft-danger' }}">{{ $item->is_active ? 'Ativo' : 'Inativo' }}</span>
+                            <span class="badge {{ $item->portal_enabled ? 'badge-soft-warning' : 'badge-soft-secondary' }}">{{ $item->portal_enabled ? 'Portal liberado' : 'Portal bloqueado' }}</span>
+                        </div>
+                    </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
                             <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>

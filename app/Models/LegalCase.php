@@ -33,6 +33,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'strategy_notes',
     'is_confidential',
     'is_active',
+    'portal_visible',
+    'portal_summary',
+    'tribunal_alias',
+    'datajud_sync_enabled',
+    'datajud_last_synced_at',
+    'latest_court_update_at',
     'created_by',
 ])]
 class LegalCase extends Model
@@ -48,6 +54,10 @@ class LegalCase extends Model
             'success_fee_percent' => 'decimal:2',
             'is_confidential' => 'boolean',
             'is_active' => 'boolean',
+            'portal_visible' => 'boolean',
+            'datajud_sync_enabled' => 'boolean',
+            'datajud_last_synced_at' => 'datetime',
+            'latest_court_update_at' => 'datetime',
         ];
     }
 
@@ -79,5 +89,10 @@ class LegalCase extends Model
     public function legalDocuments(): HasMany
     {
         return $this->hasMany(LegalDocument::class);
+    }
+
+    public function updates(): HasMany
+    {
+        return $this->hasMany(LegalCaseUpdate::class);
     }
 }

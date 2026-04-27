@@ -83,4 +83,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(LegalTask::class, 'assigned_user_id');
     }
+
+    public function legalCaseUpdates(): HasMany
+    {
+        return $this->hasMany(LegalCaseUpdate::class, 'created_by');
+    }
 }

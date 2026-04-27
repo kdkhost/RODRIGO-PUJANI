@@ -3,12 +3,13 @@
         'Visão geral' => [
             ['label' => 'Painel', 'route' => 'admin.dashboard', 'active' => 'admin.dashboard', 'icon' => 'bi-speedometer2', 'permission' => 'admin.access'],
             ['label' => 'Análises', 'route' => 'admin.analytics.index', 'active' => 'admin.analytics.*', 'icon' => 'bi-bar-chart', 'permission' => 'analytics.view'],
-            ['label' => 'Meu Perfil', 'route' => 'profile.edit', 'active' => 'profile.*', 'icon' => 'bi-person-circle', 'permission' => null],
+            ['label' => 'Meu perfil', 'route' => 'profile.edit', 'active' => 'profile.*', 'icon' => 'bi-person-circle', 'permission' => null],
         ],
         'Jurídico' => [
             ['label' => 'Agenda', 'route' => 'admin.calendar.index', 'active' => 'admin.calendar.*', 'icon' => 'bi-calendar3', 'permission' => 'calendar.manage'],
             ['label' => 'Clientes', 'route' => 'admin.clients.index', 'active' => 'admin.clients.*', 'icon' => 'bi-person-vcard', 'permission' => 'clients.manage'],
             ['label' => 'Processos', 'route' => 'admin.legal-cases.index', 'active' => 'admin.legal-cases.*', 'icon' => 'bi-briefcase', 'permission' => 'legal-cases.manage'],
+            ['label' => 'Andamentos', 'route' => 'admin.legal-case-updates.index', 'active' => 'admin.legal-case-updates.*', 'icon' => 'bi-journal-text', 'permission' => 'legal-case-updates.manage'],
             ['label' => 'Tarefas e prazos', 'route' => 'admin.legal-tasks.index', 'active' => 'admin.legal-tasks.*', 'icon' => 'bi-list-check', 'permission' => 'legal-tasks.manage'],
             ['label' => 'Documentos', 'route' => 'admin.legal-documents.index', 'active' => 'admin.legal-documents.*', 'icon' => 'bi-folder2-open', 'permission' => 'legal-documents.manage'],
         ],
@@ -19,10 +20,11 @@
             ['label' => 'Equipe', 'route' => 'admin.team-members.index', 'active' => 'admin.team-members.*', 'icon' => 'bi-people', 'permission' => 'team-members.manage'],
             ['label' => 'Depoimentos', 'route' => 'admin.testimonials.index', 'active' => 'admin.testimonials.*', 'icon' => 'bi-chat-square-quote', 'permission' => 'testimonials.manage'],
             ['label' => 'Mídias', 'route' => 'admin.media-assets.index', 'active' => 'admin.media-assets.*', 'icon' => 'bi-images', 'permission' => 'media-assets.manage'],
-            ['label' => 'SEO Global', 'route' => 'admin.seo-metas.index', 'active' => 'admin.seo-metas.*', 'icon' => 'bi-globe', 'permission' => 'seo-metas.manage'],
+            ['label' => 'SEO global', 'route' => 'admin.seo-metas.index', 'active' => 'admin.seo-metas.*', 'icon' => 'bi-globe', 'permission' => 'seo-metas.manage'],
         ],
         'Operação' => [
             ['label' => 'Mensagens', 'route' => 'admin.contact-messages.index', 'active' => 'admin.contact-messages.*', 'icon' => 'bi-envelope', 'permission' => 'contact-messages.manage'],
+            ['label' => 'Portal do cliente', 'route' => 'admin.client-portal.index', 'active' => 'admin.client-portal.*', 'icon' => 'bi-phone', 'permission' => 'client-portal.manage'],
             ['label' => 'Tela de login', 'route' => 'admin.auth-appearance.index', 'active' => 'admin.auth-appearance.*', 'icon' => 'bi-window-sidebar', 'permission' => 'settings.manage'],
             ['label' => 'Configurações', 'route' => 'admin.settings.index', 'active' => 'admin.settings.*', 'icon' => 'bi-sliders', 'permission' => 'settings.manage'],
             ['label' => 'Pré-carregador', 'route' => 'admin.preloader.index', 'active' => 'admin.preloader.*', 'icon' => 'bi-hourglass-split', 'permission' => 'preloader.manage'],
@@ -31,7 +33,7 @@
             ['label' => 'Usuários', 'route' => 'admin.users.index', 'active' => 'admin.users.*', 'icon' => 'bi-person-gear', 'permission' => 'users.manage'],
             ['label' => 'Funções', 'route' => 'admin.roles.index', 'active' => 'admin.roles.*', 'icon' => 'bi-shield-check', 'permission' => 'roles.manage'],
             ['label' => 'Permissões', 'route' => 'admin.permissions.index', 'active' => 'admin.permissions.*', 'icon' => 'bi-key', 'permission' => 'permissions.manage'],
-            ['label' => 'Arquivos do Sistema', 'route' => 'admin.system-files.index', 'active' => 'admin.system-files.*', 'icon' => 'bi-file-earmark-code', 'permission' => 'system-files.manage', 'super_admin_only' => true],
+            ['label' => 'Arquivos do sistema', 'route' => 'admin.system-files.index', 'active' => 'admin.system-files.*', 'icon' => 'bi-file-earmark-code', 'permission' => 'system-files.manage', 'super_admin_only' => true],
         ],
     ];
 

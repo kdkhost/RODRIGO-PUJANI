@@ -139,6 +139,17 @@ const AdminUI = {
                 return;
             }
 
+            const codeTrigger = event.target.closest('[data-generate-client-code]');
+            if (codeTrigger) {
+                event.preventDefault();
+                const input = codeTrigger.closest('.input-group')?.querySelector('input[name="portal_access_code"]');
+                if (input) {
+                    input.value = Math.random().toString(36).slice(-8).toUpperCase();
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                return;
+            }
+
             const calendarReset = event.target.closest('[data-calendar-reset]');
             if (calendarReset) {
                 window.setTimeout(() => {

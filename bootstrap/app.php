@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdminAccess::class,
             'check.maintenance' => \App\Http\Middleware\CheckMaintenanceAccess::class,
+            'portal.client' => \App\Http\Middleware\EnsurePortalClientAuthenticated::class,
             'track.visit' => \App\Http\Middleware\TrackPageVisit::class,
             'system-files.confirmed' => \App\Http\Middleware\EnsureSystemFilesPageConfirmed::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

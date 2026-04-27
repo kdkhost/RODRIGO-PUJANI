@@ -18,6 +18,8 @@ Sistema institucional e administrativo desenvolvido em Laravel 13 para operacao 
 - Permissoes granulares por modulo com Spatie Permission
 - Editor rich text com Summernote
 - Upload com arrastar e soltar via FilePond
+- Portal do cliente com acompanhamento individual de processos e documentos compartilhados
+- Integracao opcional com a API publica do DataJud/CNJ para movimentacoes processuais
 - PWA com manifest e service worker
 - Pagina de manutencao com liberacao programada
 - Paginas de erro personalizadas

@@ -10,7 +10,7 @@ const SiteUI = {
             this.bindMobileMenu,
             this.bindObserver,
             this.bindCounters,
-            this.bindPhoneMasks,
+            this.bindInputMasks,
             this.bindParallax,
             this.bindContactForm,
             this.bindPwa,
@@ -223,14 +223,20 @@ const SiteUI = {
         });
     },
 
-    bindPhoneMasks() {
-        document.querySelectorAll('input[type="tel"], [data-mask="phone"]').forEach((input) => {
+    bindInputMasks() {
+        document.querySelectorAll('input[type="tel"], [data-mask]').forEach((input) => {
             if (input.dataset.siteMaskReady) {
                 return;
             }
 
+            const maskType = input.dataset.mask || (input.type === 'tel' ? 'phone' : null);
+
+            if (!maskType) {
+                return;
+            }
+
             const applyMask = () => {
-                input.value = this.formatPhone(input.value);
+                input.value = this.applyMask(maskType, input.value);
             };
 
             input.addEventListener('input', applyMask);
@@ -238,6 +244,26 @@ const SiteUI = {
             applyMask();
             input.dataset.siteMaskReady = 'true';
         });
+    },
+
+    applyMask(maskType, value) {
+        switch (maskType) {
+            case 'cpf':
+                return this.formatCpf(value);
+            case 'cnpj':
+                return this.formatCnpj(value);
+            case 'cpf-cnpj':
+                return this.formatCpfCnpj(value);
+            case 'cep':
+                return this.formatCep(value);
+            case 'date':
+                return this.formatDate(value);
+            case 'time':
+                return this.formatTime(value);
+            case 'phone':
+            default:
+                return this.formatPhone(value);
+        }
     },
 
     formatPhone(value) {
@@ -256,6 +282,61 @@ const SiteUI = {
         }
 
         return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    },
+
+    formatCpf(value) {
+        const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+
+        return digits
+            .replace(/^(\d{3})(\d)/, '$1.$2')
+            .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+            .replace(/\.(\d{3})(\d)/, '.$1-$2');
+    },
+
+    formatCnpj(value) {
+        const digits = String(value || '').replace(/\D/g, '').slice(0, 14);
+
+        return digits
+            .replace(/^(\d{2})(\d)/, '$1.$2')
+            .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+            .replace(/\.(\d{3})(\d)/, '.$1/$2')
+            .replace(/(\d{4})(\d)/, '$1-$2');
+    },
+
+    formatCpfCnpj(value) {
+        const digits = String(value || '').replace(/\D/g, '');
+
+        return digits.length <= 11
+            ? this.formatCpf(digits)
+            : this.formatCnpj(digits);
+    },
+
+    formatCep(value) {
+        const digits = String(value || '').replace(/\D/g, '').slice(0, 8);
+
+        if (digits.length <= 5) {
+            return digits;
+        }
+
+        return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    },
+
+    formatDate(value) {
+        const digits = String(value || '').replace(/\D/g, '').slice(0, 8);
+
+        return digits
+            .replace(/^(\d{2})(\d)/, '$1/$2')
+            .replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+    },
+
+    formatTime(value) {
+        const digits = String(value || '').replace(/\D/g, '').slice(0, 4);
+
+        if (digits.length <= 2) {
+            return digits;
+        }
+
+        return `${digits.slice(0, 2)}:${digits.slice(2)}`;
     },
 
     bindParallax() {
