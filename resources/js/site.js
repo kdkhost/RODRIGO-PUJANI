@@ -431,26 +431,95 @@ const SiteUI = {
     },
 
     bindPwa() {
-        document.body.classList.toggle(
-            'app-installed',
-            window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
-        );
+        const root = document.documentElement;
+        const pwaEnabled = root.dataset.pwaEnabled === '1';
+        const installEnabled = root.dataset.pwaInstallEnabled === '1';
+        const promptEnabled = root.dataset.pwaPromptEnabled === '1';
+        const promptStorageKey = root.dataset.pwaPromptStorageKey || 'site-pwa-promo-dismissed-v1';
+        const promo = document.querySelector('[data-pwa-promo]');
+        const installButtons = Array.from(document.querySelectorAll('[data-pwa-install]'));
+        const installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        const setInstalledState = (value) => {
+            document.body.classList.toggle('app-installed', value);
+
+            if (value) {
+                document.body.classList.remove('pwa-installable');
+                promo?.setAttribute('hidden', 'hidden');
+                promo?.classList.remove('is-visible');
+            }
+        };
+
+        const hidePromo = (persist = false) => {
+            promo?.classList.remove('is-visible');
+            promo?.setAttribute('hidden', 'hidden');
+
+            if (persist) {
+                try {
+                    window.localStorage.setItem(promptStorageKey, '1');
+                } catch {
+                    // Ignore localStorage restrictions gracefully.
+                }
+            }
+        };
+
+        const showPromo = () => {
+            if (!promo || !promptEnabled) {
+                return;
+            }
+
+            try {
+                if (window.localStorage.getItem(promptStorageKey) === '1') {
+                    return;
+                }
+            } catch {
+                // Ignore localStorage restrictions gracefully.
+            }
+
+            promo.hidden = false;
+            window.requestAnimationFrame(() => promo.classList.add('is-visible'));
+        };
+
+        setInstalledState(installed);
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(() => null);
+                if (pwaEnabled) {
+                    navigator.serviceWorker.register('/sw.js').catch(() => null);
+                    return;
+                }
+
+                navigator.serviceWorker.getRegistrations()
+                    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+                    .catch(() => null);
             });
         }
+
+        if (!pwaEnabled || !installEnabled || installed) {
+            hidePromo();
+            return;
+        }
+
+        promo?.querySelector('[data-pwa-dismiss]')?.addEventListener('click', () => hidePromo(true));
 
         window.addEventListener('beforeinstallprompt', (event) => {
             event.preventDefault();
             this.deferredInstallPrompt = event;
             document.body.classList.add('pwa-installable');
+            showPromo();
         });
 
-        document.querySelectorAll('[data-pwa-install]').forEach((button) => {
+        window.addEventListener('appinstalled', () => {
+            this.deferredInstallPrompt = null;
+            hidePromo(true);
+            setInstalledState(true);
+            showToast('success', 'Aplicativo instalado com sucesso.');
+        });
+
+        installButtons.forEach((button) => {
             button.addEventListener('click', async () => {
                 if (!this.deferredInstallPrompt) {
+                    showToast('info', 'A instalação do aplicativo não está disponível neste dispositivo agora.');
                     return;
                 }
 
@@ -458,6 +527,7 @@ const SiteUI = {
                 await this.deferredInstallPrompt.userChoice;
                 this.deferredInstallPrompt = null;
                 document.body.classList.remove('pwa-installable');
+                hidePromo(true);
             });
         });
     },

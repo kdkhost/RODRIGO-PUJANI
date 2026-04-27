@@ -1,13 +1,14 @@
 @php
     $seo = $page->seoMeta;
     $branding = branding_config();
+    $pwa = pwa_config();
     $recaptcha = recaptcha_config();
     $title = $seo?->title ?: ($page->title.' | '.$branding['brand_name']);
     $description = $seo?->description ?: ($page->excerpt ?: 'Pujani Advogados com atuação estratégica, ética e resultado.');
     $keywords = $seo?->keywords ?: 'Pujani Advogados, advocacia, direito, consultoria jurídica, advogado';
     $hashtags = collect($seo?->hashtags)->filter();
-    $themeColor = setting('pwa.theme_color', '#0B0C10');
-    $backgroundColor = setting('pwa.background_color', '#0B0C10');
+    $themeColor = $pwa['theme_color'];
+    $backgroundColor = $pwa['background_color'];
     $preloader = preloader_config('site');
     $companyName = $branding['brand_name'];
     $companyPhone = setting('site.company_phone', '(11) 3456-7890');
@@ -34,9 +35,9 @@
         return asset('storage/'.$normalized);
     };
 
-    $ogImage = $resolveAsset($seo?->og_image_path ?: setting('pwa.icon_512', 'pwa/icon-512.png'));
-    $icon192 = $branding['favicon_url'] ?: $resolveAsset(setting('pwa.icon_192', 'pwa/icon-192.png'));
-    $icon512 = $branding['favicon_url'] ?: $resolveAsset(setting('pwa.icon_512', 'pwa/icon-512.png'));
+    $ogImage = $resolveAsset($seo?->og_image_path ?: ($pwa['icon_512_path'] ?: 'pwa/icon-512.png'));
+    $icon192 = $branding['favicon_url'] ?: $pwa['icon_192_url'];
+    $icon512 = $branding['favicon_url'] ?: $pwa['icon_512_url'];
     $homeUrl = route('site.home');
     $menuPages = collect($publicPages ?? [])
         ->reject(fn ($menuPage) => ($menuPage->is_home ?? false) || ($menuPage->slug ?? null) === 'home')
@@ -83,6 +84,10 @@
     class="scroll-smooth"
     data-recaptcha-enabled="{{ $recaptcha['enabled'] ? '1' : '0' }}"
     data-recaptcha-site-key="{{ $recaptcha['enabled'] ? $recaptcha['site_key'] : '' }}"
+    data-pwa-enabled="{{ $pwa['enabled'] ? '1' : '0' }}"
+    data-pwa-install-enabled="{{ $pwa['installation_enabled'] ? '1' : '0' }}"
+    data-pwa-prompt-enabled="{{ $pwa['install_prompt_enabled'] ? '1' : '0' }}"
+    data-pwa-prompt-storage-key="{{ $pwa['prompt_storage_key'] }}"
 >
 <head>
     <meta charset="utf-8">
@@ -94,7 +99,7 @@
     <meta name="theme-color" content="{{ $themeColor }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{ setting('pwa.short_name', 'Pujani') }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $pwa['short_name'] }}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:type" content="website">
@@ -108,7 +113,9 @@
     <meta name="twitter:description" content="{{ $seo?->og_description ?: $description }}">
     @if($ogImage)<meta name="twitter:image" content="{{ $ogImage }}">@endif
     @if($seo?->canonical_url)<link rel="canonical" href="{{ $seo->canonical_url }}">@endif
-    <link rel="manifest" href="{{ route('site.manifest') }}">
+    @if($pwa['enabled'] && $pwa['installation_enabled'])
+        <link rel="manifest" href="{{ route('site.manifest') }}">
+    @endif
     @if($branding['favicon_url'])<link rel="icon" href="{{ $branding['favicon_url'] }}">@endif
     @if($icon192)<link rel="apple-touch-icon" href="{{ $icon192 }}">@endif
     @if(!$branding['favicon_url'] && $icon512)<link rel="icon" href="{{ $icon512 }}" sizes="512x512" type="image/png">@endif
@@ -156,11 +163,26 @@
         .btn-ghost:hover{border-color:var(--gold);color:var(--gold-pale)}
         .counter{display:inline-block}.mobile-menu{transform:translateX(100%);transition:transform .4s cubic-bezier(0.76,0,0.24,1)}.mobile-menu.open{transform:translateX(0)}.input-wrap{position:relative}
         .whatsapp-float{position:fixed;bottom:2rem;right:2rem;z-index:9000;width:56px;height:56px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.35);transition:transform .3s,box-shadow .3s;animation:pulse-wpp 2.5s infinite}.whatsapp-float:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(37,211,102,.5)}@keyframes pulse-wpp{0%,100%{box-shadow:0 4px 20px rgba(37,211,102,.35)}50%{box-shadow:0 4px 32px rgba(37,211,102,.6)}}
+        .site-pwa-install{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;padding:.85rem 1.1rem;border:1px solid rgba(196,154,60,.22);background:rgba(196,154,60,.08);color:var(--gold-pale);font-size:.76rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:border-color .3s,background .3s,color .3s}
+        .site-pwa-install:hover{border-color:rgba(196,154,60,.55);background:rgba(196,154,60,.16);color:var(--gold-light)}
+        .site-pwa-install svg{flex:0 0 auto}
+        .site-pwa-promo{position:fixed;left:1.25rem;right:1.25rem;bottom:1.25rem;z-index:9400;max-width:460px;margin-left:auto;padding:1.1rem 1.1rem 1rem;border:1px solid rgba(196,154,60,.22);background:linear-gradient(180deg,rgba(17,19,24,.96),rgba(11,12,16,.98));box-shadow:0 24px 64px rgba(0,0,0,.32);backdrop-filter:blur(18px);opacity:0;transform:translateY(18px);pointer-events:none;transition:opacity .28s ease,transform .28s ease}
+        .site-pwa-promo.is-visible{opacity:1;transform:translateY(0);pointer-events:auto}
+        .site-pwa-promo-badge{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .65rem;border:1px solid rgba(196,154,60,.18);background:rgba(196,154,60,.1);color:var(--gold-pale);font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+        .site-pwa-promo-head{display:flex;gap:.9rem;align-items:flex-start;margin-top:.9rem}
+        .site-pwa-promo-icon{display:inline-flex;width:54px;height:54px;align-items:center;justify-content:center;border:1px solid rgba(196,154,60,.22);background:rgba(255,255,255,.03);flex:0 0 auto}
+        .site-pwa-promo-icon img{width:100%;height:100%;object-fit:cover}
+        .site-pwa-promo-copy h3{margin:0;font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;line-height:1}
+        .site-pwa-promo-copy p{margin:.55rem 0 0;color:rgba(240,233,220,.72);line-height:1.65;font-size:.94rem}
+        .site-pwa-promo-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem}
+        .site-pwa-promo-dismiss{padding:.85rem 1rem;border:1px solid rgba(240,233,220,.14);background:transparent;color:rgba(240,233,220,.74);font-size:.74rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:border-color .3s,color .3s}
+        .site-pwa-promo-dismiss:hover{border-color:rgba(196,154,60,.35);color:var(--gold-pale)}
+        body.app-installed .site-pwa-install,body.app-installed .site-pwa-promo{display:none!important}
         .section-label{letter-spacing:.3em;text-transform:uppercase;font-size:.65rem;font-weight:500;color:var(--gold)}
         .parallax{will-change:transform}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
         body.app-installed{padding-top:env(safe-area-inset-top)}body.app-installed .whatsapp-float{bottom:calc(1.5rem + env(safe-area-inset-bottom))}
-        @media (max-width:768px){body{cursor:auto}.cursor,.cursor-ring{display:none}}
+        @media (max-width:768px){body{cursor:auto}.cursor,.cursor-ring{display:none}.site-pwa-promo{left:1rem;right:1rem;bottom:1rem;max-width:none}}
         @media (max-width:480px){#hero .btn-primary,#hero .btn-ghost{width:calc(100vw - 4rem);max-width:calc(100vw - 4rem);justify-content:center}#hero p{width:calc(100vw - 4rem);max-width:calc(100vw - 4rem)}}
     </style>
     <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT) !!}</script>
@@ -213,6 +235,12 @@
                 <a href="{{ $pageUrl($menuPage->slug) }}" class="nav-link text-lg" onclick="closeMobile()">{{ $menuPage->menu_title ?: $menuPage->title }}</a>
             @endforeach
             <a href="{{ $contactUrl }}" class="btn-primary px-6 py-4 text-center mt-4" onclick="closeMobile()"><span>Consultoria Gratuita</span></a>
+            @if($pwa['enabled'] && $pwa['installation_enabled'] && $pwa['mobile_install_enabled'])
+                <button type="button" class="site-pwa-install text-center mt-2" data-pwa-install onclick="closeMobile()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                    <span>{{ $pwa['mobile_menu_label'] }}</span>
+                </button>
+            @endif
         </div>
     </div>
     <div id="menu-overlay" class="fixed inset-0 bg-black/50 z-40 hidden" onclick="closeMobile()"></div>
@@ -265,6 +293,15 @@
                         <div class="text-xs text-gold/50 tracking-widest uppercase mb-2">OAB/SP</div>
                         <div class="text-xs text-cream/25">{{ setting('site.oab_registration', 'Inscr. 183.472 / 201.887') }}</div>
                     </div>
+                    @if($pwa['enabled'] && $pwa['installation_enabled'] && $pwa['footer_install_enabled'])
+                        <div class="mt-8">
+                            <div class="text-xs text-gold/50 tracking-widest uppercase mb-3">Aplicativo</div>
+                            <button type="button" class="site-pwa-install" data-pwa-install>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                                <span>{{ $pwa['footer_label'] }}</span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="divider"></div>
@@ -279,6 +316,31 @@
         <a href="https://wa.me/{{ $whatsappDigits }}?text=Ol%C3%A1!%20Gostaria%20de%20uma%20consulta%20com%20a%20Pujani%20Advogados." class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp" title="Fale pelo WhatsApp">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
         </a>
+    @endif
+    @if($pwa['enabled'] && $pwa['installation_enabled'] && $pwa['install_prompt_enabled'])
+        <div class="site-pwa-promo" data-pwa-promo hidden>
+            <span class="site-pwa-promo-badge">{{ $pwa['popup_badge'] }}</span>
+            <div class="site-pwa-promo-head">
+                <span class="site-pwa-promo-icon">
+                    @if($pwa['icon_192_url'])
+                        <img src="{{ $pwa['icon_192_url'] }}" alt="{{ $pwa['app_name'] }}">
+                    @else
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.6"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                    @endif
+                </span>
+                <div class="site-pwa-promo-copy">
+                    <h3>{{ $pwa['popup_title'] }}</h3>
+                    <p>{{ $pwa['popup_description'] }}</p>
+                </div>
+            </div>
+            <div class="site-pwa-promo-actions">
+                <button type="button" class="site-pwa-install" data-pwa-install>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                    <span>{{ $pwa['popup_primary_label'] }}</span>
+                </button>
+                <button type="button" class="site-pwa-promo-dismiss" data-pwa-dismiss>{{ $pwa['popup_secondary_label'] }}</button>
+            </div>
+        </div>
     @endif
 </body>
 </html>

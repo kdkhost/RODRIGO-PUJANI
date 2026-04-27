@@ -18,9 +18,10 @@
 <body>
     <main class="panel">
         <div class="meta">Conexão indisponível</div>
-        <h1>Você está offline.</h1>
-        <p>Não foi possível carregar o conteúdo agora. Quando a conexão voltar, a navegação será retomada normalmente.</p>
+        <h1>{{ $offlineTitle }}</h1>
+        <p>{{ $offlineMessage }}</p>
         <p class="meta">Contato imediato: {{ $phone }} · <a href="mailto:{{ $email }}">{{ $email }}</a></p>
+        <p><a href="javascript:window.location.reload()">{{ $offlineButtonLabel }}</a></p>
     </main>
 </body>
 </html>

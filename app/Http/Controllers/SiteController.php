@@ -110,22 +110,24 @@ class SiteController extends Controller
 
     public function manifest(): JsonResponse
     {
+        $pwa = pwa_config();
+
         $manifest = [
-            'name' => setting('pwa.app_name', config('app.name')),
-            'short_name' => setting('pwa.short_name', 'Pujani'),
-            'description' => setting('pwa.description', 'Portal institucional e administrativo da Pujani Advogados.'),
-            'start_url' => setting('pwa.start_path', '/'),
-            'scope' => '/',
-            'display' => setting('pwa.display', 'standalone'),
-            'orientation' => 'portrait',
-            'background_color' => setting('pwa.background_color', '#0B0C10'),
-            'theme_color' => setting('pwa.theme_color', '#0B0C10'),
+            'name' => $pwa['app_name'],
+            'short_name' => $pwa['short_name'],
+            'description' => $pwa['description'],
+            'start_url' => $pwa['start_path'],
+            'scope' => $pwa['scope'],
+            'display' => $pwa['display'],
+            'orientation' => $pwa['orientation'],
+            'background_color' => $pwa['background_color'],
+            'theme_color' => $pwa['theme_color'],
             'lang' => 'pt-BR',
             'dir' => 'ltr',
             'categories' => ['business', 'legal', 'productivity'],
             'icons' => array_values(array_filter([
-                $this->manifestIcon(setting('pwa.icon_192', 'pwa/icon-192.png'), '192x192'),
-                $this->manifestIcon(setting('pwa.icon_512', 'pwa/icon-512.png'), '512x512'),
+                $this->manifestIcon($pwa['icon_192_path'] ?: 'pwa/icon-192.png', '192x192'),
+                $this->manifestIcon($pwa['icon_512_path'] ?: 'pwa/icon-512.png', '512x512'),
             ])),
         ];
 
@@ -136,6 +138,30 @@ class SiteController extends Controller
 
     public function serviceWorker(): Response
     {
+        $pwa = pwa_config();
+
+        if (! $pwa['enabled']) {
+            $cleanupScript = <<<'JS'
+self.addEventListener('install', (event) => {
+    event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys()
+            .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+            .then(() => self.registration.unregister())
+            .then(() => self.clients.claim())
+    );
+});
+JS;
+
+            return response($cleanupScript, 200, [
+                'Content-Type' => 'application/javascript; charset=UTF-8',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            ]);
+        }
+
         $buildManifestPath = public_path('build/manifest.json');
         $buildVersion = file_exists($buildManifestPath)
             ? substr(sha1_file($buildManifestPath), 0, 12)
@@ -238,10 +264,15 @@ JS;
 
     public function offline(): View
     {
+        $pwa = pwa_config();
+
         return view('site.offline', [
-            'appName' => config('app.name'),
+            'appName' => $pwa['app_name'],
             'phone' => setting('site.company_phone', '(11) 3456-7890'),
             'email' => setting('site.company_email', 'contato@pujani.adv.br'),
+            'offlineTitle' => $pwa['offline_title'],
+            'offlineMessage' => $pwa['offline_message'],
+            'offlineButtonLabel' => $pwa['offline_button_label'],
         ]);
     }
 

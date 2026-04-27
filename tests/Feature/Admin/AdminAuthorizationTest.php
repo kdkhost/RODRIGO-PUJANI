@@ -109,6 +109,8 @@ class AdminAuthorizationTest extends TestCase
 
         $logo = $this->fakePngUpload('logo.png');
         $favicon = $this->fakePngUpload('favicon.png');
+        $pwaIcon192 = $this->fakePngUpload('pwa-192.png');
+        $pwaIcon512 = $this->fakePngUpload('pwa-512.png');
 
         $response = $this->actingAs($admin)->post(route('admin.system-settings.update'), [
             '_method' => 'PUT',
@@ -119,6 +121,32 @@ class AdminAuthorizationTest extends TestCase
             'admin_footer_meta' => 'Laravel 13 | Painel premium',
             'logo' => $logo,
             'favicon' => $favicon,
+            'pwa_enabled' => '1',
+            'pwa_installation_enabled' => '1',
+            'pwa_install_prompt_enabled' => '1',
+            'pwa_footer_install_enabled' => '1',
+            'pwa_mobile_install_enabled' => '1',
+            'pwa_app_name' => 'Pujani App',
+            'pwa_short_name' => 'Pujani',
+            'pwa_description' => 'Aplicativo premium do escritório.',
+            'pwa_start_path' => '/portal-cliente',
+            'pwa_scope' => '/',
+            'pwa_display' => 'standalone',
+            'pwa_orientation' => 'portrait',
+            'pwa_theme_color' => '#123456',
+            'pwa_background_color' => '#111111',
+            'pwa_icon_192' => $pwaIcon192,
+            'pwa_icon_512' => $pwaIcon512,
+            'pwa_popup_badge' => 'Aplicativo disponível',
+            'pwa_popup_title' => 'Instale o app',
+            'pwa_popup_description' => 'Abra o escritório com aparência de aplicativo.',
+            'pwa_popup_primary_label' => 'Instalar',
+            'pwa_popup_secondary_label' => 'Depois',
+            'pwa_footer_label' => 'Instalar app',
+            'pwa_mobile_menu_label' => 'App no menu',
+            'pwa_offline_title' => 'Modo offline',
+            'pwa_offline_message' => 'Sem conexão no momento.',
+            'pwa_offline_button_label' => 'Tentar novamente',
             'recaptcha_enabled' => '1',
             'recaptcha_site_key' => 'site-key-demo',
             'recaptcha_secret_key' => 'secret-key-demo',
@@ -144,11 +172,33 @@ class AdminAuthorizationTest extends TestCase
 
         $logoSetting = Setting::query()->where('key', 'branding.logo_path')->value('value');
         $faviconSetting = Setting::query()->where('key', 'branding.favicon_path')->value('value');
+        $pwaIcon192Setting = Setting::query()->where('key', 'pwa.icon_192')->value('value');
+        $pwaIcon512Setting = Setting::query()->where('key', 'pwa.icon_512')->value('value');
 
         $this->assertNotEmpty($logoSetting);
         $this->assertNotEmpty($faviconSetting);
+        $this->assertNotEmpty($pwaIcon192Setting);
+        $this->assertNotEmpty($pwaIcon512Setting);
         $this->assertFileExists(public_path($logoSetting));
         $this->assertFileExists(public_path($faviconSetting));
+        $this->assertFileExists(public_path($pwaIcon192Setting));
+        $this->assertFileExists(public_path($pwaIcon512Setting));
+
+        $this->assertDatabaseHas('settings', [
+            'key' => 'pwa.popup_title',
+            'value' => 'Instale o app',
+        ]);
+
+        $this->getJson(route('site.manifest'))
+            ->assertOk()
+            ->assertJsonPath('name', 'Pujani App')
+            ->assertJsonPath('start_url', '/portal-cliente')
+            ->assertJsonPath('theme_color', '#123456');
+
+        $this->get(route('site.offline'))
+            ->assertOk()
+            ->assertSee('Modo offline')
+            ->assertSee('Sem conexão no momento.');
 
         $this->actingAs($admin)
             ->postJson(route('admin.system-settings.seed-demo-data'))
@@ -167,6 +217,22 @@ class AdminAuthorizationTest extends TestCase
 
         File::delete(public_path($logoSetting));
         File::delete(public_path($faviconSetting));
+        File::delete(public_path($pwaIcon192Setting));
+        File::delete(public_path($pwaIcon512Setting));
+    }
+
+    public function test_disabled_pwa_returns_cleanup_service_worker_script(): void
+    {
+        Setting::query()->updateOrCreate(
+            ['key' => 'pwa.enabled'],
+            ['group' => 'pwa', 'label' => 'Ativar PWA', 'type' => 'boolean', 'value' => '0', 'is_public' => true, 'sort_order' => 530],
+        );
+
+        $response = $this->get(route('site.service-worker'));
+
+        $response->assertOk();
+        $this->assertStringContainsString('unregister', $response->getContent());
+        $this->assertStringContainsString('caches.delete', $response->getContent());
     }
 
     public function test_administrator_cannot_open_system_files_even_with_permission(): void

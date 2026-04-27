@@ -5,14 +5,14 @@
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Marca, segurança e dados iniciais</div>
+                    <div class="admin-eyebrow">Marca, PWA, segurança e dados iniciais</div>
                     <h1>Configurações do sistema</h1>
-                    <p>Centralize a identidade visual do painel, gerencie o favicon, ative o reCAPTCHA v3 invisível e popule a base com dados de demonstração para apresentação do sistema.</p>
+                    <p>Centralize a identidade visual do painel, controle todo o PWA pelo administrativo, gerencie o favicon, ative o reCAPTCHA v3 invisível e popule a base com dados de demonstração.</p>
                 </div>
                 <div class="admin-hero-stamp">
-                    <i class="bi bi-shield-lock"></i>
+                    <i class="bi bi-phone"></i>
                     <div>
-                        <strong>{{ $recaptcha['enabled'] ? 'Proteção ativa' : 'Proteção opcional' }}</strong>
+                        <strong>{{ $pwa['enabled'] ? 'PWA ativo' : 'PWA desativado' }}</strong>
                         <small>{{ $branding['brand_name'] }}</small>
                     </div>
                 </div>
@@ -75,6 +75,171 @@
                                             <label class="form-check-label" for="remove_favicon">Remover favicon atual</label>
                                         </div>
                                     @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card admin-table-card">
+                        <div class="card-header">
+                            <div>
+                                <div class="admin-card-kicker">Experiência em aplicativo</div>
+                                <h3 class="card-title">PWA e instalação</h3>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-4 admin-premium-form">
+                                <div class="col-12">
+                                    <div class="row g-3">
+                                        <div class="col-md-3 form-check ps-5 pt-4">
+                                            <input type="checkbox" class="form-check-input" id="pwa_enabled" name="pwa_enabled" value="1" @checked(old('pwa_enabled', $pwa['enabled']))>
+                                            <label class="form-check-label" for="pwa_enabled">Ativar PWA no site</label>
+                                        </div>
+                                        <div class="col-md-3 form-check ps-5 pt-4">
+                                            <input type="checkbox" class="form-check-input" id="pwa_installation_enabled" name="pwa_installation_enabled" value="1" @checked(old('pwa_installation_enabled', $pwa['installation_enabled']))>
+                                            <label class="form-check-label" for="pwa_installation_enabled">Permitir instalação</label>
+                                        </div>
+                                        <div class="col-md-3 form-check ps-5 pt-4">
+                                            <input type="checkbox" class="form-check-input" id="pwa_install_prompt_enabled" name="pwa_install_prompt_enabled" value="1" @checked(old('pwa_install_prompt_enabled', $pwa['install_prompt_enabled']))>
+                                            <label class="form-check-label" for="pwa_install_prompt_enabled">Exibir pop-up de anúncio</label>
+                                        </div>
+                                        <div class="col-md-3 form-check ps-5 pt-4">
+                                            <input type="checkbox" class="form-check-input" id="pwa_footer_install_enabled" name="pwa_footer_install_enabled" value="1" @checked(old('pwa_footer_install_enabled', $pwa['footer_install_enabled']))>
+                                            <label class="form-check-label" for="pwa_footer_install_enabled">Exibir botão no rodapé</label>
+                                        </div>
+                                        <div class="col-md-3 form-check ps-5">
+                                            <input type="checkbox" class="form-check-input" id="pwa_mobile_install_enabled" name="pwa_mobile_install_enabled" value="1" @checked(old('pwa_mobile_install_enabled', $pwa['mobile_install_enabled']))>
+                                            <label class="form-check-label" for="pwa_mobile_install_enabled">Exibir botão no menu móvel</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="pwa_app_name">Nome do aplicativo</label>
+                                    <input id="pwa_app_name" type="text" name="pwa_app_name" class="form-control" maxlength="120" value="{{ old('pwa_app_name', $pwa['app_name']) }}" placeholder="Nome do aplicativo">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_short_name">Nome curto</label>
+                                    <input id="pwa_short_name" type="text" name="pwa_short_name" class="form-control" maxlength="32" value="{{ old('pwa_short_name', $pwa['short_name']) }}" placeholder="Nome curto">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_display">Modo de exibição</label>
+                                    <select id="pwa_display" name="pwa_display" class="form-select">
+                                        @foreach($pwaDisplayOptions as $value => $label)
+                                            <option value="{{ $value }}" @selected(old('pwa_display', $pwa['display']) === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="pwa_start_path">URL inicial</label>
+                                    <input id="pwa_start_path" type="text" name="pwa_start_path" class="form-control" maxlength="255" value="{{ old('pwa_start_path', $pwa['start_path']) }}" placeholder="/portal-cliente">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_scope">Escopo</label>
+                                    <input id="pwa_scope" type="text" name="pwa_scope" class="form-control" maxlength="255" value="{{ old('pwa_scope', $pwa['scope']) }}" placeholder="/">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_orientation">Orientação</label>
+                                    <select id="pwa_orientation" name="pwa_orientation" class="form-select">
+                                        @foreach($pwaOrientationOptions as $value => $label)
+                                            <option value="{{ $value }}" @selected(old('pwa_orientation', $pwa['orientation']) === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="pwa_description">Descrição do aplicativo</label>
+                                    <textarea id="pwa_description" name="pwa_description" class="form-control" rows="3" maxlength="255" placeholder="Descreva a experiência do aplicativo">{{ old('pwa_description', $pwa['description']) }}</textarea>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_theme_color">Cor principal</label>
+                                    <div class="input-group">
+                                        <input id="pwa_theme_color_picker" type="color" class="form-control form-control-color" value="{{ old('pwa_theme_color', $pwa['theme_color']) }}" oninput="document.getElementById('pwa_theme_color').value=this.value.toUpperCase()">
+                                        <input id="pwa_theme_color" type="text" name="pwa_theme_color" class="form-control text-uppercase" value="{{ old('pwa_theme_color', $pwa['theme_color']) }}" placeholder="#0B0C10">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_background_color">Cor de fundo</label>
+                                    <div class="input-group">
+                                        <input id="pwa_background_color_picker" type="color" class="form-control form-control-color" value="{{ old('pwa_background_color', $pwa['background_color']) }}" oninput="document.getElementById('pwa_background_color').value=this.value.toUpperCase()">
+                                        <input id="pwa_background_color" type="text" name="pwa_background_color" class="form-control text-uppercase" value="{{ old('pwa_background_color', $pwa['background_color']) }}" placeholder="#0B0C10">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_icon_192">Ícone 192x192</label>
+                                    <input id="pwa_icon_192" type="file" name="pwa_icon_192" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp">
+                                    @if($pwa['icon_192_url'])
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="remove_pwa_icon_192" name="remove_pwa_icon_192" value="1">
+                                            <label class="form-check-label" for="remove_pwa_icon_192">Remover ícone 192 atual</label>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="pwa_icon_512">Ícone 512x512</label>
+                                    <input id="pwa_icon_512" type="file" name="pwa_icon_512" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp">
+                                    @if($pwa['icon_512_url'])
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="remove_pwa_icon_512" name="remove_pwa_icon_512" value="1">
+                                            <label class="form-check-label" for="remove_pwa_icon_512">Remover ícone 512 atual</label>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="admin-premium-surface p-3">
+                                        <div class="admin-card-kicker mb-3">Convite de instalação</div>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label" for="pwa_popup_badge">Etiqueta do pop-up</label>
+                                                <input id="pwa_popup_badge" type="text" name="pwa_popup_badge" class="form-control" maxlength="80" value="{{ old('pwa_popup_badge', $pwa['popup_badge']) }}" placeholder="Aplicativo disponível">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label" for="pwa_popup_title">Título do pop-up</label>
+                                                <input id="pwa_popup_title" type="text" name="pwa_popup_title" class="form-control" maxlength="120" value="{{ old('pwa_popup_title', $pwa['popup_title']) }}" placeholder="Instale o app do escritório">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label" for="pwa_popup_description">Descrição do pop-up</label>
+                                                <textarea id="pwa_popup_description" name="pwa_popup_description" class="form-control" rows="3" maxlength="255" placeholder="Explique por que vale instalar">{{ old('pwa_popup_description', $pwa['popup_description']) }}</textarea>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label" for="pwa_popup_primary_label">Botão principal</label>
+                                                <input id="pwa_popup_primary_label" type="text" name="pwa_popup_primary_label" class="form-control" maxlength="60" value="{{ old('pwa_popup_primary_label', $pwa['popup_primary_label']) }}" placeholder="Instalar agora">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label" for="pwa_popup_secondary_label">Botão secundário</label>
+                                                <input id="pwa_popup_secondary_label" type="text" name="pwa_popup_secondary_label" class="form-control" maxlength="60" value="{{ old('pwa_popup_secondary_label', $pwa['popup_secondary_label']) }}" placeholder="Agora não">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label" for="pwa_footer_label">Texto do botão no rodapé</label>
+                                                <input id="pwa_footer_label" type="text" name="pwa_footer_label" class="form-control" maxlength="60" value="{{ old('pwa_footer_label', $pwa['footer_label']) }}" placeholder="Instalar aplicativo">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label" for="pwa_mobile_menu_label">Texto do botão no menu móvel</label>
+                                                <input id="pwa_mobile_menu_label" type="text" name="pwa_mobile_menu_label" class="form-control" maxlength="60" value="{{ old('pwa_mobile_menu_label', $pwa['mobile_menu_label']) }}" placeholder="Instalar aplicativo">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="admin-premium-surface p-3">
+                                        <div class="admin-card-kicker mb-3">Tela offline</div>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label" for="pwa_offline_title">Título offline</label>
+                                                <input id="pwa_offline_title" type="text" name="pwa_offline_title" class="form-control" maxlength="120" value="{{ old('pwa_offline_title', $pwa['offline_title']) }}" placeholder="Você está offline.">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label" for="pwa_offline_button_label">Botão offline</label>
+                                                <input id="pwa_offline_button_label" type="text" name="pwa_offline_button_label" class="form-control" maxlength="60" value="{{ old('pwa_offline_button_label', $pwa['offline_button_label']) }}" placeholder="Tentar novamente">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label" for="pwa_offline_message">Mensagem offline</label>
+                                                <textarea id="pwa_offline_message" name="pwa_offline_message" class="form-control" rows="3" maxlength="255" placeholder="Explique o que acontece quando a conexão voltar">{{ old('pwa_offline_message', $pwa['offline_message']) }}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -163,6 +328,58 @@
                                 <span>Proteção</span>
                                 <strong class="mt-2">{{ $recaptcha['enabled'] ? 'reCAPTCHA ativo' : 'reCAPTCHA desativado' }}</strong>
                                 <small>Score mínimo atual: {{ number_format($recaptcha['minimum_score'], 1, ',', '.') }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-system-preview-card">
+                        <div class="admin-system-preview-head">
+                            <span class="admin-system-preview-mark"><i class="bi bi-phone"></i></span>
+                            <div class="admin-system-preview-copy">
+                                <span>PWA do site</span>
+                                <strong>{{ $pwa['app_name'] }}</strong>
+                                <p>Manifesto, service worker, instalação, pop-up de anúncio, botão do rodapé, botão do menu móvel e tela offline agora ficam no mesmo ponto de gestão.</p>
+                            </div>
+                        </div>
+
+                        <div class="admin-brand-preview-grid mt-3">
+                            <div class="admin-brand-preview-card">
+                                <span>Ícone 192</span>
+                                <div class="admin-brand-preview-image mt-2">
+                                    @if($pwa['icon_192_url'])
+                                        <img src="{{ $pwa['icon_192_url'] }}" alt="Ícone 192 do PWA">
+                                    @else
+                                        <span class="admin-brand-preview-empty">{{ $branding['brand_short_name'] }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="admin-brand-preview-card">
+                                <span>Ícone 512</span>
+                                <div class="admin-brand-preview-image mt-2">
+                                    @if($pwa['icon_512_url'])
+                                        <img src="{{ $pwa['icon_512_url'] }}" alt="Ícone 512 do PWA">
+                                    @else
+                                        <span class="admin-brand-preview-empty">{{ $branding['brand_short_name'] }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-system-assets-grid mt-3">
+                            <div class="admin-brand-preview-card">
+                                <span>Status do PWA</span>
+                                <strong class="mt-2">{{ $pwa['enabled'] ? 'Ativo' : 'Desativado' }}</strong>
+                                <small>{{ $pwa['installation_enabled'] ? 'Instalação permitida' : 'Instalação bloqueada' }}</small>
+                            </div>
+                            <div class="admin-brand-preview-card">
+                                <span>Convite de instalação</span>
+                                <strong class="mt-2">{{ $pwa['install_prompt_enabled'] ? 'Pop-up ativo' : 'Pop-up oculto' }}</strong>
+                                <small>Rodapé: {{ $pwa['footer_install_enabled'] ? 'ativo' : 'oculto' }} · Menu móvel: {{ $pwa['mobile_install_enabled'] ? 'ativo' : 'oculto' }}</small>
+                            </div>
+                            <div class="admin-brand-preview-card">
+                                <span>Manifesto</span>
+                                <strong class="mt-2">{{ $pwa['display'] }}</strong>
+                                <small>Início em {{ $pwa['start_path'] }} · escopo {{ $pwa['scope'] }}</small>
                             </div>
                         </div>
                     </div>
