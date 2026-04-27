@@ -359,6 +359,19 @@ const AdminUI = {
         } catch (error) {
             this.hideProgress();
 
+            if (error.response?.status === 423) {
+                const redirectUrl = error.response?.data?.redirect;
+                this.showToast('warning', error.response?.data?.message || 'Confirme sua senha novamente para continuar.');
+
+                if (redirectUrl) {
+                    window.setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 500);
+                }
+
+                return;
+            }
+
             if (error.response?.status === 422) {
                 this.renderValidationErrors(form, error.response.data.errors || {});
                 this.showToast('warning', 'Revise os campos destacados.');

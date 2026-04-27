@@ -89,11 +89,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->middleware('permission:impersonate.users')
         ->name('users.impersonate');
 
-    Route::middleware('permission:system-files.manage')
+    Route::middleware('role:Super Admin')
         ->prefix('system-files')
         ->name('system-files.')
         ->group(function (): void {
-            Route::get('/', [SystemFileController::class, 'index'])->name('index');
+            Route::get('/confirm', [SystemFileController::class, 'showConfirmation'])->name('confirm');
+            Route::post('/confirm', [SystemFileController::class, 'storeConfirmation'])->name('confirm.store');
+            Route::get('/', [SystemFileController::class, 'index'])
+                ->middleware('system-files.confirmed')
+                ->name('index');
             Route::put('/{fileKey}', [SystemFileController::class, 'update'])->name('update');
             Route::post('/{fileKey}/restore', [SystemFileController::class, 'restore'])->name('restore');
         });

@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureAdminAccess::class,
             'check.maintenance' => \App\Http\Middleware\CheckMaintenanceAccess::class,
             'track.visit' => \App\Http\Middleware\TrackPageVisit::class,
+            'system-files.confirmed' => \App\Http\Middleware\EnsureSystemFilesPageConfirmed::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,

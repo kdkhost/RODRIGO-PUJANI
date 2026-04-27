@@ -80,24 +80,56 @@ class AdminAuthorizationTest extends TestCase
             ->assertSee('Instalavel');
     }
 
-    public function test_system_files_route_requires_specific_permission(): void
+    public function test_administrator_cannot_open_system_files_even_with_permission(): void
     {
         $this->seed(PermissionsSeeder::class);
 
         $user = User::factory()->create([
             'is_active' => true,
         ]);
-        $user->givePermissionTo(['admin.access']);
-
-        $this->actingAs($user)
-            ->get(route('admin.system-files.index'))
-            ->assertForbidden();
-
+        $user->assignRole('Administrador');
         $user->givePermissionTo('system-files.manage');
 
         $this->actingAs($user)
             ->get(route('admin.system-files.index'))
-            ->assertOk();
+            ->assertForbidden();
+    }
+
+    public function test_super_admin_must_confirm_password_before_opening_system_files(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $user = User::factory()->create([
+            'is_active' => true,
+        ]);
+        $user->assignRole('Super Admin');
+
+        $this->actingAs($user)
+            ->get(route('admin.system-files.index'))
+            ->assertRedirect(route('admin.system-files.confirm'));
+    }
+
+    public function test_super_admin_can_confirm_password_and_open_system_files(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $user = User::factory()->create([
+            'is_active' => true,
+            'password' => 'password',
+        ]);
+        $user->assignRole('Super Admin');
+
+        $this->actingAs($user)
+            ->post(route('admin.system-files.confirm.store'), [
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('admin.system-files.index'));
+
+        $this->actingAs($user)
+            ->get(route('admin.system-files.index'))
+            ->assertOk()
+            ->assertSee('Arquivo .env')
+            ->assertSee('Cofre técnico');
     }
 
     public function test_admin_user_can_update_user_without_validation_type_error(): void

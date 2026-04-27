@@ -41,9 +41,16 @@ class PermissionsSeeder extends Seeder
         }
 
         $superAdmin = Role::query()->firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $administrator = Role::query()->firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
         $editor = Role::query()->firstOrCreate(['name' => 'Editor', 'guard_name' => 'web']);
 
         $superAdmin->syncPermissions(Permission::all());
+        $administrator->syncPermissions(
+            Permission::query()
+                ->where('name', '!=', 'system-files.manage')
+                ->pluck('name')
+                ->all()
+        );
         $editor->syncPermissions([
             'admin.access',
             'pages.manage',

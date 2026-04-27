@@ -49,6 +49,11 @@ class User extends Authenticatable
         return $this->hasMany(MediaAsset::class, 'uploaded_by');
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('Super Admin');
+    }
+
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);

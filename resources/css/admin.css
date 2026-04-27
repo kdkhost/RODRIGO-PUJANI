@@ -401,7 +401,17 @@ img.admin-avatar {
     line-height: 1.15;
 }
 
+.admin-hero-stamp div {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
 .admin-profile-badge small {
+    color: var(--admin-muted);
+}
+
+.admin-hero-stamp small {
     color: var(--admin-muted);
 }
 
@@ -945,6 +955,231 @@ img.admin-avatar {
     background: var(--admin-surface-2);
 }
 
+.admin-system-files-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.admin-system-files-metric,
+.admin-system-guard-card,
+.admin-system-nav-card,
+.admin-system-alert-card,
+.admin-system-confirm-card,
+.admin-system-confirm-aside,
+.admin-system-editor-card {
+    border: 1px solid var(--admin-border);
+    border-radius: 0.9rem;
+    background: var(--admin-card-bg);
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-system-files-metric {
+    padding: 1.1rem 1.15rem;
+}
+
+.admin-system-files-metric span,
+.admin-system-meta-card span {
+    color: var(--admin-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-system-files-metric strong {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--admin-ink);
+    font-size: 1.65rem;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.admin-system-files-metric small {
+    display: block;
+    margin-top: 0.55rem;
+    color: var(--admin-muted);
+    line-height: 1.45;
+}
+
+.admin-system-files-sticky {
+    position: sticky;
+    top: 5.4rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-system-guard-points {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.admin-system-guard-points div {
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.8rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-system-guard-points div {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-system-guard-points strong,
+.admin-system-nav-copy strong,
+.admin-system-rules-card strong,
+.admin-system-meta-card strong {
+    display: block;
+    color: var(--admin-ink);
+    font-weight: 800;
+}
+
+.admin-system-guard-points span,
+.admin-system-nav-copy span,
+.admin-system-rules-card li,
+.admin-system-editor-title p,
+.admin-system-confirm-note,
+.admin-system-alert-card p,
+.admin-system-backup-empty span {
+    color: var(--admin-muted);
+    line-height: 1.6;
+}
+
+.admin-system-nav-list,
+.admin-system-editor-stack {
+    display: grid;
+    gap: 0.95rem;
+}
+
+.admin-system-nav-item {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.85rem;
+    color: inherit;
+    text-decoration: none;
+    background: rgba(15, 19, 24, 0.03);
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+[data-bs-theme="dark"] .admin-system-nav-item {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-system-nav-item:hover {
+    border-color: rgba(196, 154, 60, 0.35);
+    background: rgba(196, 154, 60, 0.08);
+    transform: translateY(-1px);
+}
+
+.admin-system-nav-icon,
+.admin-system-editor-mark {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.85rem;
+    background: rgba(196, 154, 60, 0.12);
+    color: var(--admin-primary);
+    flex: 0 0 auto;
+}
+
+.admin-system-editor-title {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+}
+
+.admin-system-editor-title p {
+    margin: 0.3rem 0 0;
+    max-width: 38rem;
+}
+
+.admin-system-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.15rem;
+}
+
+.admin-system-meta-card {
+    padding: 0.9rem 0.95rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.8rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-system-meta-card {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-system-editor-form .form-label {
+    margin-bottom: 0.55rem;
+}
+
+.admin-system-editor-textarea {
+    min-height: 380px;
+}
+
+.admin-system-rules-card {
+    padding: 1rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.85rem;
+    background: rgba(15, 19, 24, 0.03);
+}
+
+[data-bs-theme="dark"] .admin-system-rules-card {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-system-rules-card + .admin-system-rules-card {
+    margin-top: 0.9rem;
+}
+
+.admin-system-rules-card ul {
+    margin: 0.75rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.admin-system-rules-card-danger {
+    border-color: rgba(220, 53, 69, 0.22);
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.08), transparent);
+}
+
+.admin-system-backup-empty {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.95rem 1rem;
+    border: 1px dashed var(--admin-border);
+    border-radius: 0.8rem;
+}
+
+.admin-system-backup-empty i {
+    color: var(--admin-primary);
+}
+
+.admin-system-confirm-shell {
+    align-items: start;
+}
+
+.admin-system-confirm-note {
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(196, 154, 60, 0.18);
+    border-radius: 0.8rem;
+    background: rgba(196, 154, 60, 0.08);
+}
+
+.admin-system-alert-card {
+    background:
+        linear-gradient(135deg, rgba(255, 193, 7, 0.12), transparent),
+        var(--admin-card-bg);
+}
+
 .admin-impersonation-bar {
     position: sticky;
     top: 0;
@@ -1288,6 +1523,11 @@ img.admin-avatar {
         grid-template-columns: 1fr;
     }
 
+    .admin-system-files-metrics,
+    .admin-system-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
     .admin-permission-card,
     .admin-permission-card-header,
     .admin-permission-patterns div {
@@ -1307,6 +1547,12 @@ img.admin-avatar {
     .admin-page-hero-inner,
     .admin-danger-zone {
         align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-system-files-sticky,
+    .admin-system-editor-title {
+        position: static;
         flex-direction: column;
     }
 

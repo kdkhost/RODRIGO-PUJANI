@@ -20,19 +20,30 @@ class SystemFileManagerService
         $definition = $this->definition($key);
         $path = $definition['path'];
         $content = $this->currentContent($definition);
+        $backups = $this->backups($key);
+        $size = File::exists($path) ? File::size($path) : strlen($content);
 
         return [
             'key' => $key,
             'label' => $definition['label'],
             'description' => $definition['description'],
+            'summary' => $definition['summary'],
             'path' => str_replace(base_path().DIRECTORY_SEPARATOR, '', $path),
             'exists' => File::exists($path),
             'writable' => File::exists($path) ? is_writable($path) : is_writable(dirname($path)),
             'updated_at' => File::exists($path) ? date('d/m/Y H:i:s', File::lastModified($path)) : null,
-            'size' => File::exists($path) ? File::size($path) : strlen($content),
+            'size' => $size,
+            'size_human' => $this->formatBytes($size),
             'rows' => $definition['rows'],
             'content' => $content,
-            'backups' => $this->backups($key),
+            'backups' => $backups,
+            'backup_count' => count($backups),
+            'last_backup_at' => $backups[0]['updated_at'] ?? null,
+            'icon' => $definition['icon'],
+            'risk_level' => $definition['risk_level'],
+            'risk_badge' => $definition['risk_badge'],
+            'checklist' => $definition['checklist'],
+            'warnings' => $definition['warnings'],
         ];
     }
 
@@ -80,17 +91,41 @@ class SystemFileManagerService
         return [
             'env' => [
                 'label' => 'Arquivo .env',
-                'description' => 'Variáveis de ambiente, credenciais e parâmetros do sistema.',
+                'description' => 'Variáveis de ambiente, credenciais e parâmetros centrais do Laravel.',
+                'summary' => 'Credenciais, filas, cache, e-mail, integrações e modo de execução.',
                 'path' => base_path('.env'),
                 'fallback_path' => base_path('.env.example'),
                 'rows' => 18,
+                'icon' => 'bi-sliders2-vertical',
+                'risk_level' => 'Alto',
+                'risk_badge' => 'badge-soft-warning',
+                'checklist' => [
+                    'Revise APP_ENV, APP_URL e driver de banco antes de salvar.',
+                    'Confirme chaves, tokens e credenciais sem espaços extras.',
+                    'Se alterar cache, filas ou sessão, espere a limpeza automática do ambiente.',
+                ],
+                'warnings' => [
+                    'Uma credencial inválida pode interromper login, filas, e-mail e integrações.',
+                ],
             ],
             'htaccess' => [
                 'label' => 'Arquivo .htaccess',
                 'description' => 'Regras da raiz para reescrita de URL, segurança e publicação sem /public.',
+                'summary' => 'Controle de entrada HTTP, rewrite, cabeçalhos e comportamento da hospedagem.',
                 'path' => base_path('.htaccess'),
                 'fallback_path' => null,
                 'rows' => 16,
+                'icon' => 'bi-shield-lock',
+                'risk_level' => 'Crítico',
+                'risk_badge' => 'badge-soft-danger',
+                'checklist' => [
+                    'Mantenha a diretiva RewriteEngine ativa.',
+                    'Valide redirecionamentos, HTTPS e regras de acesso antes de publicar.',
+                    'Evite remover blocos de proteção se não houver revisão prévia.',
+                ],
+                'warnings' => [
+                    'Uma regra inválida pode tirar o site do ar imediatamente.',
+                ],
             ],
         ];
     }
@@ -191,6 +226,7 @@ class SystemFileManagerService
             ->map(fn (\SplFileInfo $file): array => [
                 'name' => $file->getFilename(),
                 'size' => $file->getSize(),
+                'size_human' => $this->formatBytes($file->getSize()),
                 'updated_at' => date('d/m/Y H:i:s', $file->getMTime()),
             ])
             ->values()
@@ -215,5 +251,18 @@ class SystemFileManagerService
         }
 
         Artisan::call('optimize:clear');
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return $bytes.' B';
+        }
+
+        if ($bytes < 1048576) {
+            return number_format($bytes / 1024, 1, ',', '.').' KB';
+        }
+
+        return number_format($bytes / 1048576, 2, ',', '.').' MB';
     }
 }

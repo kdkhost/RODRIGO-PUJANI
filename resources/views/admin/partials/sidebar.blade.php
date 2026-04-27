@@ -25,7 +25,7 @@
             ['label' => 'Usuários', 'route' => 'admin.users.index', 'active' => 'admin.users.*', 'icon' => 'bi-person-gear', 'permission' => 'users.manage'],
             ['label' => 'Funções', 'route' => 'admin.roles.index', 'active' => 'admin.roles.*', 'icon' => 'bi-shield-check', 'permission' => 'roles.manage'],
             ['label' => 'Permissões', 'route' => 'admin.permissions.index', 'active' => 'admin.permissions.*', 'icon' => 'bi-key', 'permission' => 'permissions.manage'],
-            ['label' => 'Arquivos do Sistema', 'route' => 'admin.system-files.index', 'active' => 'admin.system-files.*', 'icon' => 'bi-file-earmark-code', 'permission' => 'system-files.manage'],
+            ['label' => 'Arquivos do Sistema', 'route' => 'admin.system-files.index', 'active' => 'admin.system-files.*', 'icon' => 'bi-file-earmark-code', 'permission' => 'system-files.manage', 'super_admin_only' => true],
         ],
     ];
 
@@ -39,7 +39,15 @@
     $preparedGroups = collect($groups)
         ->map(function (array $items, string $label) use ($groupIcons): array {
             $visibleItems = collect($items)
-                ->filter(fn (array $item): bool => ! $item['permission'] || auth()->user()?->can($item['permission']))
+                ->filter(function (array $item): bool {
+                    $user = auth()->user();
+
+                    if (($item['super_admin_only'] ?? false) && ! $user?->isSuperAdmin()) {
+                        return false;
+                    }
+
+                    return ! $item['permission'] || $user?->can($item['permission']);
+                })
                 ->values();
 
             return [
