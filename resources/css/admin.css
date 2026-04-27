@@ -957,9 +957,11 @@ img.admin-avatar {
 }
 
 .admin-calendar-event-title {
+    display: block;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 0.8rem;
     font-weight: 800;
 }
@@ -2190,6 +2192,114 @@ img.admin-avatar {
 }
 
 @media (max-width: 767.98px) {
+    .admin-calendar {
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .admin-calendar .fc-toolbar {
+        gap: 0.65rem;
+        align-items: stretch;
+    }
+
+    .admin-calendar .fc-toolbar .fc-left,
+    .admin-calendar .fc-toolbar .fc-center,
+    .admin-calendar .fc-toolbar .fc-right {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        width: 100%;
+        align-items: center;
+    }
+
+    .admin-calendar .fc-toolbar .fc-left {
+        justify-content: space-between;
+    }
+
+    .admin-calendar .fc-toolbar .fc-center {
+        justify-content: flex-start;
+    }
+
+    .admin-calendar .fc-toolbar .fc-right {
+        display: grid;
+    }
+
+    .admin-calendar .fc-toolbar .fc-right .fc-button-group {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.42rem;
+        width: 100%;
+    }
+
+    .admin-calendar .fc-toolbar > * > :not(:first-child) {
+        margin-left: 0;
+    }
+
+    .admin-calendar .fc-toolbar h2 {
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .admin-calendar .fc-button {
+        min-height: 40px;
+        padding: 0.5rem 0.55rem;
+        font-size: 0.76rem;
+    }
+
+    .admin-calendar.is-compact .fc-view-container,
+    .admin-calendar.is-compact .fc-dayGrid-view,
+    .admin-calendar.is-compact .fc-list-view,
+    .admin-calendar.is-compact .fc-timeGrid-view {
+        overflow: visible;
+    }
+
+    .admin-calendar.is-compact .fc-scroller {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .admin-calendar .fc-day-header,
+    .admin-calendar .fc-list-heading td {
+        font-size: 0.62rem;
+        letter-spacing: 0.03em;
+    }
+
+    .admin-calendar .fc-day-top {
+        padding: 0.3rem 0.38rem 0.16rem;
+    }
+
+    .admin-calendar .fc-day-number,
+    .admin-calendar .fc-axis,
+    .admin-calendar .fc-time,
+    .admin-calendar .fc-list-item-time {
+        font-size: 0.76rem;
+    }
+
+    .admin-calendar .fc-day-grid-event {
+        margin: 0.08rem 0.12rem;
+        padding: 0.08rem 0.18rem;
+        border-radius: 0.5rem;
+    }
+
+    .admin-calendar .fc-day-grid-event .admin-calendar-event-shell {
+        display: block;
+    }
+
+    .admin-calendar .fc-day-grid-event .admin-calendar-event-heading {
+        display: block;
+    }
+
+    .admin-calendar .fc-day-grid-event .admin-calendar-event-time,
+    .admin-calendar.is-compact .fc-day-grid-event .admin-calendar-event-meta {
+        display: none;
+    }
+
+    .admin-calendar .fc-day-grid-event .admin-calendar-event-title {
+        font-size: 0.68rem;
+        line-height: 1.2;
+    }
+
     .admin-calendar-kpis,
     .admin-permission-kpis {
         grid-template-columns: 1fr;

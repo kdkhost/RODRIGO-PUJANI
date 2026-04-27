@@ -875,6 +875,40 @@ const AdminUI = {
                 return;
             }
 
+            const readViewportState = () => ({
+                compact: window.innerWidth <= 575,
+                narrow: window.innerWidth <= 991,
+            });
+            const applyViewportState = () => {
+                const state = readViewportState();
+                element.classList.toggle('is-compact', state.compact);
+                element.classList.toggle('is-narrow', state.narrow);
+
+                return state;
+            };
+            const buildResponsiveOptions = (state) => ({
+                defaultView: state.compact ? 'listWeek' : 'dayGridMonth',
+                height: state.compact ? 'auto' : Number(element.dataset.calendarHeight || 640),
+                contentHeight: state.compact ? 'auto' : Number(element.dataset.calendarContentHeight || 560),
+                aspectRatio: state.compact ? 0.92 : (state.narrow ? 1.2 : Number(element.dataset.calendarAspectRatio || 1.72)),
+                weekNumbers: !state.compact,
+                fixedWeekCount: !state.compact,
+                columnHeaderFormat: state.compact ? { weekday: 'narrow' } : { weekday: 'short' },
+                header: state.compact
+                    ? {
+                        left: 'prev,next',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                    }
+                    : {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                    },
+                monthEventLimit: state.compact ? 2 : (state.narrow ? 3 : 4),
+            });
+            let viewportState = applyViewportState();
+            let responsiveOptions = buildResponsiveOptions(viewportState);
             const toolbar = element.dataset.calendarToolbar ? document.querySelector(element.dataset.calendarToolbar) : null;
             const readFilters = () => {
                 const params = {};
@@ -920,13 +954,13 @@ const AdminUI = {
                 locales: [window.FullCalendar.locales['pt-br']],
                 locale: 'pt-br',
                 timeZone: 'local',
-                defaultView: 'dayGridMonth',
-                height: Number(element.dataset.calendarHeight || 640),
-                contentHeight: Number(element.dataset.calendarContentHeight || 560),
-                aspectRatio: Number(element.dataset.calendarAspectRatio || 1.72),
+                defaultView: responsiveOptions.defaultView,
+                height: responsiveOptions.height,
+                contentHeight: responsiveOptions.contentHeight,
+                aspectRatio: responsiveOptions.aspectRatio,
                 handleWindowResize: true,
                 nowIndicator: true,
-                weekNumbers: true,
+                weekNumbers: responsiveOptions.weekNumbers,
                 navLinks: true,
                 selectable: true,
                 selectMirror: true,
@@ -935,6 +969,7 @@ const AdminUI = {
                 droppable: true,
                 eventLimit: true,
                 eventLimitClick: 'popover',
+                fixedWeekCount: responsiveOptions.fixedWeekCount,
                 businessHours: true,
                 allDaySlot: true,
                 displayEventTime: true,
@@ -943,11 +978,8 @@ const AdminUI = {
                 snapDuration: '00:15:00',
                 minTime: '06:00:00',
                 maxTime: '22:00:00',
-                header: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-                },
+                header: responsiveOptions.header,
+                columnHeaderFormat: responsiveOptions.columnHeaderFormat,
                 buttonText: {
                     today: 'Hoje',
                     month: 'Mês',
@@ -956,7 +988,7 @@ const AdminUI = {
                     list: 'Lista',
                 },
                 views: {
-                    dayGridMonth: { eventLimit: 4 },
+                    dayGridMonth: { eventLimit: responsiveOptions.monthEventLimit },
                     timeGridWeek: { slotEventOverlap: true },
                     timeGridDay: { slotEventOverlap: true },
                 },
@@ -1000,7 +1032,8 @@ const AdminUI = {
                         return;
                     }
 
-                    const useInlineTime = !info.view.type.startsWith('list');
+                    const compactMonthView = element.classList.contains('is-compact') && info.view.type === 'dayGridMonth';
+                    const useInlineTime = !info.view.type.startsWith('list') && !compactMonthView;
                     const timeText = useInlineTime && info.timeText ? `<span class="admin-calendar-event-time">${this.escapeHtml(info.timeText)}</span>` : '';
                     const titleText = `<span class="admin-calendar-event-title">${this.escapeHtml(info.event.title)}</span>`;
                     const showMeta = info.view.type !== 'dayGridMonth';
@@ -1042,6 +1075,39 @@ const AdminUI = {
 
             calendar.render();
             element._fullCalendar = calendar;
+
+            const syncResponsiveCalendar = () => {
+                const previousState = viewportState;
+                viewportState = applyViewportState();
+                responsiveOptions = buildResponsiveOptions(viewportState);
+
+                calendar.setOption('height', responsiveOptions.height);
+                calendar.setOption('contentHeight', responsiveOptions.contentHeight);
+                calendar.setOption('aspectRatio', responsiveOptions.aspectRatio);
+                calendar.setOption('weekNumbers', responsiveOptions.weekNumbers);
+                calendar.setOption('fixedWeekCount', responsiveOptions.fixedWeekCount);
+                calendar.setOption('header', responsiveOptions.header);
+                calendar.setOption('columnHeaderFormat', responsiveOptions.columnHeaderFormat);
+
+                if (viewportState.compact && !previousState.compact && calendar.view.type === 'dayGridMonth') {
+                    calendar.changeView('listWeek');
+                    return;
+                }
+
+                if (!viewportState.compact && previousState.compact && calendar.view.type === 'listWeek') {
+                    calendar.changeView('dayGridMonth');
+                    return;
+                }
+
+                calendar.rerenderEvents();
+                calendar.updateSize();
+            };
+
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                window.clearTimeout(resizeTimer);
+                resizeTimer = window.setTimeout(syncResponsiveCalendar, 140);
+            });
 
             toolbar?.querySelectorAll('[data-calendar-filter]').forEach((field) => {
                 const eventName = field.tagName === 'INPUT' ? 'input' : 'change';
