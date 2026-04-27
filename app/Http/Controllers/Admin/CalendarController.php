@@ -28,6 +28,7 @@ class CalendarController extends Controller
             'users' => $this->availableOwners(),
             'statuses' => self::STATUSES,
             'visibilities' => self::VISIBILITIES,
+            'displays' => self::DISPLAYS,
             'categories' => (clone $eventsQuery)
                 ->select('category')
                 ->distinct()
@@ -49,36 +50,70 @@ class CalendarController extends Controller
         $validated = $request->validate([
             'start' => ['nullable', 'date'],
             'end' => ['nullable', 'date'],
+            'search' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', Rule::in(self::STATUSES)],
             'visibility' => ['nullable', Rule::in(self::VISIBILITIES)],
+            'display' => ['nullable', Rule::in(self::DISPLAYS)],
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
         ]);
 
         $query = $this->visibleEventsQuery()->with(['owner:id,name', 'creator:id,name']);
-
-        if (! empty($validated['start'])) {
-            $query->where(function ($builder) use ($validated): void {
-                $builder->whereNull('end_at')->where('start_at', '>=', Carbon::parse($validated['start']))
-                    ->orWhere('end_at', '>=', Carbon::parse($validated['start']));
-            });
-        }
-
-        if (! empty($validated['end'])) {
-            $query->where('start_at', '<=', Carbon::parse($validated['end']));
-        }
-
-        foreach (['category', 'status', 'visibility', 'owner_id'] as $field) {
-            if (filled($validated[$field] ?? null)) {
-                $query->where($field, $validated[$field]);
-            }
-        }
+        $this->applySearchFilter($query, $validated['search'] ?? null);
+        $this->applyRangeFilter(
+            $query,
+            filled($validated['start'] ?? null) ? Carbon::parse($validated['start']) : null,
+            filled($validated['end'] ?? null) ? Carbon::parse($validated['end']) : null,
+        );
+        $this->applyRangeFilter(
+            $query,
+            filled($validated['date_from'] ?? null) ? Carbon::parse($validated['date_from'])->startOfDay() : null,
+            filled($validated['date_to'] ?? null) ? Carbon::parse($validated['date_to'])->addDay()->startOfDay() : null,
+        );
+        $this->applyAttributeFilters($query, $validated);
 
         return response()->json($query
             ->orderBy('start_at')
             ->get()
             ->map(fn (CalendarEvent $event): array => $this->calendarPayload($event))
             ->values());
+    }
+
+    public function records(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(self::STATUSES)],
+            'visibility' => ['nullable', Rule::in(self::VISIBILITIES)],
+            'display' => ['nullable', Rule::in(self::DISPLAYS)],
+            'owner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+            'per_page' => ['nullable', 'integer', 'min:5', 'max:100'],
+        ]);
+
+        $query = $this->visibleEventsQuery()->with(['owner:id,name', 'creator:id,name']);
+        $this->applySearchFilter($query, $validated['search'] ?? null);
+        $this->applyRangeFilter(
+            $query,
+            filled($validated['date_from'] ?? null) ? Carbon::parse($validated['date_from'])->startOfDay() : null,
+            filled($validated['date_to'] ?? null) ? Carbon::parse($validated['date_to'])->addDay()->startOfDay() : null,
+        );
+        $this->applyAttributeFilters($query, $validated);
+
+        $items = $query
+            ->orderBy('start_at')
+            ->paginate($validated['per_page'] ?? 10)
+            ->withQueryString();
+
+        return response()->json([
+            'html' => view('admin.calendar._table', [
+                'items' => $items,
+            ])->render(),
+        ]);
     }
 
     public function create(Request $request): JsonResponse
@@ -113,6 +148,7 @@ class CalendarController extends Controller
         return response()->json([
             'message' => 'Evento criado com sucesso.',
             'calendarTarget' => '#admin-calendar',
+            'tableTarget' => '#admin-calendar-events-table',
         ]);
     }
 
@@ -135,6 +171,7 @@ class CalendarController extends Controller
         return response()->json([
             'message' => 'Evento atualizado com sucesso.',
             'calendarTarget' => '#admin-calendar',
+            'tableTarget' => '#admin-calendar-events-table',
         ]);
     }
 
@@ -174,6 +211,7 @@ class CalendarController extends Controller
         return response()->json([
             'message' => 'Evento removido com sucesso.',
             'calendarTarget' => '#admin-calendar',
+            'tableTarget' => '#admin-calendar-events-table',
         ]);
     }
 
@@ -286,10 +324,12 @@ class CalendarController extends Controller
             'classNames' => [
                 'admin-calendar-event-pill',
                 'admin-calendar-status-'.$event->status,
+                'admin-calendar-display-'.$event->display,
             ],
             'extendedProps' => $extendedProps + [
                 'status' => $event->status,
                 'visibility' => $event->visibility,
+                'display' => $event->display,
                 'category' => $event->category,
                 'location' => $event->location,
                 'description' => strip_tags((string) $event->description),
@@ -329,6 +369,60 @@ class CalendarController extends Controller
                         });
                 });
             });
+    }
+
+    private function applySearchFilter(Builder $query, ?string $search): void
+    {
+        $search = trim((string) $search);
+
+        if ($search === '') {
+            return;
+        }
+
+        $query->where(function (Builder $builder) use ($search): void {
+            foreach (['title', 'description', 'location', 'category'] as $index => $field) {
+                $method = $index === 0 ? 'where' : 'orWhere';
+                $builder->{$method}($field, 'like', "%{$search}%");
+            }
+        });
+    }
+
+    private function applyAttributeFilters(Builder $query, array $validated): void
+    {
+        foreach (['category', 'status', 'visibility', 'owner_id', 'display'] as $field) {
+            if (filled($validated[$field] ?? null)) {
+                $query->where($field, $validated[$field]);
+            }
+        }
+    }
+
+    private function applyRangeFilter(Builder $query, ?Carbon $rangeStart = null, ?Carbon $rangeEnd = null): void
+    {
+        if (! $rangeStart && ! $rangeEnd) {
+            return;
+        }
+
+        if ($rangeEnd) {
+            $query->where('start_at', '<', $rangeEnd);
+        }
+
+        if (! $rangeStart) {
+            return;
+        }
+
+        $query->where(function (Builder $builder) use ($rangeStart): void {
+            $builder
+                ->where(function (Builder $instantaneous) use ($rangeStart): void {
+                    $instantaneous
+                        ->whereNull('end_at')
+                        ->where('start_at', '>=', $rangeStart);
+                })
+                ->orWhere(function (Builder $ranged) use ($rangeStart): void {
+                    $ranged
+                        ->whereNotNull('end_at')
+                        ->where('end_at', '>', $rangeStart);
+                });
+        });
     }
 
     private function guardVisibleEvent(CalendarEvent $event): void

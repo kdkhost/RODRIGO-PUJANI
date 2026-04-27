@@ -729,6 +729,27 @@ img.admin-avatar {
     box-shadow: 0 6px 16px rgba(15, 19, 24, 0.14);
 }
 
+.admin-calendar .fc-bgevent {
+    opacity: 0.28;
+    border-radius: 0.75rem;
+}
+
+.admin-calendar .fc-bgevent.admin-calendar-status-scheduled {
+    background: rgba(196, 154, 60, 0.32);
+}
+
+.admin-calendar .fc-bgevent.admin-calendar-status-confirmed {
+    background: rgba(25, 135, 84, 0.28);
+}
+
+.admin-calendar .fc-bgevent.admin-calendar-status-done {
+    background: rgba(59, 130, 246, 0.26);
+}
+
+.admin-calendar .fc-bgevent.admin-calendar-status-canceled {
+    background: rgba(220, 53, 69, 0.24);
+}
+
 .admin-calendar .fc-day-grid-event {
     margin: 0.16rem 0.28rem;
 }

@@ -155,7 +155,13 @@ const AdminUI = {
                 window.setTimeout(() => {
                     const form = calendarReset.closest('form');
                     const calendar = document.querySelector(form?.dataset.calendarToolbar || '#admin-calendar');
+                    const tableTargets = new Set(
+                        Array.from(form?.querySelectorAll('[data-table-target]') || [])
+                            .map((item) => item.dataset.tableTarget)
+                            .filter(Boolean),
+                    );
                     this.refetchCalendar(calendar);
+                    tableTargets.forEach((selector) => this.refreshTable(document.querySelector(selector)));
                 }, 0);
                 return;
             }
@@ -738,6 +744,7 @@ const AdminUI = {
                         all_day: event.allDay ? 1 : 0,
                     });
                     this.showToast('success', 'Agenda atualizada.');
+                    this.refreshTable(document.querySelector('#admin-calendar-events-table'));
                 } catch (error) {
                     info.revert();
                     this.showToast('error', error.response?.data?.message || 'Não foi possível mover o evento.');
@@ -819,6 +826,7 @@ const AdminUI = {
                     const details = [
                         info.event.title,
                         props.status ? `Status: ${props.status}` : '',
+                        props.display ? `Exibição: ${props.display}` : '',
                         props.owner ? `Responsável: ${props.owner}` : '',
                         props.location ? `Local: ${props.location}` : '',
                         props.description || '',

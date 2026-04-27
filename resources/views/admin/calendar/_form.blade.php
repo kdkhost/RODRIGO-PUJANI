@@ -14,9 +14,9 @@
         'public' => 'Público',
     ];
     $displayLabels = [
-        'auto' => 'Automático',
-        'background' => 'Plano de fundo',
-        'inverse-background' => 'Fundo invertido',
+        'auto' => 'Evento normal',
+        'background' => 'Marcação de fundo',
+        'inverse-background' => 'Bloqueio invertido',
     ];
 @endphp
 
@@ -81,7 +81,7 @@
             <input type="color" name="text_color" class="form-control form-control-color w-100" value="{{ old('text_color', $record->text_color ?: '#111318') }}">
         </div>
         <div class="col-md-4">
-            <label class="form-label">Renderização</label>
+            <label class="form-label">Exibição na agenda</label>
             <select name="display" class="form-select">
                 @foreach ($displays as $display)
                     <option value="{{ $display }}" @selected(old('display', $record->display ?: 'auto') === $display)>{{ $displayLabels[$display] ?? $display }}</option>
@@ -131,8 +131,8 @@
                             <i class="bi bi-box-arrow-up-right me-1"></i>Abrir link
                         </a>
                     @endif
-                    <button type="button" class="btn btn-outline-danger" data-delete-url="{{ route('admin.calendar.destroy', $record) }}" data-calendar-target="#admin-calendar" data-confirm-text="O evento será removido permanentemente da agenda.">
-                    <i class="bi bi-trash me-1"></i>Excluir
+                    <button type="button" class="btn btn-outline-danger" data-delete-url="{{ route('admin.calendar.destroy', $record) }}" data-calendar-target="#admin-calendar" data-table-target="#admin-calendar-events-table" data-confirm-text="O evento será removido permanentemente da agenda.">
+                        <i class="bi bi-trash me-1"></i>Excluir
                     </button>
                 </div>
             @endif

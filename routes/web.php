@@ -79,6 +79,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->group(function (): void {
             Route::get('/', [CalendarController::class, 'index'])->name('index');
             Route::get('/events', [CalendarController::class, 'events'])->name('events');
+            Route::get('/records', [CalendarController::class, 'records'])->name('records');
             Route::get('/create', [CalendarController::class, 'create'])->name('create');
             Route::post('/events', [CalendarController::class, 'store'])->name('store');
             Route::get('/events/{event}/edit', [CalendarController::class, 'edit'])->name('edit');

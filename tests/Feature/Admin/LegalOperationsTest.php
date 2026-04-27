@@ -183,4 +183,48 @@ class LegalOperationsTest extends TestCase
             'id' => $event->id,
         ]);
     }
+
+    public function test_background_all_day_event_is_returned_in_feed_and_records(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->givePermissionTo(['admin.access', 'calendar.manage']);
+
+        $event = CalendarEvent::query()->create([
+            'title' => 'Plantão de fechamento',
+            'description' => '<p>Agenda interna</p>',
+            'category' => 'Operação',
+            'status' => 'scheduled',
+            'visibility' => 'team',
+            'start_at' => '2026-04-27 00:00:00',
+            'end_at' => '2026-04-28 00:00:00',
+            'all_day' => true,
+            'editable' => true,
+            'overlap' => true,
+            'display' => 'background',
+            'created_by' => $admin->id,
+        ]);
+
+        $feedResponse = $this->actingAs($admin)
+            ->getJson(route('admin.calendar.events', [
+                'start' => '2026-04-01T00:00:00-03:00',
+                'end' => '2026-05-01T00:00:00-03:00',
+            ]));
+
+        $feedResponse->assertOk();
+        $feedResponse->assertJsonCount(1);
+        $feedResponse->assertJsonPath('0.id', (string) $event->id);
+        $feedResponse->assertJsonPath('0.display', 'background');
+
+        $recordsResponse = $this->actingAs($admin)
+            ->getJson(route('admin.calendar.records', [
+                'date_from' => '2026-04-27',
+                'date_to' => '2026-04-27',
+            ]));
+
+        $recordsResponse->assertOk();
+        $this->assertStringContainsString('Plantão de fechamento', $recordsResponse->json('html'));
+        $this->assertStringContainsString('Marcação de fundo', $recordsResponse->json('html'));
+    }
 }

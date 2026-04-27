@@ -10,6 +10,11 @@
         'team' => 'Equipe',
         'public' => 'Público',
     ];
+    $displayLabels = [
+        'auto' => 'Evento normal',
+        'background' => 'Marcação de fundo',
+        'inverse-background' => 'Bloqueio invertido',
+    ];
 @endphp
 
 @extends('admin.layouts.app')
@@ -53,30 +58,47 @@
 
             <form class="admin-table-toolbar mb-3" data-calendar-toolbar="#admin-calendar">
                 <div class="admin-search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="search" name="search" class="form-control" placeholder="Pesquisar eventos" data-calendar-filter data-table-search data-table-target="#admin-calendar-events-table">
+                </div>
+                <div class="admin-search-box">
                     <i class="bi bi-funnel"></i>
-                    <input type="text" name="category" class="form-control" list="calendar-categories" placeholder="Filtrar por categoria" data-calendar-filter>
+                    <input type="text" name="category" class="form-control" list="calendar-categories" placeholder="Filtrar por categoria" data-calendar-filter data-table-filter data-table-target="#admin-calendar-events-table">
                     <datalist id="calendar-categories">
                         @foreach ($categories as $category)
                             <option value="{{ $category }}"></option>
                         @endforeach
                     </datalist>
                 </div>
-                <select name="status" class="form-select" data-calendar-filter>
+                <select name="status" class="form-select" data-calendar-filter data-table-filter data-table-target="#admin-calendar-events-table">
                     <option value="">Todos os status</option>
                     @foreach ($statuses as $status)
                         <option value="{{ $status }}">{{ $statusLabels[$status] ?? ucfirst($status) }}</option>
                     @endforeach
                 </select>
-                <select name="visibility" class="form-select" data-calendar-filter>
+                <select name="visibility" class="form-select" data-calendar-filter data-table-filter data-table-target="#admin-calendar-events-table">
                     <option value="">Todas as visibilidades</option>
                     @foreach ($visibilities as $visibility)
                         <option value="{{ $visibility }}">{{ $visibilityLabels[$visibility] ?? ucfirst($visibility) }}</option>
                     @endforeach
                 </select>
-                <select name="owner_id" class="form-select" data-calendar-filter>
+                <select name="display" class="form-select" data-calendar-filter data-table-filter data-table-target="#admin-calendar-events-table">
+                    <option value="">Todos os formatos</option>
+                    @foreach ($displays as $display)
+                        <option value="{{ $display }}">{{ $displayLabels[$display] ?? ucfirst($display) }}</option>
+                    @endforeach
+                </select>
+                <select name="owner_id" class="form-select" data-calendar-filter data-table-filter data-table-target="#admin-calendar-events-table">
                     <option value="">Todos os responsáveis</option>
                     @foreach ($users as $user)
                         <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    @endforeach
+                </select>
+                <input type="date" name="date_from" class="form-control" data-calendar-filter data-table-filter data-table-target="#admin-calendar-events-table" aria-label="Data inicial">
+                <input type="date" name="date_to" class="form-control" data-calendar-filter data-table-filter data-table-target="#admin-calendar-events-table" aria-label="Data final">
+                <select name="per_page" class="form-select" data-table-filter data-table-target="#admin-calendar-events-table">
+                    @foreach ([10, 15, 25, 50] as $size)
+                        <option value="{{ $size }}" @selected($size === 10)>{{ $size }} por página</option>
                     @endforeach
                 </select>
                 <button class="btn btn-outline-secondary" type="reset" data-calendar-reset>
@@ -109,6 +131,25 @@
                         data-calendar-create-url="{{ route('admin.calendar.create') }}"
                         data-calendar-toolbar="[data-calendar-toolbar='#admin-calendar']"
                     ></div>
+                </div>
+            </div>
+
+            <div class="card admin-calendar-records-card mt-4">
+                <div class="card-header">
+                    <div>
+                        <div class="admin-card-kicker">Gestão direta</div>
+                        <h3 class="card-title">Eventos cadastrados</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div
+                        id="admin-calendar-events-table"
+                        data-ajax-table
+                        data-toolbar="[data-calendar-toolbar='#admin-calendar']"
+                        data-url="{{ route('admin.calendar.records') }}"
+                    >
+                        <div class="py-4 text-center text-muted">Carregando eventos...</div>
+                    </div>
                 </div>
             </div>
         </div>
