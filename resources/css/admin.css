@@ -820,6 +820,71 @@ img.admin-avatar {
     color: #6c757d;
 }
 
+.admin-status-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    min-height: 30px;
+    padding: 0.24rem 0.62rem 0.24rem 0.28rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.76rem;
+    font-weight: 850;
+    line-height: 1;
+    white-space: nowrap;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-status-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(17, 19, 24, 0.1);
+}
+
+.admin-status-toggle:disabled {
+    cursor: wait;
+    opacity: 0.72;
+    transform: none;
+}
+
+.admin-status-toggle span {
+    position: relative;
+    display: inline-flex;
+    width: 34px;
+    height: 18px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.admin-status-toggle span::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(17, 19, 24, 0.22);
+    content: "";
+    transition: transform 0.18s ease;
+}
+
+.admin-status-toggle.is-active {
+    border-color: rgba(25, 135, 84, 0.22);
+    background: rgba(25, 135, 84, 0.1);
+    color: #146c43;
+}
+
+.admin-status-toggle.is-active span::after {
+    transform: translateX(16px);
+}
+
+.admin-status-toggle.is-inactive {
+    border-color: rgba(108, 117, 125, 0.22);
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
 .admin-table-actions {
     display: inline-flex;
     flex-wrap: wrap;
@@ -2148,6 +2213,182 @@ img.admin-avatar {
 
 .filepond--root {
     margin-bottom: 0;
+}
+
+.admin-upload-preview-panel {
+    margin-top: 0.7rem;
+    border: 1px solid rgba(196, 154, 60, 0.18);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--admin-card-bg) 92%, rgba(196, 154, 60, 0.08));
+    overflow: hidden;
+}
+
+.admin-upload-preview-empty,
+.admin-upload-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.85rem;
+}
+
+.admin-upload-preview-empty {
+    color: var(--admin-muted);
+}
+
+.admin-upload-preview-empty > i {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: rgba(196, 154, 60, 0.12);
+    color: var(--admin-gold);
+    font-size: 1.2rem;
+}
+
+.admin-upload-preview-empty strong,
+.admin-upload-preview-empty span {
+    display: block;
+}
+
+.admin-upload-preview-empty strong {
+    color: var(--admin-ink);
+    font-size: 0.86rem;
+}
+
+.admin-upload-preview-empty span {
+    font-size: 0.76rem;
+}
+
+.admin-upload-preview-media {
+    flex: 0 0 64px;
+    width: 64px;
+    height: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(196, 154, 60, 0.16);
+    border-radius: 0.78rem;
+    background: rgba(9, 13, 18, 0.05);
+    color: var(--admin-gold);
+    overflow: hidden;
+}
+
+.admin-upload-preview-media img,
+.admin-upload-preview-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-upload-preview-media i {
+    font-size: 1.55rem;
+}
+
+.admin-upload-preview-info {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.admin-upload-preview-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.admin-upload-preview-title strong {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--admin-ink);
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-upload-preview-title span {
+    flex: 0 0 auto;
+    color: var(--admin-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.admin-upload-preview-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.28rem;
+    color: var(--admin-muted);
+    font-size: 0.76rem;
+}
+
+.admin-upload-extension {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.35rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(196, 154, 60, 0.14);
+    color: var(--admin-gold-strong);
+    font-weight: 850;
+    letter-spacing: 0;
+}
+
+.admin-upload-preview-info audio {
+    width: 100%;
+    height: 34px;
+    margin-top: 0.45rem;
+}
+
+.admin-upload-item-progress {
+    height: 5px;
+    margin-top: 0.55rem;
+    border-radius: 999px;
+    background: rgba(108, 117, 125, 0.14);
+    overflow: hidden;
+}
+
+.admin-upload-item-progress span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #c49a3c, #22c55e);
+    transition: width 0.2s ease;
+}
+
+.admin-upload-preview-panel[data-state="done"] .admin-upload-item-progress span {
+    background: #198754;
+}
+
+.admin-upload-preview-panel[data-state="error"] .admin-upload-item-progress span {
+    width: 100% !important;
+    background: #dc3545;
+}
+
+.admin-upload-progress-summary {
+    display: grid;
+    gap: 0.3rem;
+    margin-top: 0.6rem;
+}
+
+.admin-upload-progress-summary span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--admin-muted);
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-upload-progress-summary strong {
+    display: inline-flex;
+    margin-right: 0.35rem;
+    color: var(--admin-gold-strong);
 }
 
 .admin-upload-progress {

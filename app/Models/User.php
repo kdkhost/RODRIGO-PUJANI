@@ -117,6 +117,15 @@ class User extends Authenticatable
         return $actor->canManageOtherUsers();
     }
 
+    public function canHaveStatusChangedBy(?self $actor): bool
+    {
+        if (! $actor || $actor->is($this) || $this->isSuperAdmin()) {
+            return false;
+        }
+
+        return $actor->canManageOtherUsers();
+    }
+
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);

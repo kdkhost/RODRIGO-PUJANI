@@ -143,6 +143,7 @@ const AdminUI = {
                     <div class="progress-bar progress-bar-striped progress-bar-animated" data-progress-bar style="width: 0%"></div>
                 </div>
                 <div class="small text-muted" data-progress-eta>Calculando tempo restante...</div>
+                <div class="admin-upload-progress-summary" data-progress-summary></div>
             </div>
         `;
         document.body.appendChild(wrapper);
@@ -310,6 +311,13 @@ const AdminUI = {
             if (deleteTrigger) {
                 event.preventDefault();
                 this.confirmDelete(deleteTrigger);
+                return;
+            }
+
+            const toggleTrigger = event.target.closest('[data-toggle-url]');
+            if (toggleTrigger) {
+                event.preventDefault();
+                this.toggleUserStatus(toggleTrigger);
                 return;
             }
 
@@ -492,14 +500,26 @@ const AdminUI = {
 
     async confirmDelete(trigger) {
         this.hideCalendarEventPanel();
+        const requiresPassword = trigger.dataset.requirePassword === 'true';
         const confirmResult = await Swal.fire({
-            title: 'Confirmar exclusão?',
+            title: trigger.dataset.confirmTitle || 'Confirmar exclusão?',
             text: trigger.dataset.confirmText || 'Essa ação não poderá ser desfeita.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Excluir',
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#dc3545',
+            input: requiresPassword ? 'password' : undefined,
+            inputLabel: requiresPassword ? (trigger.dataset.passwordLabel || 'Senha do administrador') : undefined,
+            inputPlaceholder: requiresPassword ? 'Digite a senha para confirmar' : undefined,
+            inputAttributes: requiresPassword ? {
+                autocomplete: 'current-password',
+                autocapitalize: 'off',
+                spellcheck: 'false',
+            } : undefined,
+            inputValidator: requiresPassword
+                ? (value) => (!value ? 'Informe a senha para continuar.' : undefined)
+                : undefined,
         });
 
         if (!confirmResult.isConfirmed) {
@@ -507,13 +527,44 @@ const AdminUI = {
         }
 
         try {
-            const response = await window.axios.delete(trigger.dataset.deleteUrl);
-            this.showToast('success', response.data.message || 'Registro excluido com sucesso.');
+            const payload = requiresPassword ? { password: confirmResult.value } : {};
+            const response = await window.axios.delete(trigger.dataset.deleteUrl, { data: payload });
+            this.showToast('success', response.data.message || 'Registro excluído com sucesso.');
             const table = document.querySelector(trigger.dataset.tableTarget);
             this.refreshTable(table);
             this.refetchCalendar(response.data.calendarTarget || trigger.dataset.calendarTarget);
         } catch (error) {
             this.showToast('error', error.response?.data?.message || 'Falha ao excluir o registro.');
+        }
+    },
+
+    async toggleUserStatus(trigger) {
+        this.hideCalendarEventPanel();
+
+        const confirmResult = await Swal.fire({
+            title: trigger.dataset.toggleTitle || 'Alterar status?',
+            text: trigger.dataset.toggleText || 'O acesso deste usuário será atualizado imediatamente.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: trigger.dataset.toggleButton || 'Confirmar',
+            cancelButtonText: 'Cancelar',
+        });
+
+        if (!confirmResult.isConfirmed) {
+            return;
+        }
+
+        trigger.disabled = true;
+
+        try {
+            const response = await window.axios.patch(trigger.dataset.toggleUrl);
+            this.showToast('success', response.data.message || 'Status atualizado com sucesso.');
+            const table = document.querySelector(response.data.tableTarget || trigger.dataset.tableTarget);
+            this.refreshTable(table);
+        } catch (error) {
+            this.showToast('error', error.response?.data?.message || 'Falha ao alterar o status do usuário.');
+        } finally {
+            trigger.disabled = false;
         }
     },
 
@@ -528,6 +579,7 @@ const AdminUI = {
         }
 
         this.resetFormErrors(form);
+        this.markUploadPreviewsState(form, 'uploading', 0);
 
         try {
             const response = await window.axios({
@@ -547,10 +599,12 @@ const AdminUI = {
                     );
                     const speed = loaded / elapsedSeconds;
                     const eta = speed > 0 && total > 0 ? Math.max(0, Math.round((total - loaded) / speed)) : 0;
-                    this.updateProgress(percent, eta);
+                    this.updateProgress(percent, eta, form);
+                    this.markUploadPreviewsState(form, 'uploading', percent);
                 },
             });
 
+            this.markUploadPreviewsState(form, 'done', 100);
             this.hideProgress();
             this.showToast('success', response.data.message || 'Registro salvo com sucesso.');
 
@@ -570,6 +624,7 @@ const AdminUI = {
 
             this.refetchCalendar(response.data.calendarTarget);
         } catch (error) {
+            this.markUploadPreviewsState(form, 'error', 0);
             this.hideProgress();
 
             if (error.response?.status === 423) {
@@ -701,16 +756,288 @@ const AdminUI = {
         return input;
     },
 
-    updateProgress(percent, etaSeconds) {
+    formatBytes(bytes) {
+        const value = Number(bytes || 0);
+
+        if (value <= 0) {
+            return 'Tamanho não informado';
+        }
+
+        const units = ['B', 'KB', 'MB', 'GB'];
+        const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+        const amount = value / (1024 ** index);
+
+        return `${amount.toLocaleString('pt-BR', {
+            minimumFractionDigits: index === 0 ? 0 : 1,
+            maximumFractionDigits: index === 0 ? 0 : 1,
+        })} ${units[index]}`;
+    },
+
+    fileExtension(name, type = '') {
+        const cleanName = String(name || '').split('?')[0];
+        const fromName = cleanName.includes('.') ? cleanName.split('.').pop() : '';
+
+        if (fromName) {
+            return fromName.toUpperCase();
+        }
+
+        const fromType = String(type || '').split('/').pop();
+
+        return (fromType || 'MIDIA').toUpperCase();
+    },
+
+    mediaKind(mimeType = '', extension = '') {
+        const type = String(mimeType || '').toLowerCase();
+        const ext = String(extension || '').toLowerCase();
+
+        if (type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'ico'].includes(ext)) {
+            return { key: 'image', label: 'Imagem', icon: 'bi-file-earmark-image' };
+        }
+
+        if (type.startsWith('video/') || ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) {
+            return { key: 'video', label: 'Vídeo', icon: 'bi-file-earmark-play' };
+        }
+
+        if (type.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) {
+            return { key: 'audio', label: 'Áudio', icon: 'bi-file-earmark-music' };
+        }
+
+        if (type === 'application/pdf' || ext === 'pdf') {
+            return { key: 'pdf', label: 'PDF', icon: 'bi-file-earmark-pdf' };
+        }
+
+        if (['doc', 'docx', 'odt', 'rtf'].includes(ext)) {
+            return { key: 'document', label: 'Documento', icon: 'bi-file-earmark-word' };
+        }
+
+        if (['xls', 'xlsx', 'csv', 'ods'].includes(ext)) {
+            return { key: 'sheet', label: 'Planilha', icon: 'bi-file-earmark-spreadsheet' };
+        }
+
+        if (['zip', 'rar', '7z'].includes(ext)) {
+            return { key: 'archive', label: 'Compactado', icon: 'bi-file-earmark-zip' };
+        }
+
+        return { key: 'file', label: 'Arquivo', icon: 'bi-file-earmark' };
+    },
+
+    currentUploadInfo(input) {
+        const explicitUrl = input.dataset.currentUrl || '';
+        const explicitName = input.dataset.currentName || '';
+        const explicitType = input.dataset.currentType || '';
+        const explicitSize = input.dataset.currentSize || '';
+
+        if (explicitUrl) {
+            return {
+                current: true,
+                url: explicitUrl,
+                name: explicitName || explicitUrl.split('/').pop(),
+                type: explicitType,
+                size: Number(explicitSize || 0),
+            };
+        }
+
+        const currentLink = input.parentElement?.querySelector('a[href]');
+
+        if (!currentLink) {
+            return null;
+        }
+
+        return {
+            current: true,
+            url: currentLink.href,
+            name: currentLink.textContent.trim() || currentLink.href.split('/').pop(),
+            type: '',
+            size: 0,
+        };
+    },
+
+    selectedUploadFiles(form) {
+        return Array.from(form?.querySelectorAll?.('[data-filepond]') || [])
+            .flatMap((input) => input._adminFilePond?.getFiles?.() || [])
+            .map((item) => item.file)
+            .filter(Boolean);
+    },
+
+    revokeUploadPreviewUrls(input) {
+        (input._adminUploadPreviewUrls || []).forEach((url) => URL.revokeObjectURL(url));
+        input._adminUploadPreviewUrls = [];
+    },
+
+    uploadPreviewSource(input, file) {
+        const kind = this.mediaKind(file.type, this.fileExtension(file.name, file.type));
+
+        if (!['image', 'video', 'audio'].includes(kind.key)) {
+            return null;
+        }
+
+        const url = URL.createObjectURL(file);
+        input._adminUploadPreviewUrls = input._adminUploadPreviewUrls || [];
+        input._adminUploadPreviewUrls.push(url);
+
+        return url;
+    },
+
+    renderUploadPreviewMedia(item, kind) {
+        const source = item.url ? this.escapeHtml(item.url) : '';
+
+        if (source && kind.key === 'image') {
+            return `<img src="${source}" alt="${this.escapeHtml(item.name)}">`;
+        }
+
+        if (source && kind.key === 'video') {
+            return `<video src="${source}" muted playsinline controls></video>`;
+        }
+
+        if (source && kind.key === 'audio') {
+            return `<i class="bi ${kind.icon}"></i>`;
+        }
+
+        return `<i class="bi ${kind.icon}"></i>`;
+    },
+
+    renderUploadPreview(input, fileItems = []) {
+        const panel = input._adminUploadPreviewPanel;
+
+        if (!panel) {
+            return;
+        }
+
+        this.revokeUploadPreviewUrls(input);
+
+        const files = fileItems
+            .map((item) => item.file)
+            .filter(Boolean)
+            .map((file) => ({
+                current: false,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                url: this.uploadPreviewSource(input, file),
+            }));
+        const current = files.length === 0 ? this.currentUploadInfo(input) : null;
+        const items = current ? [current] : files;
+
+        if (items.length === 0) {
+            panel.dataset.state = 'empty';
+            panel.innerHTML = `
+                <div class="admin-upload-preview-empty">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <div>
+                        <strong>Aguardando mídia</strong>
+                        <span>A prévia será exibida antes, durante e depois da seleção.</span>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        panel.dataset.state = current ? 'current' : 'ready';
+        panel.innerHTML = items.map((item) => {
+            const extension = this.fileExtension(item.name, item.type);
+            const kind = this.mediaKind(item.type, extension);
+            const status = item.current ? 'Arquivo atual' : 'Pronto para envio';
+            const size = item.size ? this.formatBytes(item.size) : 'Tamanho não informado';
+            const audio = item.url && kind.key === 'audio'
+                ? `<audio src="${this.escapeHtml(item.url)}" controls></audio>`
+                : '';
+
+            return `
+                <div class="admin-upload-preview-item" data-upload-preview-item>
+                    <div class="admin-upload-preview-media admin-upload-preview-media-${kind.key}">
+                        ${this.renderUploadPreviewMedia(item, kind)}
+                    </div>
+                    <div class="admin-upload-preview-info">
+                        <div class="admin-upload-preview-title">
+                            <strong title="${this.escapeHtml(item.name)}">${this.escapeHtml(item.name)}</strong>
+                            <span>${kind.label}</span>
+                        </div>
+                        <div class="admin-upload-preview-meta">
+                            <span class="admin-upload-extension">${this.escapeHtml(extension)}</span>
+                            <span>${this.escapeHtml(size)}</span>
+                            <span data-upload-status>${status}</span>
+                        </div>
+                        ${audio}
+                        <div class="admin-upload-item-progress">
+                            <span data-upload-item-progress style="width: 0%"></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    enhanceUploadInput(input, pond) {
+        const root = input.nextElementSibling?.classList?.contains('filepond--root')
+            ? input.nextElementSibling
+            : input.closest('.filepond--root');
+        const panel = document.createElement('div');
+        panel.className = 'admin-upload-preview-panel';
+        panel.dataset.uploadPreview = 'true';
+
+        if (root) {
+            root.insertAdjacentElement('afterend', panel);
+        } else {
+            input.insertAdjacentElement('afterend', panel);
+        }
+
+        input._adminFilePond = pond;
+        input._adminUploadPreviewPanel = panel;
+
+        const render = () => this.renderUploadPreview(input, pond.getFiles());
+
+        pond.on('addfile', render);
+        pond.on('removefile', render);
+        pond.on('updatefiles', render);
+        render();
+    },
+
+    markUploadPreviewsState(form, state, percent = 0) {
+        const statusMap = {
+            uploading: percent > 0 ? `Enviando ${percent}%` : 'Preparando envio',
+            done: 'Upload concluído',
+            error: 'Falha no envio',
+        };
+
+        form.querySelectorAll('[data-filepond]').forEach((input) => {
+            const panel = input._adminUploadPreviewPanel;
+
+            if (!panel || panel.dataset.state === 'empty' || panel.dataset.state === 'current') {
+                return;
+            }
+
+            panel.dataset.state = state;
+            panel.querySelectorAll('[data-upload-status]').forEach((node) => {
+                node.textContent = statusMap[state] || 'Pronto para envio';
+            });
+            panel.querySelectorAll('[data-upload-item-progress]').forEach((bar) => {
+                bar.style.width = `${state === 'done' ? 100 : Math.max(0, Math.min(100, percent))}%`;
+            });
+        });
+    },
+
+    updateProgress(percent, etaSeconds, form = null) {
         const card = document.getElementById('admin-upload-progress');
         const bar = card.querySelector('[data-progress-bar]');
         const percentLabel = card.querySelector('[data-progress-percent]');
         const etaLabel = card.querySelector('[data-progress-eta]');
+        const summary = card.querySelector('[data-progress-summary]');
+        const files = this.selectedUploadFiles(form);
 
         card.classList.add('active');
         bar.style.width = `${percent}%`;
         percentLabel.textContent = `${percent}%`;
         etaLabel.textContent = etaSeconds > 0 ? `Tempo restante aproximado: ${etaSeconds}s` : 'Finalizando upload...';
+        summary.innerHTML = files.slice(0, 3).map((file) => {
+            const extension = this.fileExtension(file.name, file.type);
+
+            return `
+                <span>
+                    <strong>${this.escapeHtml(extension)}</strong>
+                    ${this.escapeHtml(file.name)}
+                </span>
+            `;
+        }).join('');
     },
 
     hideProgress() {
@@ -718,10 +1045,12 @@ const AdminUI = {
         const bar = card.querySelector('[data-progress-bar]');
         const percentLabel = card.querySelector('[data-progress-percent]');
         const etaLabel = card.querySelector('[data-progress-eta]');
+        const summary = card.querySelector('[data-progress-summary]');
 
         bar.style.width = '0%';
         percentLabel.textContent = '0%';
         etaLabel.textContent = 'Calculando tempo restante...';
+        summary.innerHTML = '';
         card.classList.remove('active');
     },
 
@@ -791,14 +1120,20 @@ const AdminUI = {
             }
 
             try {
-                FilePond.create(input, {
+                const pond = FilePond.create(input, {
                     allowMultiple: input.hasAttribute('multiple'),
                     credits: false,
                     storeAsFile: true,
                     acceptedFileTypes: input.dataset.accepted ? input.dataset.accepted.split(',') : null,
                     labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione arquivos</span>',
+                    labelFileTypeNotAllowed: 'Tipo de arquivo não permitido',
+                    fileValidateTypeLabelExpectedTypes: 'Tipos aceitos: {allTypes}',
+                    labelTapToCancel: 'toque para cancelar',
+                    labelTapToRetry: 'toque para tentar novamente',
+                    labelTapToUndo: 'toque para desfazer',
                 });
 
+                this.enhanceUploadInput(input, pond);
                 input.dataset.filepondReady = 'true';
             } catch (error) {
                 console.error('FilePond initialization failed.', error);

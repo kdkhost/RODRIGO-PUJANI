@@ -116,16 +116,57 @@ class UserController extends AdminCrudController
         $record->syncRoles([(string) $role]);
     }
 
+    public function toggleActive(Request $request, User $user): JsonResponse
+    {
+        /** @var User $entity */
+        $entity = User::query()
+            ->visibleTo($request->user())
+            ->with('roles')
+            ->findOrFail($user->id);
+
+        if (! $entity->canHaveStatusChangedBy($request->user())) {
+            return response()->json([
+                'message' => 'Este usuário é protegido e não pode ter o status alterado.',
+            ], 403);
+        }
+
+        $entity->forceFill([
+            'is_active' => ! $entity->is_active,
+        ])->save();
+
+        activity_log(
+            $this->module,
+            $entity->is_active ? 'activated' : 'deactivated',
+            $entity,
+            ['is_active' => $entity->is_active],
+            $entity->is_active ? 'Usuário ativado.' : 'Usuário desativado.'
+        );
+
+        return response()->json([
+            'message' => $entity->is_active ? 'Usuário ativado com sucesso.' : 'Usuário desativado com sucesso.',
+            'tableTarget' => '#admin-resource-table',
+        ]);
+    }
+
     public function destroy(string $record): JsonResponse
     {
+        $request = request();
+
         /** @var User $entity */
         $entity = $this->resolveRecord($record);
 
-        if (! $entity->canBeDeletedBy(auth()->user())) {
+        if (! $entity->canBeDeletedBy($request->user())) {
             return response()->json([
                 'message' => 'Este usuário é protegido e não pode ser excluído.',
             ], 403);
         }
+
+        $request->validate([
+            'password' => ['required', 'string', 'current_password'],
+        ], [
+            'password.required' => 'Informe a senha do administrador para excluir este usuário.',
+            'password.current_password' => 'A senha informada não confere com o administrador autenticado.',
+        ]);
 
         return parent::destroy($record);
     }

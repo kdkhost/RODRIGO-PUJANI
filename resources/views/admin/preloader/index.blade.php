@@ -82,7 +82,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Logo</label>
-                                    <input type="file" name="logo" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp,image/svg+xml">
+                                    <input type="file" name="logo" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp,image/svg+xml" data-current-url="{{ $config['logo_url'] ?: '' }}" data-current-name="{{ $config['logo_path'] ? basename($config['logo_path']) : '' }}">
                                     @if($config['logo_url'])
                                         <div class="form-check mt-2">
                                             <input type="checkbox" class="form-check-input" id="remove_logo" name="remove_logo" value="1">

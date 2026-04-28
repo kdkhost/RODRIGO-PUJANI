@@ -50,6 +50,20 @@ class UserAccessPolicyTest extends TestCase
 
         $this->actingAs($administrator)
             ->deleteJson(route('admin.users.destroy', $managedUser))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['password']);
+
+        $this->actingAs($administrator)
+            ->deleteJson(route('admin.users.destroy', $managedUser), [
+                'password' => 'senha-incorreta',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['password']);
+
+        $this->actingAs($administrator)
+            ->deleteJson(route('admin.users.destroy', $managedUser), [
+                'password' => 'password',
+            ])
             ->assertOk();
 
         $this->assertDatabaseHas('users', ['id' => $superAdmin->id]);
@@ -166,6 +180,55 @@ class UserAccessPolicyTest extends TestCase
             ->assertOk();
 
         $this->assertSame(['Administrador'], $user->refresh()->getRoleNames()->all());
+    }
+
+    public function test_administrator_can_toggle_regular_user_status(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $administrator = User::factory()->create(['is_active' => true]);
+        $administrator->assignRole('Administrador');
+
+        $regularUser = User::factory()->create(['is_active' => true]);
+        $regularUser->assignRole('Advogado Associado');
+
+        $this->actingAs($administrator)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('data-toggle-url', false)
+            ->assertSee(route('admin.users.toggle-active', $regularUser), false);
+
+        $this->actingAs($administrator)
+            ->patchJson(route('admin.users.toggle-active', $regularUser))
+            ->assertOk()
+            ->assertJsonPath('tableTarget', '#admin-resource-table');
+
+        $this->assertFalse($regularUser->refresh()->is_active);
+
+        $this->actingAs($administrator)
+            ->patchJson(route('admin.users.toggle-active', $regularUser))
+            ->assertOk();
+
+        $this->assertTrue($regularUser->refresh()->is_active);
+    }
+
+    public function test_protected_users_cannot_have_status_changed(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $superAdmin = User::factory()->create(['is_active' => true]);
+        $superAdmin->assignRole('Super Admin');
+
+        $administrator = User::factory()->create(['is_active' => true]);
+        $administrator->assignRole('Administrador');
+
+        $this->actingAs($administrator)
+            ->patchJson(route('admin.users.toggle-active', $superAdmin))
+            ->assertNotFound();
+
+        $this->actingAs($administrator)
+            ->patchJson(route('admin.users.toggle-active', $administrator))
+            ->assertForbidden();
     }
 
     public function test_super_admin_cannot_delete_own_profile(): void

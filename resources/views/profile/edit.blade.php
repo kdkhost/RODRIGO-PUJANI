@@ -152,7 +152,16 @@
 
                                                 <div class="col-12">
                                                     <label for="avatar" class="form-label">Foto do perfil</label>
-                                                    <input id="avatar" name="avatar" type="file" class="form-control @error('avatar') is-invalid @enderror" data-filepond data-accepted="image/png,image/jpeg,image/webp">
+                                                    <input
+                                                        id="avatar"
+                                                        name="avatar"
+                                                        type="file"
+                                                        class="form-control @error('avatar') is-invalid @enderror"
+                                                        data-filepond
+                                                        data-accepted="image/png,image/jpeg,image/webp"
+                                                        data-current-url="{{ $avatarUrl ?: '' }}"
+                                                        data-current-name="{{ $user->avatar_path ? basename($user->avatar_path) : '' }}"
+                                                    >
                                                     @error('avatar')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                                     @if($avatarUrl)
                                                         <div class="small text-muted mt-2">Foto atual: <a href="{{ $avatarUrl }}" target="_blank" rel="noopener">{{ $user->avatar_path }}</a></div>

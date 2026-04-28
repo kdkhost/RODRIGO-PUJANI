@@ -126,6 +126,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->middleware('permission:impersonate.users')
         ->name('users.impersonate');
 
+    Route::patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])
+        ->middleware('permission:users.manage')
+        ->name('users.toggle-active');
+
     Route::middleware('role:Super Admin')
         ->prefix('system-files')
         ->name('system-files.')

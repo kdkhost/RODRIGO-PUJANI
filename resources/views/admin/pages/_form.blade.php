@@ -70,7 +70,15 @@
         </div>
         <div class="col-12">
             <label class="form-label">Imagem de Capa</label>
-            <input type="file" name="cover_image" class="form-control" data-filepond>
+            <input
+                type="file"
+                name="cover_image"
+                class="form-control"
+                data-filepond
+                data-accepted="image/png,image/jpeg,image/webp,image/svg+xml"
+                data-current-url="{{ $record->cover_path ? site_asset_url($record->cover_path) : '' }}"
+                data-current-name="{{ $record->cover_path ? basename($record->cover_path) : '' }}"
+            >
             @if($record->cover_path)
                 <div class="mt-2 small text-muted">Imagem atual: <a href="{{ site_asset_url($record->cover_path) }}" target="_blank" rel="noopener">{{ $record->cover_path }}</a></div>
             @endif
@@ -94,7 +102,17 @@
         <div class="col-12"><textarea name="seo_og_description" class="form-control" rows="2" placeholder="OG descrição">{{ old('seo_og_description', $record->seoMeta?->og_description) }}</textarea></div>
         <div class="col-md-6"><input type="text" name="seo_schema_type" class="form-control" placeholder="Schema Type" value="{{ old('seo_schema_type', $record->seoMeta?->schema_type ?? 'WebPage') }}"></div>
         <div class="col-md-3 form-check mt-5"><input type="checkbox" name="seo_noindex" id="seo_noindex" value="1" class="form-check-input" @checked(old('seo_noindex', $record->seoMeta?->noindex))><label class="form-check-label" for="seo_noindex">Noindex</label></div>
-        <div class="col-12"><input type="file" name="seo_og_image" class="form-control" data-filepond></div>
+        <div class="col-12">
+            <input
+                type="file"
+                name="seo_og_image"
+                class="form-control"
+                data-filepond
+                data-accepted="image/png,image/jpeg,image/webp,image/svg+xml"
+                data-current-url="{{ $record->seoMeta?->og_image_path ? site_asset_url($record->seoMeta->og_image_path) : '' }}"
+                data-current-name="{{ $record->seoMeta?->og_image_path ? basename($record->seoMeta->og_image_path) : '' }}"
+            >
+        </div>
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">

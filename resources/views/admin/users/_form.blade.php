@@ -22,7 +22,18 @@
                     <div class="col-md-4"><label class="form-label">CPF ou CNPJ</label><input type="text" name="document_number" data-mask="cpf-cnpj" class="form-control" value="{{ old('document_number', $record->document_number) }}" placeholder="000.000.000-00"></div>
                     <div class="col-md-4"><label class="form-label">Data de nascimento</label><input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $record->birth_date?->format('Y-m-d')) }}"></div>
                     <div class="col-md-4"><label class="form-label">Fuso horário</label><input type="text" name="timezone" class="form-control" value="{{ old('timezone', $record->timezone ?? 'America/Sao_Paulo') }}" placeholder="America/Sao_Paulo"></div>
-                    <div class="col-12"><label class="form-label">Avatar</label><input type="file" name="avatar" class="form-control" data-filepond></div>
+                    <div class="col-12">
+                        <label class="form-label">Avatar</label>
+                        <input
+                            type="file"
+                            name="avatar"
+                            class="form-control"
+                            data-filepond
+                            data-accepted="image/png,image/jpeg,image/webp"
+                            data-current-url="{{ $record->avatar_path ? site_asset_url($record->avatar_path) : '' }}"
+                            data-current-name="{{ $record->avatar_path ? basename($record->avatar_path) : '' }}"
+                        >
+                    </div>
                 </div>
             </div>
         </div>

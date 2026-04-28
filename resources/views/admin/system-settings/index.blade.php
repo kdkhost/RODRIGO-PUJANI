@@ -58,7 +58,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="logo">Logo principal</label>
-                                    <input id="logo" type="file" name="logo" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp,image/svg+xml">
+                                    <input id="logo" type="file" name="logo" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp,image/svg+xml" data-current-url="{{ $branding['logo_url'] ?: '' }}" data-current-name="{{ $branding['logo_path'] ? basename($branding['logo_path']) : '' }}">
                                     @if($branding['logo_url'])
                                         <div class="form-check mt-2">
                                             <input class="form-check-input" type="checkbox" id="remove_logo" name="remove_logo" value="1">
@@ -68,7 +68,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="favicon">Favicon</label>
-                                    <input id="favicon" type="file" name="favicon" class="form-control" data-filepond data-accepted="image/x-icon,image/png,image/webp,image/svg+xml,image/jpeg">
+                                    <input id="favicon" type="file" name="favicon" class="form-control" data-filepond data-accepted="image/x-icon,image/png,image/webp,image/svg+xml,image/jpeg" data-current-url="{{ $branding['favicon_url'] ?: '' }}" data-current-name="{{ $branding['favicon_path'] ? basename($branding['favicon_path']) : '' }}">
                                     @if($branding['favicon_url'])
                                         <div class="form-check mt-2">
                                             <input class="form-check-input" type="checkbox" id="remove_favicon" name="remove_favicon" value="1">
@@ -167,7 +167,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label" for="pwa_icon_192">Ícone 192x192</label>
-                                    <input id="pwa_icon_192" type="file" name="pwa_icon_192" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp">
+                                    <input id="pwa_icon_192" type="file" name="pwa_icon_192" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp" data-current-url="{{ $pwa['icon_192_url'] ?: '' }}" data-current-name="{{ $pwa['icon_192_path'] ? basename($pwa['icon_192_path']) : '' }}">
                                     @if($pwa['icon_192_url'])
                                         <div class="form-check mt-2">
                                             <input class="form-check-input" type="checkbox" id="remove_pwa_icon_192" name="remove_pwa_icon_192" value="1">
@@ -177,7 +177,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label" for="pwa_icon_512">Ícone 512x512</label>
-                                    <input id="pwa_icon_512" type="file" name="pwa_icon_512" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp">
+                                    <input id="pwa_icon_512" type="file" name="pwa_icon_512" class="form-control" data-filepond data-accepted="image/png,image/jpeg,image/webp" data-current-url="{{ $pwa['icon_512_url'] ?: '' }}" data-current-name="{{ $pwa['icon_512_path'] ? basename($pwa['icon_512_path']) : '' }}">
                                     @if($pwa['icon_512_url'])
                                         <div class="form-check mt-2">
                                             <input class="form-check-input" type="checkbox" id="remove_pwa_icon_512" name="remove_pwa_icon_512" value="1">

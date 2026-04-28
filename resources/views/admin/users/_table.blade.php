@@ -24,6 +24,7 @@
                 $itemInitials = $itemInitials !== '' ? mb_strtoupper($itemInitials) : 'US';
                 $itemAvatarUrl = $item->avatar_path ? site_asset_url($item->avatar_path) : null;
                 $roleName = $item->roles->pluck('name')->first() ?: 'Sem função';
+                $canToggleStatus = $item->canHaveStatusChangedBy($actor);
             @endphp
             <tr>
                 <td>
@@ -50,9 +51,23 @@
                 </td>
                 <td><span class="admin-role-pill">{{ $roleName }}</span></td>
                 <td>
-                    <span class="admin-status-pill {{ $item->is_active ? 'is-active' : 'is-inactive' }}">
-                        {{ $item->is_active ? 'Ativo' : 'Inativo' }}
-                    </span>
+                    @if($canToggleStatus)
+                        <button
+                            type="button"
+                            class="admin-status-toggle {{ $item->is_active ? 'is-active' : 'is-inactive' }}"
+                            data-toggle-url="{{ route('admin.users.toggle-active', $item) }}"
+                            data-table-target="#admin-resource-table"
+                            data-toggle-title="{{ $item->is_active ? 'Desativar usuário?' : 'Ativar usuário?' }}"
+                            data-toggle-text="{{ $item->is_active ? 'O usuário perderá o acesso ao sistema até ser ativado novamente.' : 'O usuário voltará a acessar o sistema conforme suas permissões.' }}"
+                            data-toggle-button="{{ $item->is_active ? 'Desativar' : 'Ativar' }}"
+                        >
+                            <span></span>{{ $item->is_active ? 'Ativo' : 'Inativo' }}
+                        </button>
+                    @else
+                        <span class="admin-status-pill {{ $item->is_active ? 'is-active' : 'is-inactive' }}">
+                            {{ $item->is_active ? 'Ativo' : 'Inativo' }}
+                        </span>
+                    @endif
                 </td>
                 <td class="text-end">
                     <div class="admin-table-actions">
@@ -71,7 +86,15 @@
                         @endif
                         <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>
                         @if($item->canBeDeletedBy($actor))
-                            <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button>
+                            <button
+                                class="btn btn-sm btn-outline-danger"
+                                data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}"
+                                data-table-target="#admin-resource-table"
+                                data-require-password="true"
+                                data-confirm-title="Excluir usuário?"
+                                data-confirm-text="Para remover {{ $item->name }}, confirme com a senha do administrador autenticado."
+                                data-password-label="Senha do administrador"
+                            >Excluir</button>
                         @endif
                     </div>
                 </td>
