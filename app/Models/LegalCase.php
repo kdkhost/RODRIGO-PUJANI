@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -94,5 +95,33 @@ class LegalCase extends Model
     public function updates(): HasMany
     {
         return $this->hasMany(LegalCaseUpdate::class);
+    }
+
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! $user || $user->canViewAllLegalOperations()) {
+            return $query;
+        }
+
+        $userId = $user->id;
+
+        return $query->where(function (Builder $builder) use ($userId): void {
+            $builder
+                ->where('primary_lawyer_id', $userId)
+                ->orWhere('supervising_lawyer_id', $userId)
+                ->orWhere('created_by', $userId)
+                ->orWhereHas('client', function (Builder $clientQuery) use ($userId): void {
+                    $clientQuery
+                        ->where('assigned_lawyer_id', $userId)
+                        ->orWhere('created_by', $userId);
+                })
+                ->orWhereHas('legalTasks', function (Builder $taskQuery) use ($userId): void {
+                    $taskQuery
+                        ->where('assigned_user_id', $userId)
+                        ->orWhere('created_by', $userId);
+                })
+                ->orWhereHas('legalDocuments', fn (Builder $documentQuery) => $documentQuery->where('uploaded_by', $userId))
+                ->orWhereHas('updates', fn (Builder $updateQuery) => $updateQuery->where('created_by', $userId));
+        });
     }
 }

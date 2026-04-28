@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -55,5 +56,31 @@ class LegalTask extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! $user || $user->canViewAllLegalOperations()) {
+            return $query;
+        }
+
+        $userId = $user->id;
+
+        return $query->where(function (Builder $builder) use ($userId): void {
+            $builder
+                ->where('assigned_user_id', $userId)
+                ->orWhere('created_by', $userId)
+                ->orWhereHas('legalCase', function (Builder $caseQuery) use ($userId): void {
+                    $caseQuery
+                        ->where('primary_lawyer_id', $userId)
+                        ->orWhere('supervising_lawyer_id', $userId)
+                        ->orWhere('created_by', $userId);
+                })
+                ->orWhereHas('client', function (Builder $clientQuery) use ($userId): void {
+                    $clientQuery
+                        ->where('assigned_lawyer_id', $userId)
+                        ->orWhere('created_by', $userId);
+                });
+        });
     }
 }

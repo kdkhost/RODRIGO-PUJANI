@@ -217,7 +217,7 @@
                 </div>
             </div>
 
-            @if ($isAssociatedLawyer)
+            @if ($isRestrictedLegalScope)
                 <div class="card admin-list-card">
                     <div class="card-header">
                         <div>

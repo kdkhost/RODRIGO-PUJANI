@@ -21,6 +21,7 @@ class DashboardController extends \App\Http\Controllers\Controller
     {
         $user = $request->user();
         $isAssociatedLawyer = $user?->isAssociatedLawyer() ?? false;
+        $isRestrictedLegalScope = ! ($user?->canViewAllLegalOperations() ?? false);
         $rangeStart = now()->subDays(13)->startOfDay();
 
         $rawVisitsByDay = PageVisit::query()
@@ -40,16 +41,16 @@ class DashboardController extends \App\Http\Controllers\Controller
             ];
         });
 
-        $clientsQuery = $this->clientsQuery($user?->id, $isAssociatedLawyer);
-        $casesQuery = $this->casesQuery($user?->id, $isAssociatedLawyer);
-        $tasksQuery = $this->tasksQuery($user?->id, $isAssociatedLawyer);
+        $clientsQuery = $this->clientsQuery($user);
+        $casesQuery = $this->casesQuery($user);
+        $tasksQuery = $this->tasksQuery($user);
         $eventsQuery = $this->eventsQuery($user?->id, $isAssociatedLawyer);
-        $updatesQuery = $this->updatesQuery($user?->id, $isAssociatedLawyer);
-        $documentsQuery = $this->documentsQuery($user?->id, $isAssociatedLawyer);
+        $updatesQuery = $this->updatesQuery($user);
+        $documentsQuery = $this->documentsQuery($user);
 
         $overviewCards = [
             [
-                'label' => $isAssociatedLawyer ? 'Clientes da carteira' : 'Clientes ativos',
+                'label' => $isRestrictedLegalScope ? 'Clientes da carteira' : 'Clientes ativos',
                 'value' => (clone $clientsQuery)->where('is_active', true)->count(),
                 'icon' => 'bi-people',
                 'tone' => 'gold',
@@ -118,8 +119,9 @@ class DashboardController extends \App\Http\Controllers\Controller
 
         return view('admin.dashboard', [
             'pageTitle' => 'Painel Administrativo',
-            'dashboardScopeLabel' => $isAssociatedLawyer ? 'Carteira individual do advogado' : 'Operação integrada do escritório',
+            'dashboardScopeLabel' => $isRestrictedLegalScope ? 'Carteira individual do advogado' : 'Operação integrada do escritório',
             'isAssociatedLawyer' => $isAssociatedLawyer,
+            'isRestrictedLegalScope' => $isRestrictedLegalScope,
             'overviewCards' => $overviewCards,
             'visitsByDay' => $visitsByDay,
             'caseStatusBreakdown' => $caseStatusBreakdown,
@@ -143,7 +145,7 @@ class DashboardController extends \App\Http\Controllers\Controller
                 ->latest('occurred_at')
                 ->limit(6)
                 ->get(),
-            'workloadByLawyer' => $isAssociatedLawyer
+            'workloadByLawyer' => $isRestrictedLegalScope
                 ? collect()
                 : User::query()
                     ->visibleTo($user)
@@ -187,34 +189,19 @@ class DashboardController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    private function clientsQuery(?int $userId, bool $isAssociatedLawyer): Builder
+    private function clientsQuery(?User $user): Builder
     {
-        return Client::query()
-            ->when($isAssociatedLawyer && $userId, fn (Builder $query) => $query->where('assigned_lawyer_id', $userId));
+        return Client::query()->visibleTo($user);
     }
 
-    private function casesQuery(?int $userId, bool $isAssociatedLawyer): Builder
+    private function casesQuery(?User $user): Builder
     {
-        return LegalCase::query()
-            ->when($isAssociatedLawyer && $userId, function (Builder $query) use ($userId): void {
-                $query->where(function (Builder $builder) use ($userId): void {
-                    $builder
-                        ->where('primary_lawyer_id', $userId)
-                        ->orWhere('supervising_lawyer_id', $userId);
-                });
-            });
+        return LegalCase::query()->visibleTo($user);
     }
 
-    private function tasksQuery(?int $userId, bool $isAssociatedLawyer): Builder
+    private function tasksQuery(?User $user): Builder
     {
-        return LegalTask::query()
-            ->when($isAssociatedLawyer && $userId, function (Builder $query) use ($userId): void {
-                $query->where(function (Builder $builder) use ($userId): void {
-                    $builder
-                        ->where('assigned_user_id', $userId)
-                        ->orWhereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', $userId));
-                });
-            });
+        return LegalTask::query()->visibleTo($user);
     }
 
     private function eventsQuery(?int $userId, bool $isAssociatedLawyer): Builder
@@ -233,15 +220,13 @@ class DashboardController extends \App\Http\Controllers\Controller
             });
     }
 
-    private function updatesQuery(?int $userId, bool $isAssociatedLawyer): Builder
+    private function updatesQuery(?User $user): Builder
     {
-        return LegalCaseUpdate::query()
-            ->when($isAssociatedLawyer && $userId, fn (Builder $query) => $query->whereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', $userId)));
+        return LegalCaseUpdate::query()->visibleTo($user);
     }
 
-    private function documentsQuery(?int $userId, bool $isAssociatedLawyer): Builder
+    private function documentsQuery(?User $user): Builder
     {
-        return LegalDocument::query()
-            ->when($isAssociatedLawyer && $userId, fn (Builder $query) => $query->whereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', $userId)));
+        return LegalDocument::query()->visibleTo($user);
     }
 }

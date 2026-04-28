@@ -27,24 +27,16 @@ class LegalCaseController extends AdminCrudController
 
     protected function indexQuery(Request $request): Builder
     {
-        $query = LegalCase::query()
+        return LegalCase::query()
+            ->visibleTo($request->user())
             ->with(['client:id,name', 'primaryLawyer:id,name'])
             ->withCount(['updates', 'legalDocuments']);
-
-        if ($request->user()?->isAssociatedLawyer()) {
-            $query->where('primary_lawyer_id', $request->user()->id);
-        }
-
-        return $query;
     }
 
     protected function formData(?Model $record = null): array
     {
         $clients = Client::query()
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('assigned_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -53,7 +45,7 @@ class LegalCaseController extends AdminCrudController
             ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->when(
-                auth()->user()?->isAssociatedLawyer(),
+                ! auth()->user()?->canViewAllLegalOperations(),
                 fn (Builder $query) => $query->whereKey(auth()->id())
             )
             ->orderBy('name')
@@ -62,7 +54,7 @@ class LegalCaseController extends AdminCrudController
         return [
             'clients' => $clients,
             'lawyers' => $lawyers,
-            'canChooseLawyer' => ! auth()->user()?->isAssociatedLawyer(),
+            'canChooseLawyer' => auth()->user()?->canViewAllLegalOperations() ?? false,
             'statuses' => [
                 'active' => 'Ativo',
                 'waiting_court' => 'Aguardando Judiciário',
@@ -110,9 +102,13 @@ class LegalCaseController extends AdminCrudController
     {
         $clientRule = Rule::exists('clients', 'id');
 
-        if ($request->user()?->isAssociatedLawyer()) {
-            $clientRule = Rule::exists('clients', 'id')
-                ->where(fn ($query) => $query->where('assigned_lawyer_id', $request->user()->id));
+        if (! $request->user()?->canViewAllLegalOperations()) {
+            $clientRule = Rule::in(
+                Client::query()
+                    ->visibleTo($request->user())
+                    ->pluck('id')
+                    ->all()
+            );
         }
 
         return [
@@ -154,7 +150,7 @@ class LegalCaseController extends AdminCrudController
             ? strtolower(trim((string) $validated['tribunal_alias']))
             : null;
 
-        if ($request->user()?->isAssociatedLawyer()) {
+        if (! $request->user()?->canViewAllLegalOperations()) {
             $validated['primary_lawyer_id'] = $request->user()->id;
             $validated['supervising_lawyer_id'] = $record?->supervising_lawyer_id;
         }
@@ -171,10 +167,7 @@ class LegalCaseController extends AdminCrudController
         return LegalCase::query()
             ->with(['client:id,name', 'primaryLawyer:id,name'])
             ->withCount(['updates', 'legalDocuments'])
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('primary_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->findOrFail($record);
     }
 

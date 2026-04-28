@@ -24,13 +24,9 @@ class ClientController extends AdminCrudController
 
     protected function indexQuery(Request $request): Builder
     {
-        $query = Client::query()->with(['assignedLawyer:id,name']);
-
-        if ($request->user()?->isAssociatedLawyer()) {
-            $query->where('assigned_lawyer_id', $request->user()->id);
-        }
-
-        return $query;
+        return Client::query()
+            ->visibleTo($request->user())
+            ->with(['assignedLawyer:id,name']);
     }
 
     protected function formData(?Model $record = null): array
@@ -39,7 +35,7 @@ class ClientController extends AdminCrudController
             ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->when(
-                auth()->user()?->isAssociatedLawyer(),
+                ! auth()->user()?->canViewAllLegalOperations(),
                 fn (Builder $query) => $query->whereKey(auth()->id())
             )
             ->orderBy('name')
@@ -47,7 +43,7 @@ class ClientController extends AdminCrudController
 
         return [
             'lawyers' => $lawyers,
-            'canChooseLawyer' => ! auth()->user()?->isAssociatedLawyer(),
+            'canChooseLawyer' => auth()->user()?->canViewAllLegalOperations() ?? false,
         ];
     }
 
@@ -91,7 +87,7 @@ class ClientController extends AdminCrudController
             ? strtoupper((string) $validated['address_state'])
             : null;
 
-        if ($request->user()?->isAssociatedLawyer()) {
+        if (! $request->user()?->canViewAllLegalOperations()) {
             $validated['assigned_lawyer_id'] = $request->user()->id;
         }
 
@@ -116,10 +112,7 @@ class ClientController extends AdminCrudController
     {
         return Client::query()
             ->with(['assignedLawyer:id,name'])
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('assigned_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->findOrFail($record);
     }
 }

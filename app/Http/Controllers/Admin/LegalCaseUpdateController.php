@@ -28,11 +28,7 @@ class LegalCaseUpdateController extends AdminCrudController
             'legalCase:id,title,process_number,primary_lawyer_id',
             'client:id,name',
             'creator:id,name',
-        ]);
-
-        if ($request->user()?->isAssociatedLawyer()) {
-            $query->whereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', $request->user()->id));
-        }
+        ])->visibleTo($request->user());
 
         return $query;
     }
@@ -40,19 +36,13 @@ class LegalCaseUpdateController extends AdminCrudController
     protected function formData(?Model $record = null): array
     {
         $cases = LegalCase::query()
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('primary_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->orderBy('title')
             ->get(['id', 'title', 'client_id']);
 
         $clients = Client::query()
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('assigned_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
@@ -81,9 +71,13 @@ class LegalCaseUpdateController extends AdminCrudController
     {
         $caseRule = Rule::exists('legal_cases', 'id');
 
-        if ($request->user()?->isAssociatedLawyer()) {
-            $caseRule = Rule::exists('legal_cases', 'id')
-                ->where(fn ($query) => $query->where('primary_lawyer_id', $request->user()->id));
+        if (! $request->user()?->canViewAllLegalOperations()) {
+            $caseRule = Rule::in(
+                LegalCase::query()
+                    ->visibleTo($request->user())
+                    ->pluck('id')
+                    ->all()
+            );
         }
 
         return [
@@ -98,7 +92,9 @@ class LegalCaseUpdateController extends AdminCrudController
 
     protected function mutateData(array $validated, Request $request, ?Model $record = null): array
     {
-        $legalCase = LegalCase::query()->findOrFail($validated['legal_case_id']);
+        $legalCase = LegalCase::query()
+            ->visibleTo($request->user())
+            ->findOrFail($validated['legal_case_id']);
 
         $validated['client_id'] = $legalCase->client_id;
         $validated['created_by'] ??= $record?->created_by ?: $request->user()?->id;
@@ -111,9 +107,7 @@ class LegalCaseUpdateController extends AdminCrudController
     {
         return LegalCaseUpdate::query()
             ->with(['legalCase:id,title,primary_lawyer_id', 'client:id,name', 'creator:id,name'])
-            ->when(auth()->user()?->isAssociatedLawyer(), function (Builder $query): void {
-                $query->whereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', auth()->id()));
-            })
+            ->visibleTo(auth()->user())
             ->findOrFail($record);
     }
 }

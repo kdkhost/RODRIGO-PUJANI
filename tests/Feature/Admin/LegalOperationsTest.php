@@ -5,6 +5,9 @@ namespace Tests\Feature\Admin;
 use App\Models\CalendarEvent;
 use App\Models\Client;
 use App\Models\LegalCase;
+use App\Models\LegalCaseUpdate;
+use App\Models\LegalDocument;
+use App\Models\LegalTask;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,6 +81,250 @@ class LegalOperationsTest extends TestCase
         $this->actingAs($lawyerA)
             ->get(route('admin.legal-cases.edit', $case))
             ->assertNotFound();
+    }
+
+    public function test_admin_and_super_admin_see_all_clients_and_cases(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $superAdmin = User::factory()->create(['is_active' => true]);
+        $administrator = User::factory()->create(['is_active' => true]);
+        $lawyerA = User::factory()->create(['is_active' => true]);
+        $lawyerB = User::factory()->create(['is_active' => true]);
+        $superAdmin->assignRole('Super Admin');
+        $administrator->assignRole('Administrador');
+        $lawyerA->assignRole('Advogado Associado');
+        $lawyerB->assignRole('Advogado Associado');
+
+        $clientA = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Integral A',
+            'assigned_lawyer_id' => $lawyerA->id,
+            'created_by' => $lawyerA->id,
+            'is_active' => true,
+        ]);
+        $clientB = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Integral B',
+            'assigned_lawyer_id' => $lawyerB->id,
+            'created_by' => $lawyerB->id,
+            'is_active' => true,
+        ]);
+
+        LegalCase::query()->create([
+            'client_id' => $clientA->id,
+            'title' => 'Processo Integral A',
+            'primary_lawyer_id' => $lawyerA->id,
+            'status' => 'active',
+            'phase' => 'initial',
+            'priority' => 'medium',
+            'is_active' => true,
+            'created_by' => $lawyerA->id,
+        ]);
+        LegalCase::query()->create([
+            'client_id' => $clientB->id,
+            'title' => 'Processo Integral B',
+            'primary_lawyer_id' => $lawyerB->id,
+            'status' => 'active',
+            'phase' => 'initial',
+            'priority' => 'medium',
+            'is_active' => true,
+            'created_by' => $lawyerB->id,
+        ]);
+
+        foreach ([$superAdmin, $administrator] as $viewer) {
+            $this->actingAs($viewer)
+                ->get(route('admin.clients.index'))
+                ->assertOk()
+                ->assertSee('Cliente Integral A')
+                ->assertSee('Cliente Integral B');
+
+            $this->actingAs($viewer)
+                ->get(route('admin.legal-cases.index'))
+                ->assertOk()
+                ->assertSee('Processo Integral A')
+                ->assertSee('Processo Integral B');
+        }
+    }
+
+    public function test_associated_lawyer_sees_cases_clients_and_demands_linked_to_their_work(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $lawyerA = User::factory()->create(['is_active' => true]);
+        $lawyerB = User::factory()->create(['is_active' => true]);
+        $lawyerA->assignRole('Advogado Associado');
+        $lawyerB->assignRole('Advogado Associado');
+
+        $supervisedClient = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Supervisionado',
+            'assigned_lawyer_id' => $lawyerB->id,
+            'created_by' => $lawyerB->id,
+            'is_active' => true,
+        ]);
+        $taskClient = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente com Demanda Vinculada',
+            'assigned_lawyer_id' => $lawyerB->id,
+            'created_by' => $lawyerB->id,
+            'is_active' => true,
+        ]);
+        $externalClient = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Sem Vinculo',
+            'assigned_lawyer_id' => $lawyerB->id,
+            'created_by' => $lawyerB->id,
+            'is_active' => true,
+        ]);
+
+        $supervisedCase = LegalCase::query()->create([
+            'client_id' => $supervisedClient->id,
+            'title' => 'Processo Supervisionado',
+            'primary_lawyer_id' => $lawyerB->id,
+            'supervising_lawyer_id' => $lawyerA->id,
+            'status' => 'active',
+            'phase' => 'initial',
+            'priority' => 'medium',
+            'is_active' => true,
+            'created_by' => $lawyerB->id,
+        ]);
+        $taskCase = LegalCase::query()->create([
+            'client_id' => $taskClient->id,
+            'title' => 'Processo com Demanda Vinculada',
+            'primary_lawyer_id' => $lawyerB->id,
+            'status' => 'active',
+            'phase' => 'initial',
+            'priority' => 'medium',
+            'is_active' => true,
+            'created_by' => $lawyerB->id,
+        ]);
+        LegalCase::query()->create([
+            'client_id' => $externalClient->id,
+            'title' => 'Processo Sem Vinculo',
+            'primary_lawyer_id' => $lawyerB->id,
+            'status' => 'active',
+            'phase' => 'initial',
+            'priority' => 'medium',
+            'is_active' => true,
+            'created_by' => $lawyerB->id,
+        ]);
+        $task = LegalTask::query()->create([
+            'legal_case_id' => $taskCase->id,
+            'client_id' => $taskClient->id,
+            'assigned_user_id' => $lawyerA->id,
+            'title' => 'Demanda vinculada ao advogado',
+            'task_type' => 'review',
+            'priority' => 'medium',
+            'status' => 'pending',
+            'created_by' => $lawyerB->id,
+        ]);
+        $document = LegalDocument::query()->create([
+            'legal_case_id' => $taskCase->id,
+            'client_id' => $taskClient->id,
+            'uploaded_by' => $lawyerB->id,
+            'title' => 'Documento do processo vinculado',
+            'original_name' => 'documento.pdf',
+            'file_name' => 'documento.pdf',
+            'path' => 'uploads/legal-documents/documento.pdf',
+            'mime_type' => 'application/pdf',
+            'extension' => 'pdf',
+            'size' => 1024,
+            'is_sensitive' => true,
+        ]);
+        $update = LegalCaseUpdate::query()->create([
+            'legal_case_id' => $supervisedCase->id,
+            'client_id' => $supervisedClient->id,
+            'created_by' => $lawyerB->id,
+            'source' => 'manual',
+            'update_type' => 'procedural',
+            'title' => 'Andamento supervisionado',
+            'occurred_at' => now(),
+        ]);
+
+        $this->actingAs($lawyerA)
+            ->get(route('admin.clients.index'))
+            ->assertOk()
+            ->assertSee('Cliente Supervisionado')
+            ->assertSee('Cliente com Demanda Vinculada')
+            ->assertDontSee('Cliente Sem Vinculo');
+
+        $this->actingAs($lawyerA)
+            ->get(route('admin.legal-cases.index'))
+            ->assertOk()
+            ->assertSee('Processo Supervisionado')
+            ->assertSee('Processo com Demanda Vinculada')
+            ->assertDontSee('Processo Sem Vinculo');
+
+        $this->actingAs($lawyerA)
+            ->get(route('admin.legal-tasks.edit', $task))
+            ->assertOk();
+
+        $this->actingAs($lawyerA)
+            ->get(route('admin.legal-documents.edit', $document))
+            ->assertOk();
+
+        $this->actingAs($lawyerA)
+            ->get(route('admin.legal-case-updates.edit', $update))
+            ->assertOk();
+    }
+
+    public function test_non_admin_legal_operator_does_not_receive_full_portfolio(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $editor = User::factory()->create(['is_active' => true]);
+        $lawyerB = User::factory()->create(['is_active' => true]);
+        $editor->assignRole('Editor');
+        $lawyerB->assignRole('Advogado Associado');
+
+        $ownClient = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Vinculado ao Editor',
+            'assigned_lawyer_id' => $editor->id,
+            'created_by' => $editor->id,
+            'is_active' => true,
+        ]);
+        $externalClient = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Fora do Editor',
+            'assigned_lawyer_id' => $lawyerB->id,
+            'created_by' => $lawyerB->id,
+            'is_active' => true,
+        ]);
+
+        LegalCase::query()->create([
+            'client_id' => $ownClient->id,
+            'title' => 'Processo Vinculado ao Editor',
+            'primary_lawyer_id' => $editor->id,
+            'status' => 'active',
+            'phase' => 'initial',
+            'priority' => 'medium',
+            'is_active' => true,
+            'created_by' => $editor->id,
+        ]);
+        LegalCase::query()->create([
+            'client_id' => $externalClient->id,
+            'title' => 'Processo Fora do Editor',
+            'primary_lawyer_id' => $lawyerB->id,
+            'status' => 'active',
+            'phase' => 'initial',
+            'priority' => 'medium',
+            'is_active' => true,
+            'created_by' => $lawyerB->id,
+        ]);
+
+        $this->actingAs($editor)
+            ->get(route('admin.clients.index'))
+            ->assertOk()
+            ->assertSee('Cliente Vinculado ao Editor')
+            ->assertDontSee('Cliente Fora do Editor');
+
+        $this->actingAs($editor)
+            ->get(route('admin.legal-cases.index'))
+            ->assertOk()
+            ->assertSee('Processo Vinculado ao Editor')
+            ->assertDontSee('Processo Fora do Editor');
     }
 
     public function test_associated_lawyer_receives_only_own_calendar_events(): void

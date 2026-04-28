@@ -95,6 +95,11 @@ class User extends Authenticatable
         return $this->isSuperAdmin() || $this->isAdministrator();
     }
 
+    public function canViewAllLegalOperations(): bool
+    {
+        return $this->isSuperAdmin() || $this->isAdministrator();
+    }
+
     public function canBeImpersonatedBy(?self $actor): bool
     {
         if (! $actor || $actor->is($this) || ! $this->is_active) {

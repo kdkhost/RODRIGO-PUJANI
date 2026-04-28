@@ -19,7 +19,7 @@ class LegalCaseDataJudSyncTest extends TestCase
         $this->seed(PermissionsSeeder::class);
 
         $admin = User::factory()->create(['is_active' => true]);
-        $admin->givePermissionTo(['admin.access', 'legal-cases.manage']);
+        $admin->assignRole('Administrador');
 
         $client = Client::query()->create([
             'person_type' => 'individual',

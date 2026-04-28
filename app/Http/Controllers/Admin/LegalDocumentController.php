@@ -24,36 +24,21 @@ class LegalDocumentController extends AdminCrudController
 
     protected function indexQuery(Request $request): Builder
     {
-        $query = LegalDocument::query()->with(['legalCase:id,title', 'client:id,name', 'uploader:id,name']);
-
-        if ($request->user()?->isAssociatedLawyer()) {
-            $query->where(function (Builder $builder) use ($request): void {
-                $builder
-                    ->where('uploaded_by', $request->user()->id)
-                    ->orWhereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', $request->user()->id))
-                    ->orWhereHas('client', fn (Builder $clientQuery) => $clientQuery->where('assigned_lawyer_id', $request->user()->id));
-            });
-        }
-
-        return $query;
+        return LegalDocument::query()
+            ->visibleTo($request->user())
+            ->with(['legalCase:id,title', 'client:id,name', 'uploader:id,name']);
     }
 
     protected function formData(?Model $record = null): array
     {
         $clients = Client::query()
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('assigned_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 
         $cases = LegalCase::query()
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('primary_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->orderBy('title')
             ->get(['id', 'title']);
@@ -78,12 +63,20 @@ class LegalDocumentController extends AdminCrudController
         $clientRule = Rule::exists('clients', 'id');
         $caseRule = Rule::exists('legal_cases', 'id');
 
-        if ($request->user()?->isAssociatedLawyer()) {
-            $clientRule = Rule::exists('clients', 'id')
-                ->where(fn ($query) => $query->where('assigned_lawyer_id', $request->user()->id));
+        if (! $request->user()?->canViewAllLegalOperations()) {
+            $clientRule = Rule::in(
+                Client::query()
+                    ->visibleTo($request->user())
+                    ->pluck('id')
+                    ->all()
+            );
 
-            $caseRule = Rule::exists('legal_cases', 'id')
-                ->where(fn ($query) => $query->where('primary_lawyer_id', $request->user()->id));
+            $caseRule = Rule::in(
+                LegalCase::query()
+                    ->visibleTo($request->user())
+                    ->pluck('id')
+                    ->all()
+            );
         }
 
         return [
@@ -134,14 +127,7 @@ class LegalDocumentController extends AdminCrudController
     {
         return LegalDocument::query()
             ->with(['legalCase:id,title', 'client:id,name', 'uploader:id,name'])
-            ->when(auth()->user()?->isAssociatedLawyer(), function (Builder $query): void {
-                $query->where(function (Builder $builder): void {
-                    $builder
-                        ->where('uploaded_by', auth()->id())
-                        ->orWhereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', auth()->id()))
-                        ->orWhereHas('client', fn (Builder $clientQuery) => $clientQuery->where('assigned_lawyer_id', auth()->id()));
-                });
-            })
+            ->visibleTo(auth()->user())
             ->findOrFail($record);
     }
 }

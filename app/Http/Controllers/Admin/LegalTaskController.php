@@ -25,35 +25,21 @@ class LegalTaskController extends AdminCrudController
 
     protected function indexQuery(Request $request): Builder
     {
-        $query = LegalTask::query()->with(['legalCase:id,title', 'client:id,name', 'assignedUser:id,name']);
-
-        if ($request->user()?->isAssociatedLawyer()) {
-            $query->where(function (Builder $builder) use ($request): void {
-                $builder
-                    ->where('assigned_user_id', $request->user()->id)
-                    ->orWhereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', $request->user()->id));
-            });
-        }
-
-        return $query;
+        return LegalTask::query()
+            ->visibleTo($request->user())
+            ->with(['legalCase:id,title', 'client:id,name', 'assignedUser:id,name']);
     }
 
     protected function formData(?Model $record = null): array
     {
         $clients = Client::query()
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('assigned_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 
         $cases = LegalCase::query()
-            ->when(
-                auth()->user()?->isAssociatedLawyer(),
-                fn (Builder $query) => $query->where('primary_lawyer_id', auth()->id())
-            )
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->orderBy('title')
             ->get(['id', 'title']);
@@ -62,7 +48,7 @@ class LegalTaskController extends AdminCrudController
             ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->when(
-                auth()->user()?->isAssociatedLawyer(),
+                ! auth()->user()?->canViewAllLegalOperations(),
                 fn (Builder $query) => $query->whereKey(auth()->id())
             )
             ->orderBy('name')
@@ -103,12 +89,20 @@ class LegalTaskController extends AdminCrudController
         $caseRule = Rule::exists('legal_cases', 'id');
         $assignedUserRule = Rule::exists('users', 'id');
 
-        if ($request->user()?->isAssociatedLawyer()) {
-            $clientRule = Rule::exists('clients', 'id')
-                ->where(fn ($query) => $query->where('assigned_lawyer_id', $request->user()->id));
+        if (! $request->user()?->canViewAllLegalOperations()) {
+            $clientRule = Rule::in(
+                Client::query()
+                    ->visibleTo($request->user())
+                    ->pluck('id')
+                    ->all()
+            );
 
-            $caseRule = Rule::exists('legal_cases', 'id')
-                ->where(fn ($query) => $query->where('primary_lawyer_id', $request->user()->id));
+            $caseRule = Rule::in(
+                LegalCase::query()
+                    ->visibleTo($request->user())
+                    ->pluck('id')
+                    ->all()
+            );
 
             $assignedUserRule = Rule::exists('users', 'id')
                 ->where(fn ($query) => $query->where('id', $request->user()->id));
@@ -136,7 +130,7 @@ class LegalTaskController extends AdminCrudController
     {
         $validated['created_by'] ??= $record?->created_by ?: $request->user()?->id;
 
-        if ($request->user()?->isAssociatedLawyer()) {
+        if (! $request->user()?->canViewAllLegalOperations()) {
             $validated['assigned_user_id'] = $request->user()->id;
         }
 
@@ -161,13 +155,7 @@ class LegalTaskController extends AdminCrudController
     {
         return LegalTask::query()
             ->with(['legalCase:id,title', 'client:id,name', 'assignedUser:id,name'])
-            ->when(auth()->user()?->isAssociatedLawyer(), function (Builder $query): void {
-                $query->where(function (Builder $builder): void {
-                    $builder
-                        ->where('assigned_user_id', auth()->id())
-                        ->orWhereHas('legalCase', fn (Builder $caseQuery) => $caseQuery->where('primary_lawyer_id', auth()->id()));
-                });
-            })
+            ->visibleTo(auth()->user())
             ->findOrFail($record);
     }
 }
