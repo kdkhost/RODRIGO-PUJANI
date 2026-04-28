@@ -999,145 +999,134 @@ img.admin-avatar {
     text-transform: uppercase;
 }
 
-.admin-calendar .fc-event {
-    border: 0;
-    border-radius: 0.6rem;
-    padding: 0.18rem 0.32rem;
-    box-shadow: 0 10px 22px rgba(15, 19, 24, 0.14);
-}
-
-.admin-calendar .fc-bgevent {
-    opacity: 0.3;
-    border-radius: 0.75rem;
-    box-shadow: inset 0 0 0 1px rgba(196, 154, 60, 0.22);
-}
-
-.admin-calendar .fc-bgevent.admin-calendar-status-scheduled {
-    background: rgba(196, 154, 60, 0.32);
-}
-
-.admin-calendar .fc-bgevent.admin-calendar-status-confirmed {
-    background: rgba(25, 135, 84, 0.28);
-}
-
-.admin-calendar .fc-bgevent.admin-calendar-status-done {
-    background: rgba(59, 130, 246, 0.26);
-}
-
-.admin-calendar .fc-bgevent.admin-calendar-status-canceled {
-    background: rgba(220, 53, 69, 0.24);
-}
-
-.admin-calendar .fc-day-grid-event {
-    margin: 0.14rem 0.22rem;
-}
-
-.admin-calendar .fc-time-grid .fc-event,
-.admin-calendar .fc-list-item {
-    border-radius: 0.72rem;
-}
-
-.admin-calendar .fc-day-number,
-.admin-calendar .fc-axis,
-.admin-calendar .fc-time,
-.admin-calendar .fc-list-item-time {
-    color: var(--admin-muted);
-    font-weight: 700;
-}
-
-.admin-calendar .fc-day-top {
-    padding: 0.42rem 0.55rem 0.2rem;
-}
-
-.admin-calendar .fc-highlight {
-    background: rgba(196, 154, 60, 0.14);
-}
-
-.admin-calendar .fc-day-grid-event .fc-content,
-.admin-calendar .fc-time-grid-event .fc-content {
-    white-space: normal;
-}
-
-.admin-calendar-event-shell {
-    display: grid;
-    gap: 0.34rem;
-}
-
-.admin-calendar-event-heading {
-    display: flex;
-    gap: 0.42rem;
-    align-items: center;
-    min-width: 0;
-}
-
-.admin-calendar-event-time {
-    font-size: 0.7rem;
-    font-weight: 800;
-    opacity: 0.78;
-    white-space: nowrap;
-}
-
-.admin-calendar-event-title {
-    display: block;
-    min-width: 0;
+/* --- Modern FullCalendar 4 --- */
+.admin-calendar {
+    border: 1px solid var(--admin-border);
+    border-radius: 1.25rem;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.8rem;
-    font-weight: 800;
+    background: var(--admin-card-bg);
+    box-shadow: var(--admin-shadow-sm);
 }
 
-.admin-calendar-event-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
+.admin-calendar .fc-view-container {
+    background: var(--admin-card-bg);
 }
 
-.admin-calendar-event-meta span {
-    display: inline-flex;
-    align-items: center;
-    min-height: 18px;
-    padding: 0.12rem 0.34rem;
-    border-radius: 999px;
-    background: rgba(17, 19, 24, 0.16);
-    color: inherit;
-    font-size: 0.68rem;
+.admin-calendar .fc-toolbar {
+    padding: 1.5rem;
+    margin-bottom: 0 !important;
+    background: linear-gradient(180deg, rgba(196, 154, 60, 0.05), transparent);
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-calendar .fc-toolbar h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
     font-weight: 700;
-    line-height: 1.1;
+    color: var(--admin-ink);
 }
 
-.admin-calendar-event-chip {
-    background: rgba(255, 255, 255, 0.18);
-    color: inherit;
+.admin-calendar .fc-button {
+    height: 42px;
+    padding: 0 1.2rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 0.75rem;
+    background: var(--admin-card-bg);
+    color: var(--admin-ink);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-shadow: none;
+    box-shadow: none;
+    transition: all 0.2s ease;
 }
 
-.admin-calendar .fc-time-grid-event.admin-calendar-status-confirmed,
-.admin-calendar .fc-day-grid-event.admin-calendar-status-confirmed,
-.admin-calendar .fc-list-item.admin-calendar-status-confirmed {
-    box-shadow: 0 10px 24px rgba(25, 135, 84, 0.24);
+.admin-calendar .fc-button:hover {
+    background: var(--admin-primary-soft);
+    border-color: rgba(196, 154, 60, 0.3);
 }
 
-.admin-calendar .fc-time-grid-event.admin-calendar-status-scheduled,
-.admin-calendar .fc-day-grid-event.admin-calendar-status-scheduled,
-.admin-calendar .fc-list-item.admin-calendar-status-scheduled {
-    box-shadow: 0 10px 24px rgba(196, 154, 60, 0.24);
+.admin-calendar .fc-button-active {
+    background: var(--admin-primary) !important;
+    border-color: var(--admin-primary) !important;
+    color: #111318 !important;
+    box-shadow: 0 8px 20px rgba(196, 154, 60, 0.3) !important;
 }
 
-.admin-calendar .fc-time-grid-event.admin-calendar-status-done,
-.admin-calendar .fc-day-grid-event.admin-calendar-status-done,
-.admin-calendar .fc-list-item.admin-calendar-status-done {
-    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.24);
+.admin-calendar .fc-today-button {
+    opacity: 1 !important;
+    background: rgba(196, 154, 60, 0.1) !important;
+    color: var(--admin-primary) !important;
+    border-color: rgba(196, 154, 60, 0.2) !important;
 }
 
-.admin-calendar .fc-time-grid-event.admin-calendar-status-canceled,
-.admin-calendar .fc-day-grid-event.admin-calendar-status-canceled,
-.admin-calendar .fc-list-item.admin-calendar-status-canceled {
-    box-shadow: 0 10px 24px rgba(220, 53, 69, 0.24);
+.admin-calendar th {
+    padding: 1rem 0 !important;
+    background: rgba(15, 19, 24, 0.02);
+    border-color: var(--admin-border) !important;
+    color: var(--admin-muted);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.admin-calendar td {
+    border-color: var(--admin-border) !important;
+}
+
+.admin-calendar .fc-day-number {
+    padding: 0.75rem !important;
+    color: var(--admin-ink);
+    font-size: 0.95rem;
+    font-weight: 700;
 }
 
 .admin-calendar .fc-today {
-    background: rgba(196, 154, 60, 0.08) !important;
+    background: rgba(196, 154, 60, 0.04) !important;
 }
+
+.admin-calendar .fc-event {
+    border: 0;
+    border-radius: 0.65rem;
+    padding: 0.25rem 0.5rem;
+    margin: 0.15rem 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.admin-calendar .fc-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.18);
+}
+
+.admin-calendar .fc-bgevent {
+    opacity: 0.15;
+    border-radius: 0.75rem;
+}
+
+/* Event Status Colors */
+.admin-calendar-status-scheduled { background: #c49a3c !important; color: #111318 !important; }
+.admin-calendar-status-confirmed { background: #198754 !important; color: #fff !important; }
+.admin-calendar-status-done { background: #0d6efd !important; color: #fff !important; }
+.admin-calendar-status-canceled { background: #dc3545 !important; color: #fff !important; }
+
+.admin-calendar .fc-list-item {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--admin-border) !important;
+}
+
+.admin-calendar .fc-list-heading td {
+    background: rgba(15, 19, 24, 0.03) !important;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
 
 .admin-calendar-legend {
     display: flex;
