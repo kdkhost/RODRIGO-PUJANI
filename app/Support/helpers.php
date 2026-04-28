@@ -166,9 +166,6 @@ if (! function_exists('recaptcha_config')) {
     }
 }
 
-    }
-}
-
 if (! function_exists('seo_config')) {
     function seo_config(): array
     {
