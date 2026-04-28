@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class UserController extends AdminCrudController
@@ -22,13 +24,21 @@ class UserController extends AdminCrudController
 
     protected function indexQuery(Request $request): Builder
     {
-        return User::query()->with('roles');
+        return User::query()
+            ->visibleTo($request->user())
+            ->with('roles');
     }
 
     protected function formData(?Model $record = null): array
     {
         return [
-            'roles' => Role::query()->orderBy('name')->get(),
+            'roles' => Role::query()
+                ->when(
+                    ! auth()->user()?->isSuperAdmin(),
+                    fn (Builder $query) => $query->where('name', '!=', 'Super Admin')
+                )
+                ->orderBy('name')
+                ->get(),
         ];
     }
 
@@ -55,7 +65,14 @@ class UserController extends AdminCrudController
             'timezone' => ['nullable', 'string', 'max:255'],
             'password' => $passwordRule,
             'role_names' => ['nullable', 'array'],
-            'role_names.*' => ['string', 'exists:roles,name'],
+            'role_names.*' => [
+                'string',
+                'exists:roles,name',
+                Rule::when(
+                    ! $request->user()?->isSuperAdmin(),
+                    Rule::notIn(['Super Admin'])
+                ),
+            ],
         ];
     }
 
@@ -63,6 +80,11 @@ class UserController extends AdminCrudController
     {
         unset($validated['avatar'], $validated['role_names']);
         $validated += $this->booleanData($request, ['is_active']);
+
+        if ($record instanceof User && $record->exists && $record->isSuperAdmin()) {
+            $validated['is_active'] = true;
+        }
+
         $validated['address_state'] = filled($validated['address_state'] ?? null)
             ? strtoupper((string) $validated['address_state'])
             : null;
@@ -77,6 +99,40 @@ class UserController extends AdminCrudController
 
     protected function afterSave(Model $record, Request $request, bool $created): void
     {
-        $record->syncRoles($request->input('role_names', []));
+        $roles = collect($request->input('role_names', []))
+            ->filter()
+            ->values();
+
+        if (! $request->user()?->isSuperAdmin()) {
+            $roles = $roles->reject(fn (string $role): bool => $role === 'Super Admin')->values();
+        }
+
+        if ($record instanceof User && $record->isSuperAdmin() && ! $roles->contains('Super Admin')) {
+            $roles->push('Super Admin');
+        }
+
+        $record->syncRoles($roles->all());
+    }
+
+    public function destroy(string $record): JsonResponse
+    {
+        /** @var User $entity */
+        $entity = $this->resolveRecord($record);
+
+        if (! $entity->canBeDeletedBy(auth()->user())) {
+            return response()->json([
+                'message' => 'Este usuário é protegido e não pode ser excluído.',
+            ], 403);
+        }
+
+        return parent::destroy($record);
+    }
+
+    protected function resolveRecord(string $record): Model
+    {
+        return User::query()
+            ->visibleTo(auth()->user())
+            ->with('roles')
+            ->findOrFail($record);
     }
 }

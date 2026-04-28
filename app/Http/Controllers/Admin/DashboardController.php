@@ -146,6 +146,7 @@ class DashboardController extends \App\Http\Controllers\Controller
             'workloadByLawyer' => $isAssociatedLawyer
                 ? collect()
                 : User::query()
+                    ->visibleTo($user)
                     ->where('is_active', true)
                     ->withCount([
                         'primaryLegalCases as open_cases_count' => fn (Builder $query) => $query

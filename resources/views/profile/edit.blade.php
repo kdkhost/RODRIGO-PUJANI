@@ -281,9 +281,13 @@
                                     <h3>Excluir conta</h3>
                                     <p>Esta ação encerra sua sessão e remove permanentemente seu usuário.</p>
                                 </div>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-profile-modal">
-                                    <i class="bi bi-trash3 me-1"></i>Excluir conta
-                                </button>
+                                @if($user->isSuperAdmin())
+                                    <span class="badge text-bg-dark">Conta Super Admin protegida</span>
+                                @else
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-profile-modal">
+                                        <i class="bi bi-trash3 me-1"></i>Excluir conta
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -50,6 +50,7 @@ class LegalCaseController extends AdminCrudController
             ->get(['id', 'name']);
 
         $lawyers = User::query()
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->when(
                 auth()->user()?->isAssociatedLawyer(),

@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -74,6 +75,46 @@ class User extends Authenticatable
     public function isAssociatedLawyer(): bool
     {
         return $this->hasRole('Advogado Associado');
+    }
+
+    public function scopeVisibleTo(Builder $query, ?self $viewer): Builder
+    {
+        if ($viewer?->isSuperAdmin()) {
+            return $query;
+        }
+
+        return $query->whereDoesntHave('roles', function (Builder $roleQuery): void {
+            $roleQuery
+                ->where('name', 'Super Admin')
+                ->where('guard_name', 'web');
+        });
+    }
+
+    public function canManageOtherUsers(): bool
+    {
+        return $this->isSuperAdmin() || $this->isAdministrator();
+    }
+
+    public function canBeImpersonatedBy(?self $actor): bool
+    {
+        if (! $actor || $actor->is($this) || ! $this->is_active) {
+            return false;
+        }
+
+        if ($actor->isSuperAdmin()) {
+            return true;
+        }
+
+        return $actor->isAdministrator() && ! $this->isSuperAdmin();
+    }
+
+    public function canBeDeletedBy(?self $actor): bool
+    {
+        if (! $actor || $actor->is($this) || $this->isSuperAdmin()) {
+            return false;
+        }
+
+        return $actor->canManageOtherUsers();
     }
 
     public function activityLogs(): HasMany

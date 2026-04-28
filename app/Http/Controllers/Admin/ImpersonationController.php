@@ -14,12 +14,8 @@ class ImpersonationController extends Controller
     {
         $impersonator = $request->user();
 
-        if (! $impersonator || $impersonator->is($user)) {
-            return back()->with('error', 'Não é possível assumir o próprio usuário.');
-        }
-
-        if (! $user->is_active) {
-            return back()->with('error', 'Este usuário está inativo.');
+        if (! $user->canBeImpersonatedBy($impersonator)) {
+            return back()->with('error', 'Você não tem permissão para assumir esta conta.');
         }
 
         $request->session()->put([

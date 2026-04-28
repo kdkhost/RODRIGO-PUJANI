@@ -400,6 +400,7 @@ class CalendarController extends Controller
     private function availableOwners()
     {
         return User::query()
+            ->visibleTo(Auth::user())
             ->where('is_active', true)
             ->when(
                 Auth::user()?->isAssociatedLawyer(),

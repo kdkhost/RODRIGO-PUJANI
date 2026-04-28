@@ -66,6 +66,11 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        if ($user->isSuperAdmin()) {
+            return Redirect::route('profile.edit')
+                ->with('error', 'A conta Super Admin é protegida e não pode ser excluída.');
+        }
+
         Auth::logout();
 
         $user->delete();

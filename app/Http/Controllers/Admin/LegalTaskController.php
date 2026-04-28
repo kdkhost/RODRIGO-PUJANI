@@ -59,6 +59,7 @@ class LegalTaskController extends AdminCrudController
             ->get(['id', 'title']);
 
         $users = User::query()
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->when(
                 auth()->user()?->isAssociatedLawyer(),

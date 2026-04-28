@@ -36,6 +36,7 @@ class ClientController extends AdminCrudController
     protected function formData(?Model $record = null): array
     {
         $lawyers = User::query()
+            ->visibleTo(auth()->user())
             ->where('is_active', true)
             ->when(
                 auth()->user()?->isAssociatedLawyer(),
