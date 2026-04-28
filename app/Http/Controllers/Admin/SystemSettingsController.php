@@ -64,6 +64,15 @@ class SystemSettingsController extends Controller
         'site.whatsapp_multiple_support' => ['label' => 'Suporte WhatsApp Multinível', 'type' => 'boolean', 'public' => true, 'sort' => 600],
         'site.whatsapp_selection_title' => ['label' => 'Título da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 601],
         'site.whatsapp_selection_subtitle' => ['label' => 'Subtítulo da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 602],
+        'seo.title_suffix' => ['label' => 'Sufixo do título das páginas', 'type' => 'text', 'public' => true, 'sort' => 700],
+        'seo.meta_description' => ['label' => 'Meta descrição global', 'type' => 'textarea', 'public' => true, 'sort' => 701],
+        'seo.meta_keywords' => ['label' => 'Palavras-chave (separadas por vírgula)', 'type' => 'textarea', 'public' => true, 'sort' => 702],
+        'seo.hashtags' => ['label' => 'Hashtags persistentes (ex: #advogado #justiça)', 'type' => 'textarea', 'public' => true, 'sort' => 703],
+        'seo.author' => ['label' => 'Autor do site', 'type' => 'text', 'public' => true, 'sort' => 704],
+        'seo.og_image_path' => ['label' => 'Imagem para redes sociais (OG Image)', 'type' => 'text', 'public' => true, 'sort' => 705],
+        'seo.google_analytics_id' => ['label' => 'ID do Google Analytics (G-XXXXXX)', 'type' => 'text', 'public' => true, 'sort' => 706],
+        'seo.google_site_verification' => ['label' => 'Verificação do Google Search Console', 'type' => 'text', 'public' => true, 'sort' => 707],
+        'seo.bing_site_verification' => ['label' => 'Verificação do Bing Webmaster', 'type' => 'text', 'public' => true, 'sort' => 708],
     ];
 
     public function index(): View
@@ -72,6 +81,7 @@ class SystemSettingsController extends Controller
             'pageTitle' => 'Configurações do sistema',
             'branding' => branding_config(),
             'pwa' => pwa_config(),
+            'seo' => seo_config(),
             'recaptcha' => recaptcha_config(),
             'pwaDisplayOptions' => [
                 'browser' => 'Navegador',
@@ -144,6 +154,15 @@ class SystemSettingsController extends Controller
             'whatsapp_multiple_support' => ['nullable', 'boolean'],
             'whatsapp_selection_title' => ['nullable', 'string', 'max:120'],
             'whatsapp_selection_subtitle' => ['nullable', 'string', 'max:255'],
+            'seo_title_suffix' => ['nullable', 'string', 'max:120'],
+            'seo_meta_description' => ['nullable', 'string', 'max:255'],
+            'seo_meta_keywords' => ['nullable', 'string', 'max:500'],
+            'seo_hashtags' => ['nullable', 'string', 'max:500'],
+            'seo_author' => ['nullable', 'string', 'max:120'],
+            'seo_og_image_path' => ['nullable', 'string', 'max:255'],
+            'seo_google_analytics_id' => ['nullable', 'string', 'max:32'],
+            'seo_google_site_verification' => ['nullable', 'string', 'max:255'],
+            'seo_bing_site_verification' => ['nullable', 'string', 'max:255'],
         ]);
 
         $currentLogo = (string) setting('branding.logo_path', '');
@@ -192,6 +211,15 @@ class SystemSettingsController extends Controller
             'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',
             'site.whatsapp_selection_title' => trim((string) ($validated['whatsapp_selection_title'] ?? 'Escolha um especialista')),
             'site.whatsapp_selection_subtitle' => trim((string) ($validated['whatsapp_selection_subtitle'] ?? 'Selecione com quem deseja falar pelo WhatsApp:')),
+            'seo.title_suffix' => trim((string) ($validated['seo_title_suffix'] ?? '')),
+            'seo.meta_description' => trim((string) ($validated['seo_meta_description'] ?? '')),
+            'seo.meta_keywords' => trim((string) ($validated['seo_meta_keywords'] ?? '')),
+            'seo.hashtags' => trim((string) ($validated['seo_hashtags'] ?? '')),
+            'seo.author' => trim((string) ($validated['seo_author'] ?? '')),
+            'seo.og_image_path' => trim((string) ($validated['seo_og_image_path'] ?? '')),
+            'seo.google_analytics_id' => trim((string) ($validated['seo_google_analytics_id'] ?? '')),
+            'seo.google_site_verification' => trim((string) ($validated['seo_google_site_verification'] ?? '')),
+            'seo.bing_site_verification' => trim((string) ($validated['seo_bing_site_verification'] ?? '')),
         ];
 
         if ($request->boolean('remove_logo') && ! $request->hasFile('logo')) {
@@ -232,6 +260,7 @@ class SystemSettingsController extends Controller
                 str_starts_with($key, 'pwa.') => 'pwa',
                 str_starts_with($key, 'security.') => 'security',
                 str_starts_with($key, 'site.') => 'site',
+                str_starts_with($key, 'seo.') => 'seo',
                 default => 'system',
             };
 

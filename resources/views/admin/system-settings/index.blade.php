@@ -281,6 +281,68 @@
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
+                                <div class="admin-card-kicker">Otimização de Busca</div>
+                                <h3 class="card-title">SEO e Hashtags Persistentes</h3>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-4 admin-premium-form">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="seo_title_suffix">Sufixo de Título</label>
+                                    <input id="seo_title_suffix" type="text" name="seo_title_suffix" class="form-control" value="{{ old('seo_title_suffix', $seo['title_suffix']) }}" placeholder="Ex: | Pujani Advogados">
+                                    <small class="text-muted mt-1 d-block">Aparece após o nome de cada página no navegador.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="seo_author">Autor do Site</label>
+                                    <input id="seo_author" type="text" name="seo_author" class="form-control" value="{{ old('seo_author', $seo['author']) }}" placeholder="Ex: Rodrigo Pujani">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="seo_meta_description">Meta Descrição Global</label>
+                                    <textarea id="seo_meta_description" name="seo_meta_description" class="form-control" rows="3" placeholder="Descreva seu escritório em até 160 caracteres...">{{ old('seo_meta_description', $seo['meta_description']) }}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="seo_meta_keywords">Palavras-chave</label>
+                                    <textarea id="seo_meta_keywords" name="seo_meta_keywords" class="form-control" rows="3" placeholder="advogado, jurídico, porto alegre, etc...">{{ old('seo_meta_keywords', $seo['meta_keywords']) }}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="seo_hashtags">Hashtags Persistentes</label>
+                                    <textarea id="seo_hashtags" name="seo_hashtags" class="form-control" rows="3" placeholder="#pujani #advocacia #justiça">{{ old('seo_hashtags', $seo['hashtags']) }}</textarea>
+                                    <small class="text-muted mt-1 d-block">Utilizadas para alavancar o site em redes sociais e buscas orgânicas.</small>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label" for="seo_og_image_path">Imagem Redes Sociais (OG Image)</label>
+                                    <div class="input-group">
+                                        <input id="seo_og_image_path" type="text" name="seo_og_image_path" class="form-control" value="{{ old('seo_og_image_path', $seo['og_image_path']) }}" placeholder="Caminho da imagem ou URL">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="window.AdminUI.openAssetManager('seo_og_image_path')">
+                                            <i class="bi bi-folder2-open"></i>
+                                        </button>
+                                    </div>
+                                    @if($seo['og_image_url'])
+                                        <div class="mt-2">
+                                            <img src="{{ $seo['og_image_url'] }}" alt="Preview SEO" class="rounded border" style="height: 60px; object-fit: cover;">
+                                        </div>
+                                    @endif
+                                </div>
+                                <hr class="my-4 opacity-5">
+                                <div class="col-md-4">
+                                    <label class="form-label" for="seo_google_analytics_id">Google Analytics ID</label>
+                                    <input id="seo_google_analytics_id" type="text" name="seo_google_analytics_id" class="form-control" value="{{ old('seo_google_analytics_id', $seo['google_analytics_id']) }}" placeholder="G-XXXXXXXX">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="seo_google_site_verification">Google Search Console</label>
+                                    <input id="seo_google_site_verification" type="text" name="seo_google_site_verification" class="form-control" value="{{ old('seo_google_site_verification', $seo['google_site_verification']) }}" placeholder="Código de verificação">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="seo_bing_site_verification">Bing Webmaster</label>
+                                    <input id="seo_bing_site_verification" type="text" name="seo_bing_site_verification" class="form-control" value="{{ old('seo_bing_site_verification', $seo['bing_site_verification']) }}" placeholder="Código de verificação">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card admin-table-card">
+                        <div class="card-header">
+                            <div>
                                 <div class="admin-card-kicker">Suporte e Atendimento</div>
                                 <h3 class="card-title">WhatsApp Multinível</h3>
                             </div>

@@ -166,6 +166,46 @@ if (! function_exists('recaptcha_config')) {
     }
 }
 
+    }
+}
+
+if (! function_exists('seo_config')) {
+    function seo_config(): array
+    {
+        try {
+            return Cache::rememberForever('seo.config.v1', function (): array {
+                $ogImagePath = (string) setting('seo.og_image_path', '');
+                
+                return [
+                    'title_suffix' => (string) setting('seo.title_suffix', ' - Pujani Advogados'),
+                    'meta_description' => (string) setting('seo.meta_description', 'Escritório de advocacia premium especializado em soluções jurídicas personalizadas.'),
+                    'meta_keywords' => (string) setting('seo.meta_keywords', 'advogado, jurídico, processos, justiça, consultoria'),
+                    'hashtags' => (string) setting('seo.hashtags', '#pujaniadvogados #advocacia #justiça #direito'),
+                    'author' => (string) setting('seo.author', 'Rodrigo Pujani'),
+                    'og_image_path' => $ogImagePath,
+                    'og_image_url' => site_asset_url($ogImagePath),
+                    'google_analytics_id' => (string) setting('seo.google_analytics_id', ''),
+                    'google_site_verification' => (string) setting('seo.google_site_verification', ''),
+                    'bing_site_verification' => (string) setting('seo.bing_site_verification', ''),
+                ];
+            });
+        } catch (Throwable) {
+            return [
+                'title_suffix' => ' - Pujani Advogados',
+                'meta_description' => 'Escritório de advocacia premium especializado em soluções jurídicas personalizadas.',
+                'meta_keywords' => 'advogado, jurídico, processos, justiça, consultoria',
+                'hashtags' => '#pujaniadvogados #advocacia #justiça #direito',
+                'author' => 'Rodrigo Pujani',
+                'og_image_path' => '',
+                'og_image_url' => null,
+                'google_analytics_id' => '',
+                'google_site_verification' => '',
+                'bing_site_verification' => '',
+            ];
+        }
+    }
+}
+
 if (! function_exists('pwa_config')) {
     function pwa_config(): array
     {

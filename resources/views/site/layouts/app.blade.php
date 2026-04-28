@@ -1,12 +1,22 @@
 @php
+    $seoConfig = seo_config();
     $seo = $page->seoMeta;
     $branding = branding_config();
     $pwa = pwa_config();
     $recaptcha = recaptcha_config();
-    $title = $seo?->title ?: ($page->title.' | '.$branding['brand_name']);
-    $description = $seo?->description ?: ($page->excerpt ?: 'Pujani Advogados com atuação estratégica, ética e resultado.');
-    $keywords = $seo?->keywords ?: 'Pujani Advogados, advocacia, direito, consultoria jurídica, advogado';
-    $hashtags = collect($seo?->hashtags)->filter();
+    
+    // SEO Logic with Global Fallbacks
+    $titleSuffix = $seoConfig['title_suffix'] ?: (' | '.$branding['brand_name']);
+    $title = ($seo?->title ?: $page->title) . $titleSuffix;
+    
+    $description = $seo?->description ?: ($page->excerpt ?: $seoConfig['meta_description']);
+    $keywords = $seo?->keywords ?: $seoConfig['meta_keywords'];
+    
+    // Hashtags merging (Local + Global)
+    $localHashtags = collect($seo?->hashtags)->filter();
+    $globalHashtags = collect(explode(' ', $seoConfig['hashtags']))->filter();
+    $allHashtags = $localHashtags->merge($globalHashtags)->unique();
+    
     $themeColor = $pwa['theme_color'];
     $backgroundColor = $pwa['background_color'];
     $preloader = preloader_config('site');
@@ -16,6 +26,7 @@
     $companyAddress = setting('site.company_address', 'Av. Paulista, 1842 · Bela Vista · São Paulo/SP');
     $whatsappDigits = preg_replace('/\D+/', '', setting('site.company_whatsapp', '(11) 99876-5432'));
     $currentUrl = $seo?->canonical_url ?: url()->current();
+    $author = $seoConfig['author'] ?: 'Rodrigo Pujani';
 
     $resolveAsset = function (?string $path): ?string {
         if (! filled($path)) {
@@ -35,7 +46,7 @@
         return asset('storage/'.$normalized);
     };
 
-    $ogImage = $resolveAsset($seo?->og_image_path ?: ($pwa['icon_512_path'] ?: 'pwa/icon-512.png'));
+    $ogImage = $resolveAsset($seo?->og_image_path ?: ($seoConfig['og_image_path'] ?: ($pwa['icon_512_path'] ?: 'pwa/icon-512.png')));
     $icon192 = $branding['favicon_url'] ?: $pwa['icon_192_url'];
     $icon512 = $branding['favicon_url'] ?: $pwa['icon_512_url'];
     $homeUrl = route('site.home');
@@ -95,7 +106,45 @@
     <title>{{ $title }}</title>
     <meta name="description" content="{{ $description }}">
     <meta name="keywords" content="{{ $keywords }}">
+    <meta name="author" content="{{ $author }}">
     <meta name="robots" content="{{ $seo?->noindex ? 'noindex,nofollow' : ($seo?->robots ?: 'index,follow') }}">
+    
+    {{-- Google / Bing Verificaton --}}
+    @if($seoConfig['google_site_verification'])
+        <meta name="google-site-verification" content="{{ $seoConfig['google_site_verification'] }}">
+    @endif
+    @if($seoConfig['bing_site_verification'])
+        <meta name="msvalidate.01" content="{{ $seoConfig['bing_site_verification'] }}">
+    @endif
+
+    {{-- Open Graph / Facebook --}}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ $currentUrl }}">
+    <meta property="og:title" content="{{ $title }}">
+    <meta property="og:description" content="{{ $description }}">
+    @if($ogImage)
+        <meta property="og:image" content="{{ $ogImage }}">
+    @endif
+
+    {{-- Twitter --}}
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ $currentUrl }}">
+    <meta property="twitter:title" content="{{ $title }}">
+    <meta property="twitter:description" content="{{ $description }}">
+    @if($ogImage)
+        <meta property="twitter:image" content="{{ $ogImage }}">
+    @endif
+
+    {{-- Google Analytics --}}
+    @if($seoConfig['google_analytics_id'])
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $seoConfig['google_analytics_id'] }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ $seoConfig['google_analytics_id'] }}');
+        </script>
+    @endif
     <meta name="theme-color" content="{{ $themeColor }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -456,8 +505,23 @@
             <div class="divider"></div>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8">
                 <div class="text-xs text-cream/20 tracking-widest">© {{ now()->year }} {{ $companyName }} · Todos os direitos reservados</div>
-                <div class="text-xs text-cream/15">Este site não constitui consultoria jurídica. Consulte um advogado para orientação específica.</div>
+                <div class="flex gap-4 text-xs text-cream/15">
+                    <a href="{{ route('site.sitemap') }}" class="hover:text-gold/50 transition-colors">Sitemap</a>
+                    <span>·</span>
+                    <div class="text-xs text-cream/15">Este site não constitui consultoria jurídica. Consulte um advogado para orientação específica.</div>
+                </div>
             </div>
+
+            {{-- Persistent SEO Hashtags (Leverage) --}}
+            @if($allHashtags->isNotEmpty())
+                <div class="mt-10 pt-8 border-t border-white/5 opacity-[0.03] hover:opacity-20 transition-opacity duration-700">
+                    <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[0.65rem] text-cream uppercase tracking-widest text-center">
+                        @foreach($allHashtags as $tag)
+                            <span>{{ Str::start($tag, '#') }}</span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
     </footer>
 
