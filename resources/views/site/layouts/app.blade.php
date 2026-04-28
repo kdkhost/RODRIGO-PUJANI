@@ -184,6 +184,155 @@
         body.app-installed{padding-top:env(safe-area-inset-top)}body.app-installed .whatsapp-float{bottom:calc(1.5rem + env(safe-area-inset-bottom))}
         @media (max-width:768px){body{cursor:auto}.cursor,.cursor-ring{display:none}.site-pwa-promo{left:1rem;right:1rem;bottom:1rem;max-width:none}}
         @media (max-width:480px){#hero .btn-primary,#hero .btn-ghost{width:calc(100vw - 4rem);max-width:calc(100vw - 4rem);justify-content:center}#hero p{width:calc(100vw - 4rem);max-width:calc(100vw - 4rem)}}
+        
+        .whatsapp-support-box {
+            position: fixed;
+            right: 2rem;
+            bottom: 6rem;
+            width: min(90vw, 360px);
+            z-index: 9100;
+            background: rgba(17, 19, 24, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .whatsapp-support-box.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        
+        .whatsapp-support-header {
+            padding: 1.5rem 1.5rem 1.2rem;
+            background: linear-gradient(180deg, rgba(196, 154, 60, 0.08), transparent);
+            border-bottom: 1px solid rgba(196, 154, 60, 0.1);
+        }
+        
+        .whatsapp-support-header h3 {
+            margin: 0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--gold-pale);
+        }
+        
+        .whatsapp-support-header p {
+            margin: 0.5rem 0 0;
+            font-size: 0.88rem;
+            color: rgba(240, 233, 220, 0.6);
+            line-height: 1.4;
+        }
+        
+        .whatsapp-support-list {
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 0.75rem;
+        }
+        
+        .whatsapp-support-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem;
+            border-radius: 0.85rem;
+            text-decoration: none;
+            transition: background 0.25s ease;
+        }
+        
+        .whatsapp-support-item:hover {
+            background: rgba(196, 154, 60, 0.08);
+        }
+        
+        .whatsapp-support-avatar {
+            flex: 0 0 48px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid rgba(196, 154, 60, 0.3);
+            overflow: hidden;
+            background: var(--ink-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .whatsapp-support-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .whatsapp-support-avatar i {
+            font-size: 1.4rem;
+            color: var(--gold);
+        }
+        
+        .whatsapp-support-info {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        
+        .whatsapp-support-info strong {
+            display: block;
+            color: var(--cream);
+            font-size: 0.95rem;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .whatsapp-support-info span {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.15rem;
+        }
+        
+        .whatsapp-support-badge {
+            flex: 0 0 auto;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(37, 211, 102, 0.12);
+            color: #25D366;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: transform 0.25s ease, background 0.25s ease;
+        }
+        
+        .whatsapp-support-item:hover .whatsapp-support-badge {
+            transform: scale(1.1);
+            background: #25D366;
+            color: #fff;
+        }
+        
+        .whatsapp-support-footer {
+            padding: 1rem 1.5rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: rgba(240, 233, 220, 0.3);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        
+        @media (max-width: 640px) {
+            .whatsapp-support-box {
+                right: 1rem;
+                bottom: 5.5rem;
+            }
+        }
     </style>
     <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT) !!}</script>
 </head>
@@ -318,11 +467,58 @@
         </svg>
     </button>
 
-    @if($whatsappDigits)
-        <a href="https://wa.me/{{ $whatsappDigits }}?text=Ol%C3%A1!%20Gostaria%20de%20uma%20consulta%20com%20a%20Pujani%20Advogados." class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp" title="Fale pelo WhatsApp">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
-        </a>
+    @php
+        $whatsappMultiple = setting('site.whatsapp_multiple_support') == '1';
+        $whatsappNumber = setting('contact.whatsapp');
+        $whatsappUrl = $whatsappNumber ? 'https://wa.me/55' . preg_replace('/\D/', '', $whatsappNumber) : null;
+    @endphp
+
+    @if($whatsappUrl || ($whatsappMultiple && $whatsappTeamMembers->isNotEmpty()))
+        <div class="whatsapp-container">
+            @if($whatsappMultiple && $whatsappTeamMembers->isNotEmpty())
+                <div id="whatsapp-support-box" class="whatsapp-support-box">
+                    <div class="whatsapp-support-header">
+                        <h3>{{ setting('site.whatsapp_selection_title', 'Escolha um especialista') }}</h3>
+                        <p>{{ setting('site.whatsapp_selection_subtitle', 'Selecione com quem deseja falar pelo WhatsApp:') }}</p>
+                    </div>
+                    <div class="whatsapp-support-list">
+                        @foreach($whatsappTeamMembers as $member)
+                            <a href="https://wa.me/55{{ preg_replace('/\D/', '', $member->whatsapp) }}" 
+                               target="_blank" 
+                               rel="noopener" 
+                               class="whatsapp-support-item">
+                                <div class="whatsapp-support-avatar">
+                                    @if($member->image_path)
+                                        <img src="{{ Storage::url($member->image_path) }}" alt="{{ $member->name }}">
+                                    @else
+                                        <i class="bi bi-person-fill"></i>
+                                    @endif
+                                </div>
+                                <div class="whatsapp-support-info">
+                                    <strong>{{ $member->name }}</strong>
+                                    <span>{{ $member->role }}</span>
+                                </div>
+                                <div class="whatsapp-support-badge">
+                                    <i class="bi bi-whatsapp"></i>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                    <div class="whatsapp-support-footer">
+                        Atendimento Jurídico Especializado
+                    </div>
+                </div>
+            @endif
+
+            <a href="{{ $whatsappMultiple ? 'javascript:void(0)' : $whatsappUrl }}" 
+               class="whatsapp-float" 
+               @if(!$whatsappMultiple) target="_blank" rel="noopener" @else id="whatsapp-toggle" @endif
+               aria-label="Fale conosco pelo WhatsApp">
+                <i class="bi bi-whatsapp"></i>
+            </a>
+        </div>
     @endif
+    
     @if($pwa['enabled'] && $pwa['installation_enabled'] && $pwa['install_prompt_enabled'])
         <div class="site-pwa-promo" data-pwa-promo hidden>
             <span class="site-pwa-promo-badge">{{ $pwa['popup_badge'] }}</span>

@@ -276,6 +276,37 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="card admin-table-card">
+                        <div class="card-header">
+                            <div>
+                                <div class="admin-card-kicker">Suporte e Atendimento</div>
+                                <h3 class="card-title">WhatsApp Multinível</h3>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3 admin-premium-form">
+                                <div class="col-md-4 form-check ps-5 pt-4">
+                                    <input type="checkbox" class="form-check-input" id="whatsapp_multiple_support" name="whatsapp_multiple_support" value="1" @checked(old('whatsapp_multiple_support', setting('site.whatsapp_multiple_support') == '1'))>
+                                    <label class="form-check-label" for="whatsapp_multiple_support">Ativar seleção de especialistas</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="whatsapp_selection_title">Título da caixa</label>
+                                    <input id="whatsapp_selection_title" type="text" name="whatsapp_selection_title" class="form-control" value="{{ old('whatsapp_selection_title', setting('site.whatsapp_selection_title', 'Escolha um especialista')) }}" placeholder="Ex: Fale com nossa equipe">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="whatsapp_selection_subtitle">Subtítulo da caixa</label>
+                                    <input id="whatsapp_selection_subtitle" type="text" name="whatsapp_selection_subtitle" class="form-control" value="{{ old('whatsapp_selection_subtitle', setting('site.whatsapp_selection_subtitle', 'Selecione com quem deseja falar pelo WhatsApp:')) }}" placeholder="Ex: Clique no advogado desejado">
+                                </div>
+                                <div class="col-12">
+                                    <div class="alert alert-info border-0 bg-opacity-10 mb-0">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Quando ativo, o botão do WhatsApp no site exibirá uma caixa luxuosa listando todos os <strong>membros da equipe ativos</strong> que possuam número de WhatsApp cadastrado.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-save me-1"></i>Salvar configurações

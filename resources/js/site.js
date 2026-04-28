@@ -31,6 +31,7 @@ const SiteUI = {
             this.bindParallax,
             this.bindContactForm,
             this.bindPwa,
+            this.bindWhatsApp,
         ].forEach((task) => {
             try {
                 task.call(this);
@@ -586,6 +587,28 @@ const SiteUI = {
             .find((message) => String(message || '').trim() !== '');
 
         return firstMessage || error.response?.data?.message || fallbackMessage;
+    },
+
+    bindWhatsApp() {
+        const toggle = document.getElementById('whatsapp-toggle');
+        const box = document.getElementById('whatsapp-support-box');
+
+        if (!toggle || !box) {
+            return;
+        }
+
+        toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            box.classList.toggle('active');
+            toggle.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!box.contains(event.target) && !toggle.contains(event.target)) {
+                box.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        });
     },
 };
 

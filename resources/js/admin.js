@@ -593,12 +593,35 @@ const AdminUI = {
                     const total = progressEvent.total || 0;
                     const loaded = progressEvent.loaded || 0;
                     const percent = total ? Math.round((loaded / total) * 100) : 0;
-                    const elapsedSeconds = Math.max(
-                        1,
-                        (Date.now() - (form._uploadStartedAt || (form._uploadStartedAt = Date.now()))) / 1000,
-                    );
-                    const speed = loaded / elapsedSeconds;
-                    const eta = speed > 0 && total > 0 ? Math.max(0, Math.round((total - loaded) / speed)) : 0;
+                    
+                    if (!form._uploadStats) {
+                        form._uploadStats = {
+                            start: Date.now(),
+                            samples: [],
+                            lastLoaded: 0,
+                            lastTime: Date.now()
+                        };
+                    }
+
+                    const now = Date.now();
+                    const timeDiff = (now - form._uploadStats.lastTime) / 1000;
+                    const loadedDiff = loaded - form._uploadStats.lastLoaded;
+                    
+                    if (timeDiff > 0.1) {
+                        const currentSpeed = loadedDiff / timeDiff;
+                        form._uploadStats.samples.push(currentSpeed);
+                        if (form._uploadStats.samples.length > 10) form._uploadStats.samples.shift();
+                        
+                        form._uploadStats.lastTime = now;
+                        form._uploadStats.lastLoaded = loaded;
+                    }
+
+                    const avgSpeed = form._uploadStats.samples.length > 0 
+                        ? form._uploadStats.samples.reduce((a, b) => a + b, 0) / form._uploadStats.samples.length 
+                        : 0;
+
+                    const eta = avgSpeed > 0 && total > 0 ? Math.max(0, Math.round((total - loaded) / avgSpeed)) : 0;
+                    
                     this.updateProgress(percent, eta, form);
                     this.markUploadPreviewsState(form, 'uploading', percent);
                 },
@@ -648,7 +671,7 @@ const AdminUI = {
 
             this.showToast('error', error.response?.data?.message || 'Falha ao processar a solicitação.');
         } finally {
-            delete form._uploadStartedAt;
+            delete form._uploadStats;
             if (submitButton) {
                 submitButton.disabled = false;
             }
@@ -1027,7 +1050,19 @@ const AdminUI = {
         card.classList.add('active');
         bar.style.width = `${percent}%`;
         percentLabel.textContent = `${percent}%`;
-        etaLabel.textContent = etaSeconds > 0 ? `Tempo restante aproximado: ${etaSeconds}s` : 'Finalizando upload...';
+        
+        let etaText = 'Finalizando upload...';
+        if (etaSeconds > 0) {
+            const minutes = Math.floor(etaSeconds / 60);
+            const seconds = etaSeconds % 60;
+            etaText = `Tempo restante: ${minutes > 0 ? `${minutes}m ` : ''}${seconds}s`;
+        }
+        
+        etaLabel.textContent = etaText;
+        
+        const count = files.length;
+        const countText = count > 1 ? `<div class="mt-1 fw-bold text-primary small">${count} arquivos sendo enviados</div>` : '';
+        
         summary.innerHTML = files.slice(0, 3).map((file) => {
             const extension = this.fileExtension(file.name, file.type);
 
@@ -1037,7 +1072,7 @@ const AdminUI = {
                     ${this.escapeHtml(file.name)}
                 </span>
             `;
-        }).join('');
+        }).join('') + countText;
     },
 
     hideProgress() {

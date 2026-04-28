@@ -61,6 +61,9 @@ class SystemSettingsController extends Controller
         'security.recaptcha_site_key' => ['label' => 'Site key do reCAPTCHA', 'type' => 'text', 'public' => false, 'sort' => 561],
         'security.recaptcha_secret_key' => ['label' => 'Secret key do reCAPTCHA', 'type' => 'text', 'public' => false, 'sort' => 562],
         'security.recaptcha_min_score' => ['label' => 'Score mínimo do reCAPTCHA', 'type' => 'text', 'public' => false, 'sort' => 563],
+        'site.whatsapp_multiple_support' => ['label' => 'Suporte WhatsApp Multinível', 'type' => 'boolean', 'public' => true, 'sort' => 600],
+        'site.whatsapp_selection_title' => ['label' => 'Título da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 601],
+        'site.whatsapp_selection_subtitle' => ['label' => 'Subtítulo da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 602],
     ];
 
     public function index(): View
@@ -138,6 +141,9 @@ class SystemSettingsController extends Controller
             'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
             'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
             'recaptcha_min_score' => ['nullable', 'numeric', 'min:0.1', 'max:1'],
+            'whatsapp_multiple_support' => ['nullable', 'boolean'],
+            'whatsapp_selection_title' => ['nullable', 'string', 'max:120'],
+            'whatsapp_selection_subtitle' => ['nullable', 'string', 'max:255'],
         ]);
 
         $currentLogo = (string) setting('branding.logo_path', '');
@@ -183,6 +189,9 @@ class SystemSettingsController extends Controller
             'security.recaptcha_site_key' => trim((string) ($validated['recaptcha_site_key'] ?? '')),
             'security.recaptcha_secret_key' => trim((string) ($validated['recaptcha_secret_key'] ?? '')),
             'security.recaptcha_min_score' => number_format((float) ($validated['recaptcha_min_score'] ?? 0.5), 1, '.', ''),
+            'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',
+            'site.whatsapp_selection_title' => trim((string) ($validated['whatsapp_selection_title'] ?? 'Escolha um especialista')),
+            'site.whatsapp_selection_subtitle' => trim((string) ($validated['whatsapp_selection_subtitle'] ?? 'Selecione com quem deseja falar pelo WhatsApp:')),
         ];
 
         if ($request->boolean('remove_logo') && ! $request->hasFile('logo')) {
@@ -222,6 +231,7 @@ class SystemSettingsController extends Controller
                 str_starts_with($key, 'branding.') => 'branding',
                 str_starts_with($key, 'pwa.') => 'pwa',
                 str_starts_with($key, 'security.') => 'security',
+                str_starts_with($key, 'site.') => 'site',
                 default => 'system',
             };
 
@@ -286,6 +296,7 @@ class SystemSettingsController extends Controller
             'preloader.settings.v1',
             'site_pages.menu.v2',
             'site_pages.public.v2',
+            'site_whatsapp.team.v1',
         ] as $key) {
             Cache::forget($key);
         }

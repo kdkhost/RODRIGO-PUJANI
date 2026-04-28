@@ -2152,7 +2152,7 @@ img.admin-avatar {
 .admin-scroll-top {
     position: fixed;
     right: 1.35rem;
-    bottom: 1.35rem;
+    bottom: 5.5rem;
     z-index: 1080;
     display: inline-flex;
     width: 48px;
@@ -2359,8 +2359,15 @@ img.admin-avatar {
     width: 0;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #c49a3c, #22c55e);
-    transition: width 0.2s ease;
+    background: linear-gradient(90deg, #c49a3c, #8d6a1f, #22c55e);
+    background-size: 200% 100%;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: admin-progress-shine 2s linear infinite;
+}
+
+@keyframes admin-progress-shine {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
 }
 
 .admin-upload-preview-panel[data-state="done"] .admin-upload-item-progress span {
@@ -2406,6 +2413,12 @@ img.admin-avatar {
 
 .admin-upload-progress.active {
     display: block;
+    animation: admin-card-pulse 2s ease-in-out infinite;
+}
+
+@keyframes admin-card-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
 }
 
 .admin-code-editor {
@@ -2601,7 +2614,7 @@ img.admin-avatar {
 
     .admin-scroll-top {
         right: 1rem;
-        bottom: 1rem;
+        bottom: 5.25rem;
         width: 44px;
         height: 44px;
     }
