@@ -28,6 +28,7 @@ class UserAccessPolicyTest extends TestCase
         $managedUser = User::factory()->create([
             'name' => 'Usuario Gerenciado',
             'email' => 'usuario@demo.test',
+            'avatar_path' => 'uploads/avatars/usuario-demo.webp',
             'is_active' => true,
         ]);
 
@@ -35,6 +36,8 @@ class UserAccessPolicyTest extends TestCase
             ->get(route('admin.users.index'))
             ->assertOk()
             ->assertSee('usuario@demo.test')
+            ->assertSee('admin-user-list-avatar', false)
+            ->assertSee('uploads/avatars/usuario-demo.webp', false)
             ->assertDontSee('superadmin@demo.test');
 
         $this->actingAs($administrator)
@@ -107,10 +110,62 @@ class UserAccessPolicyTest extends TestCase
                 'password' => 'password',
                 'password_confirmation' => 'password',
                 'is_active' => '1',
-                'role_names' => ['Super Admin'],
+                'role_name' => 'Super Admin',
             ])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['role_names.0']);
+            ->assertJsonValidationErrors(['role_name']);
+    }
+
+    public function test_user_form_uses_single_role_select(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $superAdmin = User::factory()->create(['is_active' => true]);
+        $superAdmin->assignRole('Super Admin');
+
+        $response = $this->actingAs($superAdmin)
+            ->getJson(route('admin.users.create'))
+            ->assertOk();
+
+        $html = $response->json('html');
+
+        $this->assertStringContainsString('name="role_name"', $html);
+        $this->assertStringNotContainsString('name="role_names[]"', $html);
+        $this->assertStringNotContainsString('multiple', $html);
+    }
+
+    public function test_user_save_keeps_only_one_role(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $superAdmin = User::factory()->create(['is_active' => true]);
+        $superAdmin->assignRole('Super Admin');
+
+        $this->actingAs($superAdmin)
+            ->postJson(route('admin.users.store'), [
+                'name' => 'Usuario de Papel Unico',
+                'email' => 'papel.unico@demo.test',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'is_active' => '1',
+                'role_name' => 'Editor',
+            ])
+            ->assertOk();
+
+        $user = User::query()->where('email', 'papel.unico@demo.test')->firstOrFail();
+
+        $this->assertSame(['Editor'], $user->getRoleNames()->all());
+
+        $this->actingAs($superAdmin)
+            ->putJson(route('admin.users.update', $user), [
+                'name' => 'Usuario de Papel Unico',
+                'email' => 'papel.unico@demo.test',
+                'is_active' => '1',
+                'role_name' => 'Administrador',
+            ])
+            ->assertOk();
+
+        $this->assertSame(['Administrador'], $user->refresh()->getRoleNames()->all());
     }
 
     public function test_super_admin_cannot_delete_own_profile(): void

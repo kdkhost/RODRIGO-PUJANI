@@ -48,16 +48,15 @@
 
     <div class="app-wrapper">
         @if(session('impersonator_id'))
-            <div class="admin-impersonation-bar">
+            <div class="admin-impersonation-bar" role="status" aria-live="polite">
+                <span class="admin-impersonation-icon"><i class="bi bi-person-check"></i></span>
                 <div>
                     <strong>Acesso assistido ativo</strong>
                     <span>Você está acessando como {{ $currentUser?->name }}. Operador original: {{ session('impersonator_name') }}.</span>
                 </div>
                 <form method="POST" action="{{ route('impersonate.stop') }}">
                     @csrf
-                    <button class="btn btn-sm btn-dark" type="submit">
-                        <i class="bi bi-person-check me-1"></i>Encerrar
-                    </button>
+                    <button class="btn btn-sm btn-dark admin-impersonation-exit" type="submit">Encerrar</button>
                 </form>
             </div>
         @endif

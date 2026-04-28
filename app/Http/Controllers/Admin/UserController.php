@@ -45,6 +45,15 @@ class UserController extends AdminCrudController
     protected function rules(Request $request, ?Model $record = null): array
     {
         $passwordRule = $record?->exists ? ['nullable', 'confirmed', 'min:8'] : ['required', 'confirmed', 'min:8'];
+        $roleRule = [
+            $record?->exists ? 'nullable' : 'required',
+            'string',
+            'exists:roles,name',
+            Rule::when(
+                ! $request->user()?->isSuperAdmin(),
+                Rule::notIn(['Super Admin'])
+            ),
+        ];
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -64,21 +73,14 @@ class UserController extends AdminCrudController
             'avatar' => ['nullable', 'image', 'max:4096'],
             'timezone' => ['nullable', 'string', 'max:255'],
             'password' => $passwordRule,
-            'role_names' => ['nullable', 'array'],
-            'role_names.*' => [
-                'string',
-                'exists:roles,name',
-                Rule::when(
-                    ! $request->user()?->isSuperAdmin(),
-                    Rule::notIn(['Super Admin'])
-                ),
-            ],
+            'role_name' => $roleRule,
+            'role_names' => ['prohibited'],
         ];
     }
 
     protected function mutateData(array $validated, Request $request, ?Model $record = null): array
     {
-        unset($validated['avatar'], $validated['role_names']);
+        unset($validated['avatar'], $validated['role_name'], $validated['role_names']);
         $validated += $this->booleanData($request, ['is_active']);
 
         if ($record instanceof User && $record->exists && $record->isSuperAdmin()) {
@@ -99,19 +101,19 @@ class UserController extends AdminCrudController
 
     protected function afterSave(Model $record, Request $request, bool $created): void
     {
-        $roles = collect($request->input('role_names', []))
-            ->filter()
-            ->values();
+        $role = $request->input('role_name');
 
-        if (! $request->user()?->isSuperAdmin()) {
-            $roles = $roles->reject(fn (string $role): bool => $role === 'Super Admin')->values();
+        if ($record instanceof User && $record->isSuperAdmin()) {
+            $record->syncRoles(['Super Admin']);
+
+            return;
         }
 
-        if ($record instanceof User && $record->isSuperAdmin() && ! $roles->contains('Super Admin')) {
-            $roles->push('Super Admin');
+        if (blank($role)) {
+            return;
         }
 
-        $record->syncRoles($roles->all());
+        $record->syncRoles([(string) $role]);
     }
 
     public function destroy(string $record): JsonResponse
