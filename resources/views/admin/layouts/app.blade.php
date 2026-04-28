@@ -34,7 +34,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 </head>
-<body class="layout-fixed layout-navbar-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell" 
+<body class="layout-fixed header-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell" 
       data-user-role="{{ $currentUser?->roles->first()?->name ?? 'Usuário' }}"
       data-onboarding-completed="{{ $currentUser?->tour_completed_at ? 'true' : 'false' }}"
       data-onboarding-url="{{ route('admin.documentation.complete-tour') }}">

@@ -70,6 +70,9 @@ body {
     border-bottom: 1px solid var(--admin-border);
     background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(14px);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
 }
 
 [data-bs-theme="dark"] .admin-topbar {
@@ -1003,22 +1006,24 @@ img.admin-avatar {
 .admin-calendar {
     border: 1px solid var(--admin-border);
     border-radius: 1.25rem;
-    overflow: hidden;
+    overflow: visible; /* Changed from hidden to avoid potential height collapse */
     background: var(--admin-card-bg);
     box-shadow: var(--admin-shadow-sm);
+    min-height: 650px; /* Ensure space is occupied */
 }
 
 .admin-calendar .fc-view-container {
     background: var(--admin-card-bg);
 }
 
-.admin-calendar .fc-toolbar {
+.admin-calendar .fc-header-toolbar {
     padding: 1.5rem;
     margin-bottom: 0 !important;
     background: linear-gradient(180deg, rgba(196, 154, 60, 0.05), transparent);
     border-bottom: 1px solid var(--admin-border);
 }
 
+.admin-calendar .fc-header-toolbar h2,
 .admin-calendar .fc-toolbar h2 {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.8rem;
@@ -1026,6 +1031,7 @@ img.admin-avatar {
     color: var(--admin-ink);
 }
 
+.admin-calendar .fc-header-toolbar .fc-button,
 .admin-calendar .fc-button {
     height: 42px;
     padding: 0 1.2rem;
