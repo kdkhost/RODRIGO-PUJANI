@@ -2899,3 +2899,44 @@ img.admin-avatar {
 .driver-popover-arrow-side-bottom { border-bottom-color: rgba(196, 154, 60, 0.3) !important; }
 
 
+@media (max-width: 991.98px) {
+    .admin-page-hero-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+    .admin-hero-stamp {
+        width: 100%;
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .admin-stat-value {
+        font-size: 1.5rem;
+    }
+    .admin-stat-icon {
+        width: 36px;
+        height: 36px;
+        margin-bottom: 0.75rem;
+    }
+    .admin-stat-card .card-body {
+        padding: 0.85rem;
+    }
+    .admin-dashboard-highlight-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-dashboard-highlight-row {
+        grid-template-columns: 1fr;
+    }
+    .admin-page-hero h1 {
+        font-size: 1.4rem;
+    }
+    .admin-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

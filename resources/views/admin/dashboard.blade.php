@@ -88,7 +88,7 @@
         <div class="container-fluid">
             <div class="row g-3 mb-4">
                 @foreach ($overviewCards as $card)
-                    <div class="col-md-6 col-xl-2">
+                    <div class="col-6 col-md-4 col-xl-2">
                         <div class="card admin-stat-card admin-stat-{{ $card['tone'] }} h-100">
                             <div class="card-body">
                                 <div class="admin-stat-icon"><i class="bi {{ $card['icon'] }}"></i></div>
@@ -110,7 +110,7 @@
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-xl-6">
+                <div class="col-md-12 col-xl-6">
                     <div class="card admin-chart-card h-100">
                         <div class="card-header">
                             <div>
@@ -126,7 +126,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 col-xl-3">
+                <div class="col-6 col-md-6 col-xl-3">
                     <div class="card admin-chart-card h-100">
                         <div class="card-header">
                             <div>
@@ -142,7 +142,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 col-xl-3">
+                <div class="col-6 col-md-6 col-xl-3">
                     <div class="card admin-chart-card h-100">
                         <div class="card-header">
                             <div>
