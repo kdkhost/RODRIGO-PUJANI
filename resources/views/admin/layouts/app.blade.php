@@ -31,8 +31,13 @@
         <link rel="apple-touch-icon" href="{{ $branding['favicon_url'] }}">
     @endif
     @vite(['resources/css/admin.css', 'resources/js/admin.js'])
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 </head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell" 
+      data-user-role="{{ $currentUser?->roles->first()?->name ?? 'Usuário' }}"
+      data-onboarding-completed="{{ $currentUser?->tour_completed_at ? 'true' : 'false' }}"
+      data-onboarding-url="{{ route('admin.documentation.complete-tour') }}">
     @if ($statusMessage)
         <div data-page-toast data-type="success" data-message="{{ $statusMessage }}"></div>
     @endif

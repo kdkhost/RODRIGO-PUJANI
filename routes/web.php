@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ClientPortalController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\DocumentationController;
 use App\Http\Controllers\Admin\LegalCaseController;
 use App\Http\Controllers\Admin\LegalCaseUpdateController;
 use App\Http\Controllers\Admin\LegalDocumentController;
@@ -163,6 +164,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     $crud('roles', 'roles', RoleController::class, 'roles.manage');
     $crud('permissions', 'permissions', PermissionController::class, 'permissions.manage');
     $crud('settings', 'settings', SettingController::class, 'settings.manage');
+
+    Route::get('/documentation', [DocumentationController::class, 'index'])->name('documentation.index');
+    Route::post('/documentation/complete-tour', [DocumentationController::class, 'completeTour'])->name('documentation.complete-tour');
 });
 
 Route::middleware('auth')->group(function () {

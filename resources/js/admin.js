@@ -61,6 +61,7 @@ const AdminUI = {
         this.flushPageToasts();
         this.bindBackToTop();
         this.bindDocumentEvents();
+        this.bindTourGuide();
         this.initPlugins(document);
         this.initAjaxTables(document);
     },
@@ -1512,6 +1513,123 @@ const AdminUI = {
                 });
             });
         });
+    },
+    bindTourGuide() {
+        const body = document.body;
+        const onboardingCompleted = body.dataset.onboardingCompleted === 'true';
+        const role = body.dataset.userRole;
+        const onboardingUrl = body.dataset.onboardingUrl;
+
+        if (onboardingCompleted || !window.driver || !onboardingUrl) {
+            return;
+        }
+
+        const driverObj = window.driver.js.driver({
+            showProgress: true,
+            allowClose: false,
+            nextBtnText: 'Próximo',
+            prevBtnText: 'Anterior',
+            doneBtnText: 'Finalizar',
+            progressText: 'Passo {{current}} de {{total}}',
+            onDeselected: (element, step, { config, state }) => {
+                if (state.activeIndex === config.steps.length - 1) {
+                    this.markOnboardingAsCompleted(onboardingUrl);
+                }
+            },
+            onDestroyed: () => {
+                this.markOnboardingAsCompleted(onboardingUrl);
+            }
+        });
+
+        const commonSteps = [
+            { 
+                element: '.app-header', 
+                popover: { 
+                    title: 'Barra de Ferramentas', 
+                    description: 'Aqui você encontra atalhos rápidos para o site, alternância de tema e as configurações do seu perfil.', 
+                    side: "bottom", 
+                    align: 'start' 
+                } 
+            },
+            { 
+                element: '.app-sidebar', 
+                popover: { 
+                    title: 'Menu de Navegação', 
+                    description: 'Toda a inteligência do sistema está organizada nestes módulos. Explore as seções de acordo com seu acesso.', 
+                    side: "right", 
+                    align: 'start' 
+                } 
+            },
+        ];
+
+        const roleSteps = role === 'Super Admin' || role === 'Administrador'
+            ? [
+                { 
+                    element: '[href*="system-settings"]', 
+                    popover: { 
+                        title: 'Configurações Estratégicas', 
+                        description: 'Como administrador, você pode ajustar a marca, SEO, PWA e integrações de segurança por aqui.', 
+                        side: "right", 
+                        align: 'start' 
+                    } 
+                },
+                { 
+                    element: '[href*="users"]', 
+                    popover: { 
+                        title: 'Gestão de Usuários', 
+                        description: 'Controle quem tem acesso ao sistema e defina permissões específicas para cada colaborador.', 
+                        side: "right", 
+                        align: 'start' 
+                    } 
+                }
+            ]
+            : [
+                { 
+                    element: '[href*="calendar"]', 
+                    popover: { 
+                        title: 'Sua Agenda', 
+                        description: 'Organize seus prazos e compromissos jurídicos em nosso calendário interativo.', 
+                        side: "right", 
+                        align: 'start' 
+                    } 
+                },
+                { 
+                    element: '[href*="legal-cases"]', 
+                    popover: { 
+                        title: 'Processos Judiciais', 
+                        description: 'Gerencie todos os seus casos, sincronize movimentações via DataJud e anexe documentos.', 
+                        side: "right", 
+                        align: 'start' 
+                    } 
+                }
+            ];
+
+        const finalStep = [
+            { 
+                element: '.admin-app-footer', 
+                popover: { 
+                    title: 'Tudo pronto!', 
+                    description: 'Agora você conhece o básico. Caso tenha dúvidas, acesse o menu "Documentação" no final da barra lateral.', 
+                    side: "top", 
+                    align: 'center' 
+                } 
+            }
+        ];
+
+        driverObj.setSteps([...commonSteps, ...roleSteps, ...finalStep]);
+        
+        window.setTimeout(() => {
+            driverObj.drive();
+        }, 1500);
+    },
+
+    async markOnboardingAsCompleted(url) {
+        try {
+            await window.axios.post(url);
+            document.body.dataset.onboardingCompleted = 'true';
+        } catch (error) {
+            console.error('Falha ao marcar onboarding como concluído.', error);
+        }
     },
 };
 

@@ -36,6 +36,9 @@
             ['label' => 'Permissões', 'route' => 'admin.permissions.index', 'active' => 'admin.permissions.*', 'icon' => 'bi-key', 'permission' => 'permissions.manage'],
             ['label' => 'Arquivos do sistema', 'route' => 'admin.system-files.index', 'active' => 'admin.system-files.*', 'icon' => 'bi-file-earmark-code', 'permission' => 'system-files.manage', 'super_admin_only' => true],
         ],
+        'Ajuda' => [
+            ['label' => 'Documentação', 'route' => 'admin.documentation.index', 'active' => 'admin.documentation.*', 'icon' => 'bi-journal-bookmark', 'permission' => null],
+        ],
     ];
 
     $groupIcons = [
@@ -44,6 +47,7 @@
         'Conteúdo' => 'bi-layout-text-sidebar-reverse',
         'Operação' => 'bi-briefcase',
         'Segurança' => 'bi-shield-lock',
+        'Ajuda' => 'bi-question-circle',
     ];
 
     $preparedGroups = collect($groups)
