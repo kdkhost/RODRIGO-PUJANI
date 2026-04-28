@@ -152,7 +152,8 @@
         </button>
 
         <footer class="app-footer admin-app-footer">
-            <div class="container-fluid py-3">
+            <div class="container-fluid py-2">
+
                 <div>
                     <strong>{{ $branding['admin_footer_text'] }}</strong>
                     <small>{{ $branding['admin_footer_meta'] }}</small>
