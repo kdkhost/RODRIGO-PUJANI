@@ -932,107 +932,38 @@ img.admin-avatar {
     line-height: 1;
 }
 
-.admin-calendar {
-    min-height: 520px;
-    max-height: 640px;
-    overflow: hidden;
-}
-
-.admin-calendar.is-loading {
-    opacity: 0.55;
-    pointer-events: none;
-}
-
-.admin-calendar .fc-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.admin-calendar .fc-toolbar h2 {
-    margin: 0;
-    color: var(--admin-ink);
-    font-size: 1.15rem;
-    font-weight: 850;
-}
-
-.admin-calendar .fc-button {
-    border: 1px solid var(--admin-border);
-    border-radius: 0.58rem;
-    background: var(--admin-card-bg);
-    color: var(--admin-ink);
-    font-weight: 800;
-    box-shadow: none;
-    text-transform: capitalize;
-}
-
-.admin-calendar .fc-button:hover,
-.admin-calendar .fc-button-primary:not(:disabled).fc-button-active {
-    border-color: var(--admin-primary);
-    background: var(--admin-primary);
-    color: #111318;
-}
-
-.admin-calendar .fc-button:focus {
-    box-shadow: 0 0 0 0.22rem var(--admin-ring);
-}
-
-.admin-calendar .fc-toolbar > * > :not(:first-child) {
-    margin-left: 0.42rem;
-}
-
-.admin-calendar .fc-view-container,
-.admin-calendar .fc-list-view,
-.admin-calendar .fc-timeGrid-view,
-.admin-calendar .fc-dayGrid-view {
-    border: 1px solid var(--admin-border);
-    border-radius: 0.88rem;
-    overflow: hidden;
-    background: var(--admin-card-bg);
-}
-
-.admin-calendar .fc-day-header,
-.admin-calendar .fc-list-heading td {
-    color: var(--admin-muted);
-    font-size: 0.74rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
 
 /* --- Modern FullCalendar 4 --- */
-.admin-calendar {
+.admin-calendar-shell {
     border: 1px solid var(--admin-border);
     border-radius: 1.25rem;
-    overflow: visible; /* Changed from hidden to avoid potential height collapse */
+    overflow: visible; 
     background: var(--admin-card-bg);
     box-shadow: var(--admin-shadow-sm);
-    min-height: 650px; /* Ensure space is occupied */
+    margin-bottom: 2rem;
 }
 
-.admin-calendar .fc-view-container {
+.admin-calendar-shell .fc-view-container {
     background: var(--admin-card-bg);
 }
 
-.admin-calendar .fc-header-toolbar {
+.admin-calendar-shell .fc-header-toolbar {
     padding: 1.5rem;
     margin-bottom: 0 !important;
     background: linear-gradient(180deg, rgba(196, 154, 60, 0.05), transparent);
     border-bottom: 1px solid var(--admin-border);
 }
 
-.admin-calendar .fc-header-toolbar h2,
-.admin-calendar .fc-toolbar h2 {
+.admin-calendar-shell .fc-header-toolbar h2,
+.admin-calendar-shell .fc-toolbar h2 {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.8rem;
     font-weight: 700;
     color: var(--admin-ink);
 }
 
-.admin-calendar .fc-header-toolbar .fc-button,
-.admin-calendar .fc-button {
+.admin-calendar-shell .fc-header-toolbar .fc-button,
+.admin-calendar-shell .fc-button {
     height: 42px;
     padding: 0 1.2rem;
     border: 1px solid var(--admin-border);
@@ -1046,26 +977,27 @@ img.admin-avatar {
     transition: all 0.2s ease;
 }
 
-.admin-calendar .fc-button:hover {
+.admin-calendar-shell .fc-button:hover {
     background: var(--admin-primary-soft);
     border-color: rgba(196, 154, 60, 0.3);
 }
 
-.admin-calendar .fc-button-active {
+.admin-calendar-shell .fc-button-active {
     background: var(--admin-primary) !important;
     border-color: var(--admin-primary) !important;
     color: #111318 !important;
     box-shadow: 0 8px 20px rgba(196, 154, 60, 0.3) !important;
 }
 
-.admin-calendar .fc-today-button {
+.admin-calendar-shell .fc-today-button {
     opacity: 1 !important;
     background: rgba(196, 154, 60, 0.1) !important;
     color: var(--admin-primary) !important;
     border-color: rgba(196, 154, 60, 0.2) !important;
 }
 
-.admin-calendar th {
+.admin-calendar-shell .fc-day-header,
+.admin-calendar-shell th {
     padding: 1rem 0 !important;
     background: rgba(15, 19, 24, 0.02);
     border-color: var(--admin-border) !important;
@@ -1076,22 +1008,22 @@ img.admin-avatar {
     letter-spacing: 0.05em;
 }
 
-.admin-calendar td {
+.admin-calendar-shell td {
     border-color: var(--admin-border) !important;
 }
 
-.admin-calendar .fc-day-number {
+.admin-calendar-shell .fc-day-number {
     padding: 0.75rem !important;
     color: var(--admin-ink);
     font-size: 0.95rem;
     font-weight: 700;
 }
 
-.admin-calendar .fc-today {
+.admin-calendar-shell .fc-today {
     background: rgba(196, 154, 60, 0.04) !important;
 }
 
-.admin-calendar .fc-event {
+.admin-calendar-shell .fc-event {
     border: 0;
     border-radius: 0.65rem;
     padding: 0.25rem 0.5rem;
@@ -2614,7 +2546,7 @@ img.admin-avatar {
         height: 44px;
     }
 
-    .admin-calendar {
+    .admin-calendar-shell {
         min-height: 0;
         max-height: none;
         overflow: visible;

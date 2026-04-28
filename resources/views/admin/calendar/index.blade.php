@@ -125,17 +125,18 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div
-                            id="admin-calendar"
-                            class="admin-calendar"
-                            data-calendar
-                            data-calendar-height="650"
-                            data-calendar-content-height="570"
-                            data-calendar-aspect-ratio="1.7"
-                            data-calendar-events-url="{{ route('admin.calendar.events') }}"
-                            data-calendar-create-url="{{ route('admin.calendar.create') }}"
-                            data-calendar-toolbar="[data-calendar-toolbar='#admin-calendar']"
-                        ></div>
+                        <div class="admin-calendar-shell">
+                            <div
+                                id="admin-calendar"
+                                data-calendar
+                                data-calendar-height="650"
+                                data-calendar-content-height="570"
+                                data-calendar-aspect-ratio="1.7"
+                                data-calendar-events-url="{{ route('admin.calendar.events') }}"
+                                data-calendar-create-url="{{ route('admin.calendar.create') }}"
+                                data-calendar-toolbar="[data-calendar-toolbar='#admin-calendar']"
+                            ></div>
+                        </div>
                     </div>
                 </div>
 
