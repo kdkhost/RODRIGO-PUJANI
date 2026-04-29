@@ -1612,13 +1612,14 @@ const AdminUI = {
         const role = body.dataset.userRole;
         const onboardingUrl = body.dataset.onboardingUrl;
 
-        if (onboardingCompleted || !window.driver || !onboardingUrl) {
+        if (!window.driver || !onboardingUrl) {
             return;
         }
 
         const driverObj = window.driver.js.driver({
             showProgress: true,
-            allowClose: false,
+            allowClose: true,
+            overlayClickBehavior: 'close',
             nextBtnText: 'Próximo',
             prevBtnText: 'Anterior',
             doneBtnText: 'Finalizar',
@@ -1708,11 +1709,42 @@ const AdminUI = {
             }
         ];
 
-        driverObj.setSteps([...commonSteps, ...roleSteps, ...finalStep]);
-        
-        window.setTimeout(() => {
-            driverObj.drive();
-        }, 1500);
+        const steps = [...commonSteps, ...roleSteps, ...finalStep]
+            .map((step) => {
+                const selectors = String(step.element || '')
+                    .split(',')
+                    .map((selector) => selector.trim())
+                    .filter(Boolean);
+                const matchedSelector = selectors.find((selector) => document.querySelector(selector));
+
+                return matchedSelector ? { ...step, element: matchedSelector } : null;
+            })
+            .filter(Boolean);
+
+        if (steps.length === 0) {
+            return;
+        }
+
+        driverObj.setSteps(steps);
+
+        document.querySelectorAll('[data-start-tour]').forEach((trigger) => {
+            if (trigger.dataset.tourReady === 'true') {
+                return;
+            }
+
+            trigger.addEventListener('click', (event) => {
+                event.preventDefault();
+                driverObj.drive();
+            });
+
+            trigger.dataset.tourReady = 'true';
+        });
+
+        if (!onboardingCompleted) {
+            window.setTimeout(() => {
+                driverObj.drive();
+            }, 1500);
+        }
     },
 
     async markOnboardingAsCompleted(url) {

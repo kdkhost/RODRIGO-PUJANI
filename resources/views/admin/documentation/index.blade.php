@@ -82,6 +82,19 @@
                     <p class="text-xl text-zinc-400 max-w-2xl leading-relaxed">
                         Bem-vindo ao centro de conhecimento do Sistema Rodrigo Pujani. Encontre guias detalhados e tutoriais para otimizar sua rotina jurídica.
                     </p>
+                    <div class="mt-6 flex flex-wrap items-center gap-3">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gold text-ink font-black shadow-gold hover:opacity-95 transition"
+                            data-start-tour
+                        >
+                            <i class="bi bi-signpost-split-fill"></i>
+                            Iniciar tour guiado
+                        </button>
+                        <span class="text-sm text-zinc-500">
+                            Use este botão sempre que quiser rever o fluxo guiado do sistema.
+                        </span>
+                    </div>
                 </header>
 
                 <div class="space-y-16">
