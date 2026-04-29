@@ -553,7 +553,7 @@
                                class="whatsapp-support-item">
                                 <div class="whatsapp-support-avatar">
                                     @if($member->image_path)
-                                        <img src="{{ Storage::url($member->image_path) }}" alt="{{ $member->name }}">
+                                        <img src="{{ site_asset_url($member->image_path) }}" alt="{{ $member->name }}">
                                     @else
                                         <i class="bi bi-person-fill"></i>
                                     @endif
