@@ -511,17 +511,42 @@ const SiteUI = {
             window.requestAnimationFrame(() => promo.classList.add('is-visible'));
         };
 
+        const clearPwaLocalData = async () => {
+            try {
+                if ('caches' in window) {
+                    const keys = await window.caches.keys();
+                    await Promise.all(keys
+                        .filter((key) => key.startsWith('pujani-'))
+                        .map((key) => window.caches.delete(key)));
+                }
+
+                window.localStorage?.removeItem(promptStorageKey);
+            } catch {
+                // A limpeza local é complementar e não deve interromper a navegação.
+            }
+        };
+
         setInstalledState(installed);
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 if (pwaEnabled) {
-                    navigator.serviceWorker.register('/sw.js').catch(() => null);
+                    navigator.serviceWorker.register('/sw.js')
+                        .then((registration) => {
+                            registration.update().catch(() => null);
+                            registration.active?.postMessage({ type: 'PUJANI_UPDATE_PWA' });
+                        })
+                        .catch(() => null);
                     return;
                 }
 
                 navigator.serviceWorker.getRegistrations()
-                    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+                    .then((registrations) => Promise.all(registrations.map((registration) => {
+                        registration.active?.postMessage({ type: 'PUJANI_CLEAR_PWA' });
+                        registration.waiting?.postMessage({ type: 'PUJANI_CLEAR_PWA' });
+                        return registration.unregister();
+                    })))
+                    .then(clearPwaLocalData)
                     .catch(() => null);
             });
         }
@@ -544,6 +569,7 @@ const SiteUI = {
             this.deferredInstallPrompt = null;
             hidePromo(true);
             setInstalledState(true);
+            navigator.serviceWorker?.getRegistration?.('/').then((registration) => registration?.update()).catch(() => null);
             showToast('success', 'Aplicativo instalado com sucesso.');
         });
 

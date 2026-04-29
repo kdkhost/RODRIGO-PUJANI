@@ -193,7 +193,9 @@ class AdminAuthorizationTest extends TestCase
             ->assertOk()
             ->assertJsonPath('name', 'Pujani App')
             ->assertJsonPath('start_url', '/portal-cliente')
-            ->assertJsonPath('theme_color', '#123456');
+            ->assertJsonPath('theme_color', '#123456')
+            ->assertJsonPath('prefer_related_applications', false)
+            ->assertJsonStructure(['id', 'display_override', 'icons']);
 
         $this->get(route('site.offline'))
             ->assertOk()
@@ -232,6 +234,16 @@ class AdminAuthorizationTest extends TestCase
 
         $response->assertOk();
         $this->assertStringContainsString('unregister', $response->getContent());
+        $this->assertStringContainsString('caches.delete', $response->getContent());
+    }
+
+    public function test_pwa_cleanup_page_clears_local_installation_data(): void
+    {
+        $response = $this->get(route('site.pwa-cleanup'));
+
+        $response->assertOk();
+        $response->assertHeader('Clear-Site-Data', '"cache", "storage"');
+        $this->assertStringContainsString('PUJANI_CLEAR_PWA', $response->getContent());
         $this->assertStringContainsString('caches.delete', $response->getContent());
     }
 

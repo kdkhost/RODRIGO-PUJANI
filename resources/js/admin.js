@@ -1273,6 +1273,12 @@ const AdminUI = {
         const fullCalendar = window.FullCalendar;
 
         if (!fullCalendar?.Calendar) {
+            scope.querySelectorAll?.('[data-calendar]')?.forEach((element) => {
+                if (!element.dataset.calendarFailed) {
+                    element.dataset.calendarFailed = 'true';
+                    element.innerHTML = '<div class="admin-calendar-fallback">Agenda indisponível. Atualize a página para carregar o calendário.</div>';
+                }
+            });
             return;
         }
 
@@ -1319,102 +1325,127 @@ const AdminUI = {
                 ? 'auto'
                 : Number(element.dataset.calendarContentHeight || 590);
 
-            const calendar = new fullCalendar.Calendar(element, {
-                plugins: fullCalendar.plugins,
-                locales: [fullCalendar.locales['pt-br']],
-                locale: 'pt-br',
-                timeZone: 'local',
-                initialView: isCompact() ? 'listWeek' : 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: isCompact()
-                        ? 'dayGridMonth,listWeek'
-                        : 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-                },
-                buttonText: {
-                    today: 'Hoje',
-                    month: 'Mês',
-                    week: 'Semana',
-                    day: 'Dia',
-                    list: 'Lista',
-                },
-                allDayText: 'Dia inteiro',
-                noEventsMessage: 'Nenhum evento encontrado.',
-                height: resolveHeight(),
-                contentHeight: resolveContentHeight(),
-                fixedWeekCount: false,
-                showNonCurrentDates: true,
-                dayMaxEvents: isCompact() ? 2 : 4,
-                editable: true,
-                eventStartEditable: true,
-                eventDurationEditable: true,
-                selectable: true,
-                selectMirror: true,
-                nowIndicator: true,
-                navLinks: true,
-                businessHours: true,
-                events: (fetchInfo, successCallback, failureCallback) => {
-                    const url = new URL(eventsUrl, window.location.origin);
-                    const params = {
-                        start: fetchInfo.startStr,
-                        end: fetchInfo.endStr,
-                        timeZone: fetchInfo.timeZone,
-                        ...readFilters(),
-                    };
+            let calendar;
 
-                    Object.entries(params).forEach(([key, value]) => {
-                        if (value !== '' && value !== null && value !== undefined) {
-                            url.searchParams.set(key, value);
-                        }
-                    });
+            try {
+                const locale = fullCalendar.locales?.['pt-br'];
 
-                    window.axios.get(url.toString())
-                        .then((response) => successCallback(response.data || []))
-                        .catch((error) => {
-                            this.showToast('error', 'Não foi possível carregar a agenda.');
-                            failureCallback(error);
+                calendar = new fullCalendar.Calendar(element, {
+                    plugins: fullCalendar.plugins,
+                    ...(locale ? { locales: [locale] } : {}),
+                    locale: 'pt-br',
+                    timeZone: 'local',
+                    initialView: isCompact() ? 'listWeek' : 'dayGridMonth',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: isCompact()
+                            ? 'dayGridMonth,listWeek'
+                            : 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                    },
+                    buttonText: {
+                        today: 'Hoje',
+                        month: 'Mês',
+                        week: 'Semana',
+                        day: 'Dia',
+                        list: 'Lista',
+                    },
+                    allDayText: 'Dia inteiro',
+                    noEventsMessage: 'Nenhum evento encontrado.',
+                    height: resolveHeight(),
+                    contentHeight: resolveContentHeight(),
+                    fixedWeekCount: false,
+                    showNonCurrentDates: true,
+                    dayMaxEvents: isCompact() ? 2 : 4,
+                    editable: true,
+                    eventStartEditable: true,
+                    eventDurationEditable: true,
+                    selectable: true,
+                    selectMirror: true,
+                    nowIndicator: true,
+                    navLinks: true,
+                    businessHours: true,
+                    events: (fetchInfo, successCallback, failureCallback) => {
+                        const url = new URL(eventsUrl, window.location.origin);
+                        const params = {
+                            start: fetchInfo.startStr,
+                            end: fetchInfo.endStr,
+                            timeZone: fetchInfo.timeZone,
+                            ...readFilters(),
+                        };
+
+                        Object.entries(params).forEach(([key, value]) => {
+                            if (value !== '' && value !== null && value !== undefined) {
+                                url.searchParams.set(key, value);
+                            }
                         });
-                },
-                loading: (loading) => {
-                    element.classList.toggle('is-loading', loading);
-                },
-                select: (info) => {
-                    const createUrl = element.dataset.createUrl;
 
-                    if (!createUrl) {
+                        window.axios.get(url.toString())
+                            .then((response) => {
+                                const payload = Array.isArray(response.data)
+                                    ? response.data
+                                    : (Array.isArray(response.data?.data) ? response.data.data : []);
+
+                                successCallback(payload);
+                            })
+                            .catch((error) => {
+                                this.showToast('error', 'Não foi possível carregar a agenda.');
+                                failureCallback(error);
+                            });
+                    },
+                    loading: (loading) => {
+                        element.classList.toggle('is-loading', loading);
+                    },
+                    select: (info) => {
+                        const createUrl = element.dataset.createUrl;
+
+                        if (!createUrl) {
+                            calendar.unselect();
+                            return;
+                        }
+
+                        const url = new URL(createUrl, window.location.origin);
+                        url.searchParams.set('start', info.startStr);
+                        url.searchParams.set('end', info.endStr);
+                        url.searchParams.set('all_day', info.allDay ? '1' : '0');
+
+                        this.loadModal(url.toString(), 'Novo evento');
                         calendar.unselect();
-                        return;
-                    }
-
-                    const url = new URL(createUrl, window.location.origin);
-                    url.searchParams.set('start', info.startStr);
-                    url.searchParams.set('end', info.endStr);
-                    url.searchParams.set('all_day', info.allDay ? '1' : '0');
-
-                    this.loadModal(url.toString(), 'Novo evento');
-                    calendar.unselect();
-                },
-                eventClick: (info) => {
-                    info.jsEvent.preventDefault();
-                    this.showCalendarEventPanel(info.event, info.jsEvent);
-                },
-                eventContent: (info) => this.renderCalendarEventContent(info),
-                eventDidMount: (info) => {
-                    this.decorateCalendarEvent(info);
-                },
-                eventDrop: (info) => {
-                    this.updateCalendarEventPosition(info, element);
-                },
-                eventResize: (info) => {
-                    this.updateCalendarEventPosition(info, element);
-                },
-            });
+                    },
+                    eventClick: (info) => {
+                        info.jsEvent.preventDefault();
+                        this.showCalendarEventPanel(info.event, info.jsEvent);
+                    },
+                    eventContent: (info) => this.renderCalendarEventContent(info),
+                    eventDidMount: (info) => {
+                        this.decorateCalendarEvent(info);
+                    },
+                    eventDrop: (info) => {
+                        this.updateCalendarEventPosition(info, element);
+                    },
+                    eventResize: (info) => {
+                        this.updateCalendarEventPosition(info, element);
+                    },
+                    datesSet: () => {
+                        window.requestAnimationFrame(() => calendar?.updateSize());
+                    },
+                });
+            } catch (error) {
+                console.error('Falha ao inicializar FullCalendar.', error);
+                element.dataset.calendarFailed = 'true';
+                element.innerHTML = '<div class="admin-calendar-fallback">Não foi possível iniciar a agenda. Atualize a página.</div>';
+                this.showToast('error', 'Não foi possível iniciar a agenda.');
+                return;
+            }
 
             element.classList.toggle('is-compact', isCompact());
             element._fullCalendar = calendar;
-            calendar.render();
             window.adminCalendar = calendar;
+            window.requestAnimationFrame(() => {
+                calendar.render();
+                calendar.updateSize();
+                element.classList.add('is-ready');
+            });
 
             const syncCompactMode = () => {
                 const compact = isCompact();

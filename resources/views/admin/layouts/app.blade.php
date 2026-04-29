@@ -30,6 +30,28 @@
         <link rel="icon" href="{{ $branding['favicon_url'] }}">
         <link rel="apple-touch-icon" href="{{ $branding['favicon_url'] }}">
     @endif
+    <script>
+        window.addEventListener('load', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration('/')
+                    .then((registration) => {
+                        registration?.update?.();
+                        registration?.active?.postMessage({ type: 'PUJANI_UPDATE_PWA' });
+                    })
+                    .catch(() => null);
+            }
+
+            if ('caches' in window) {
+                caches.keys()
+                    .then((keys) => Promise.all(
+                        keys
+                            .filter((key) => key.startsWith('pujani-'))
+                            .map((key) => caches.delete(key))
+                    ))
+                    .catch(() => null);
+            }
+        });
+    </script>
     @vite(['resources/css/admin.css', 'resources/js/admin.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>

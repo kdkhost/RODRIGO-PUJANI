@@ -51,6 +51,7 @@ Route::post('/instalar', [InstallController::class, 'store'])->name('install.sto
 Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
     Route::get('/manifest.webmanifest', [SiteController::class, 'manifest'])->name('site.manifest');
     Route::get('/sw.js', [SiteController::class, 'serviceWorker'])->name('site.service-worker');
+    Route::get('/pwa/limpar', [SiteController::class, 'pwaCleanup'])->name('site.pwa-cleanup');
     Route::get('/offline', [SiteController::class, 'offline'])->name('site.offline');
     Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('site.sitemap');
     Route::get('/robots.txt', [SiteController::class, 'robots'])->name('site.robots');

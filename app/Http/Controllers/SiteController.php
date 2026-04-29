@@ -111,28 +111,65 @@ class SiteController extends Controller
     public function manifest(): JsonResponse
     {
         $pwa = pwa_config();
+        $startUrl = $this->normalizePwaPath($pwa['start_path'] ?: '/');
+        $scope = $this->normalizePwaPath($pwa['scope'] ?: '/');
+        $displayOverride = array_values(array_unique(array_filter([
+            $pwa['display'],
+            'standalone',
+            'minimal-ui',
+        ])));
 
         $manifest = [
+            'id' => rtrim(route('site.home'), '/').'/?pwa_id=pujani-advogados',
             'name' => $pwa['app_name'],
             'short_name' => $pwa['short_name'],
             'description' => $pwa['description'],
-            'start_url' => $pwa['start_path'],
-            'scope' => $pwa['scope'],
+            'start_url' => $startUrl,
+            'scope' => $scope,
             'display' => $pwa['display'],
+            'display_override' => $displayOverride,
             'orientation' => $pwa['orientation'],
             'background_color' => $pwa['background_color'],
             'theme_color' => $pwa['theme_color'],
             'lang' => 'pt-BR',
             'dir' => 'ltr',
             'categories' => ['business', 'legal', 'productivity'],
+            'prefer_related_applications' => false,
+            'handle_links' => 'preferred',
+            'launch_handler' => [
+                'client_mode' => ['navigate-existing', 'auto'],
+            ],
             'icons' => array_values(array_filter([
-                $this->manifestIcon($pwa['icon_192_path'] ?: 'pwa/icon-192.png', '192x192'),
-                $this->manifestIcon($pwa['icon_512_path'] ?: 'pwa/icon-512.png', '512x512'),
+                $this->manifestIcon($pwa['icon_192_path'] ?: 'pwa/icon-192.png', '192x192', 'any'),
+                $this->manifestIcon($pwa['icon_512_path'] ?: 'pwa/icon-512.png', '512x512', 'any'),
+                $this->manifestIcon($pwa['icon_512_path'] ?: 'pwa/icon-512.png', '512x512', 'maskable'),
             ])),
+            'shortcuts' => [
+                [
+                    'name' => 'Início',
+                    'short_name' => 'Início',
+                    'description' => 'Abrir o site do escritório',
+                    'url' => '/',
+                    'icons' => array_values(array_filter([
+                        $this->manifestIcon($pwa['icon_192_path'] ?: 'pwa/icon-192.png', '192x192', 'any'),
+                    ])),
+                ],
+                [
+                    'name' => 'Portal do cliente',
+                    'short_name' => 'Portal',
+                    'description' => 'Abrir o portal do cliente',
+                    'url' => '/portal-cliente',
+                    'icons' => array_values(array_filter([
+                        $this->manifestIcon($pwa['icon_192_path'] ?: 'pwa/icon-192.png', '192x192', 'any'),
+                    ])),
+                ],
+            ],
         ];
 
         return response()->json($manifest, 200, [
             'Content-Type' => 'application/manifest+json; charset=UTF-8',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
     }
 
@@ -154,6 +191,16 @@ self.addEventListener('activate', (event) => {
             .then(() => self.clients.claim())
     );
 });
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'PUJANI_CLEAR_PWA') {
+        event.waitUntil(
+            caches.keys()
+                .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+                .then(() => self.registration.unregister())
+        );
+    }
+});
 JS;
 
             return response($cleanupScript, 200, [
@@ -166,16 +213,46 @@ JS;
         $buildVersion = file_exists($buildManifestPath)
             ? substr(sha1_file($buildManifestPath), 0, 12)
             : config('app.version', '1');
-        $cacheName = 'pujani-site-'.$buildVersion;
+        $pwaFingerprint = substr(sha1(json_encode([
+            $pwa['enabled'],
+            $pwa['installation_enabled'],
+            $pwa['app_name'],
+            $pwa['short_name'],
+            $pwa['start_path'],
+            $pwa['scope'],
+            $pwa['display'],
+            $pwa['theme_color'],
+            $pwa['background_color'],
+            $pwa['icon_192_path'],
+            $pwa['icon_512_path'],
+        ])), 0, 12);
+        $cacheName = 'pujani-pwa-'.$buildVersion.'-'.$pwaFingerprint;
         $offlineUrl = route('site.offline');
-        $manifestUrl = route('site.manifest');
         $homeUrl = route('site.home');
 
         $script = <<<JS
 const CACHE_NAME = '{$cacheName}';
+const OWN_CACHE_PREFIX = 'pujani-';
 const OFFLINE_URL = '{$offlineUrl}';
-const PRECACHE_URLS = ['{$homeUrl}', '{$offlineUrl}', '{$manifestUrl}'];
+const PRECACHE_URLS = ['{$homeUrl}', '{$offlineUrl}'];
 const BUILD_PATH_PREFIX = '/build/';
+const ADMIN_PATH_PREFIX = '/admin';
+
+const clearOwnCaches = () => caches.keys().then((keys) => Promise.all(
+    keys
+        .filter((key) => key.startsWith(OWN_CACHE_PREFIX) && key !== CACHE_NAME)
+        .map((key) => caches.delete(key))
+));
+
+const shouldIgnoreRequest = (request, url) => {
+    return request.method !== 'GET'
+        || url.origin !== self.location.origin
+        || url.pathname.startsWith(ADMIN_PATH_PREFIX)
+        || url.pathname === '/sw.js'
+        || url.pathname === '/manifest.webmanifest'
+        || url.pathname.startsWith('/login')
+        || url.pathname.startsWith('/logout');
+};
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -187,19 +264,29 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((keys) => Promise.all(
-            keys
-                .filter((key) => key !== CACHE_NAME)
-                .map((key) => caches.delete(key))
-        )).then(() => self.clients.claim())
+        clearOwnCaches().then(() => self.clients.claim())
     );
+});
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'PUJANI_CLEAR_PWA') {
+        event.waitUntil(
+            caches.keys()
+                .then((keys) => Promise.all(keys.filter((key) => key.startsWith(OWN_CACHE_PREFIX)).map((key) => caches.delete(key))))
+                .then(() => self.registration.unregister())
+        );
+    }
+
+    if (event.data && event.data.type === 'PUJANI_UPDATE_PWA') {
+        event.waitUntil(clearOwnCaches());
+    }
 });
 
 self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
 
-    if (request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/admin')) {
+    if (shouldIgnoreRequest(request, url)) {
         return;
     }
 
@@ -224,8 +311,13 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             fetch(request)
                 .then((response) => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                    const contentType = response.headers.get('content-type') || '';
+
+                    if (response.ok && contentType.includes('text/html')) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                    }
+
                     return response;
                 })
                 .catch(async () => {
@@ -244,7 +336,9 @@ self.addEventListener('fetch', (event) => {
             }
 
             return fetch(request).then((response) => {
-                if (response.ok) {
+                const contentType = response.headers.get('content-type') || '';
+
+                if (response.ok && !contentType.includes('text/html')) {
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
                 }
@@ -273,6 +367,64 @@ JS;
             'offlineTitle' => $pwa['offline_title'],
             'offlineMessage' => $pwa['offline_message'],
             'offlineButtonLabel' => $pwa['offline_button_label'],
+        ]);
+    }
+
+    public function pwaCleanup(): Response
+    {
+        $homeUrl = route('site.home');
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Atualização do aplicativo</title>
+    <meta name="robots" content="noindex,nofollow">
+    <style>
+        body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0c10;color:#f5f1e8;font-family:Arial,sans-serif}
+        main{width:min(92vw,520px);padding:32px;border:1px solid rgba(196,154,60,.34);border-radius:18px;background:rgba(255,255,255,.05)}
+        h1{margin:0 0 12px;font-size:24px}p{line-height:1.55;color:#d8d1c2}a{color:#c49a3c;font-weight:700}
+    </style>
+</head>
+<body>
+<main>
+    <h1>Aplicativo atualizado</h1>
+    <p>Os dados locais do PWA foram limpos neste navegador. Reinstale o aplicativo pela tela inicial para receber o pacote mais recente.</p>
+    <p><a href="{$homeUrl}">Voltar ao site</a></p>
+</main>
+<script>
+(async () => {
+    try {
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map((registration) => {
+                registration.active?.postMessage({ type: 'PUJANI_CLEAR_PWA' });
+                registration.waiting?.postMessage({ type: 'PUJANI_CLEAR_PWA' });
+                registration.installing?.postMessage({ type: 'PUJANI_CLEAR_PWA' });
+                return registration.unregister();
+            }));
+        }
+
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.filter((key) => key.startsWith('pujani-')).map((key) => caches.delete(key)));
+        }
+
+        window.localStorage?.removeItem('site-pwa-promo-dismissed-v1');
+    } catch (error) {
+        console.warn('Não foi possível limpar todos os dados locais do PWA.', error);
+    }
+})();
+</script>
+</body>
+</html>
+HTML;
+
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
+            'Clear-Site-Data' => '"cache", "storage"',
         ]);
     }
 
@@ -403,7 +555,25 @@ JS;
             : $fallback;
     }
 
-    protected function manifestIcon(?string $path, string $sizes): ?array
+    protected function normalizePwaPath(?string $path): string
+    {
+        $path = trim((string) $path);
+
+        if ($path === '') {
+            return '/';
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            $parsedPath = parse_url($path, PHP_URL_PATH) ?: '/';
+            $query = parse_url($path, PHP_URL_QUERY);
+
+            return $parsedPath.($query ? '?'.$query : '');
+        }
+
+        return Str::startsWith($path, '/') ? $path : '/'.$path;
+    }
+
+    protected function manifestIcon(?string $path, string $sizes, string $purpose = 'any'): ?array
     {
         $src = $this->resolveAssetUrl($path);
 
@@ -412,11 +582,27 @@ JS;
         }
 
         return [
-            'src' => $src,
+            'src' => $this->versionedAssetUrl($src, $path),
             'sizes' => $sizes,
             'type' => 'image/png',
-            'purpose' => 'any maskable',
+            'purpose' => $purpose,
         ];
+    }
+
+    protected function versionedAssetUrl(string $src, ?string $path): string
+    {
+        if (! filled($path) || Str::contains($src, '?') || Str::startsWith($path, ['http://', 'https://'])) {
+            return $src;
+        }
+
+        $normalized = ltrim($path, '/');
+        $publicPath = file_exists(public_path($normalized))
+            ? public_path($normalized)
+            : public_path('storage/'.$normalized);
+
+        $version = file_exists($publicPath) ? filemtime($publicPath) : substr(sha1((string) $path), 0, 12);
+
+        return $src.'?v='.$version;
     }
 
     protected function resolveAssetUrl(?string $path): ?string
