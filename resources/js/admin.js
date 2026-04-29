@@ -439,6 +439,10 @@ const AdminUI = {
 
     initAjaxTables(scope) {
         scope.querySelectorAll('[data-ajax-table]').forEach((table) => {
+            if (table.dataset.ajaxManaged === 'inline') {
+                return;
+            }
+
             if (!table.dataset.loaded) {
                 this.refreshTable(table);
             }
@@ -1316,6 +1320,10 @@ const AdminUI = {
             : Array.from(scope.querySelectorAll('[data-calendar]'));
 
         calendars.forEach((element) => {
+            if (element.dataset.calendarManaged === 'inline') {
+                return;
+            }
+
             if (element._fullCalendar) {
                 return;
             }

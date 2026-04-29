@@ -119,6 +119,7 @@
                                 id="admin-calendar"
                                 class="admin-calendar"
                                 data-calendar
+                                data-calendar-managed="inline"
                                 data-calendar-version="6"
                                 data-calendar-toolbar="#admin-calendar-filters"
                                 data-events-url="{{ route('admin.calendar.events') }}"
@@ -186,13 +187,242 @@
                     <div
                         id="admin-calendar-events-table"
                         data-ajax-table
+                        data-ajax-managed="inline"
                         data-toolbar="#admin-calendar-filters"
                         data-url="{{ route('admin.calendar.records') }}"
                     >
-                        <div class="py-4 text-center text-muted">Carregando eventos...</div>
+                        @include('admin.calendar._table', ['items' => $records])
                     </div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const calendarElement = document.getElementById('admin-calendar');
+            const recordsElement = document.getElementById('admin-calendar-events-table');
+            const filtersForm = document.getElementById('admin-calendar-filters');
+
+            if (!calendarElement || !recordsElement || !filtersForm) {
+                return;
+            }
+
+            const adminUI = window.AdminUI || null;
+            const compactQuery = window.matchMedia('(max-width: 767.98px)');
+            let calendarInstance = null;
+            let searchTimer = null;
+
+            const request = async (url) => {
+                if (window.axios) {
+                    const response = await window.axios.get(url);
+                    return response.data;
+                }
+
+                const response = await fetch(url, {
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha na requisicao.');
+                }
+
+                return response.json();
+            };
+
+            const readFilters = () => {
+                const params = new URLSearchParams();
+
+                new FormData(filtersForm).forEach((value, key) => {
+                    const normalized = typeof value === 'string' ? value.trim() : value;
+
+                    if (normalized !== '' && normalized !== null && normalized !== undefined) {
+                        params.set(key, normalized);
+                    }
+                });
+
+                return params;
+            };
+
+            const loadRecords = async (url = recordsElement.dataset.url) => {
+                if (!url) {
+                    return;
+                }
+
+                recordsElement.classList.add('opacity-50');
+
+                try {
+                    const requestUrl = new URL(url, window.location.origin);
+                    readFilters().forEach((value, key) => requestUrl.searchParams.set(key, value));
+                    const payload = await request(requestUrl.toString());
+                    recordsElement.innerHTML = payload.html || '<div class="py-4 text-center text-muted">Nenhum evento encontrado.</div>';
+                    adminUI?.initPlugins?.(recordsElement);
+                } catch (error) {
+                    console.error('Falha ao carregar a tabela da agenda.', error);
+                    recordsElement.innerHTML = '<div class="py-4 text-center text-muted">Nao foi possivel carregar os eventos.</div>';
+                } finally {
+                    recordsElement.classList.remove('opacity-50');
+                }
+            };
+
+            const ensureCalendarDependencies = async () => {
+                if (window.FullCalendar?.Calendar) {
+                    return window.FullCalendar;
+                }
+
+                throw new Error('FullCalendar nao esta disponivel no painel.');
+            };
+
+            const mountCalendar = async () => {
+                try {
+                    const fullCalendar = await ensureCalendarDependencies();
+                    const locale = fullCalendar.locales?.['pt-br'];
+
+                    calendarInstance = new fullCalendar.Calendar(calendarElement, {
+                        plugins: fullCalendar.plugins || [],
+                        ...(locale ? { locales: [locale] } : {}),
+                        locale: 'pt-br',
+                        timeZone: 'local',
+                        initialView: compactQuery.matches ? 'listWeek' : 'dayGridMonth',
+                        headerToolbar: {
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: compactQuery.matches
+                                ? 'dayGridMonth,listWeek'
+                                : 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                        },
+                        buttonText: {
+                            today: 'Hoje',
+                            month: 'Mês',
+                            week: 'Semana',
+                            day: 'Dia',
+                            list: 'Lista',
+                        },
+                        allDayText: 'Dia inteiro',
+                        noEventsMessage: 'Nenhum evento encontrado.',
+                        height: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarHeight || 650),
+                        contentHeight: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarContentHeight || 590),
+                        fixedWeekCount: false,
+                        showNonCurrentDates: true,
+                        dayMaxEvents: compactQuery.matches ? 2 : 4,
+                        editable: true,
+                        eventStartEditable: true,
+                        eventDurationEditable: true,
+                        selectable: true,
+                        selectMirror: true,
+                        nowIndicator: true,
+                        navLinks: true,
+                        businessHours: true,
+                        events: async (fetchInfo, successCallback, failureCallback) => {
+                            try {
+                                const requestUrl = new URL(calendarElement.dataset.eventsUrl, window.location.origin);
+                                requestUrl.searchParams.set('start', fetchInfo.startStr);
+                                requestUrl.searchParams.set('end', fetchInfo.endStr);
+                                requestUrl.searchParams.set('timeZone', fetchInfo.timeZone);
+                                readFilters().forEach((value, key) => requestUrl.searchParams.set(key, value));
+                                const payload = await request(requestUrl.toString());
+                                successCallback(Array.isArray(payload) ? payload : []);
+                            } catch (error) {
+                                console.error('Falha ao carregar o feed da agenda.', error);
+                                failureCallback(error);
+                            }
+                        },
+                        loading: (state) => {
+                            calendarElement.classList.toggle('is-loading', state);
+                        },
+                        select: (info) => {
+                            const createUrl = calendarElement.dataset.createUrl;
+
+                            if (!createUrl || !adminUI?.loadModal) {
+                                calendarInstance.unselect();
+                                return;
+                            }
+
+                            const modalUrl = new URL(createUrl, window.location.origin);
+                            modalUrl.searchParams.set('start', info.startStr);
+                            modalUrl.searchParams.set('end', info.endStr);
+                            modalUrl.searchParams.set('all_day', info.allDay ? '1' : '0');
+                            adminUI.loadModal(modalUrl.toString(), 'Novo evento');
+                            calendarInstance.unselect();
+                        },
+                        eventClick: (info) => {
+                            info.jsEvent.preventDefault();
+                            adminUI?.showCalendarEventPanel?.(info.event, info.jsEvent);
+                        },
+                        eventContent: (info) => adminUI?.renderCalendarEventContent?.(info),
+                        eventDidMount: (info) => {
+                            adminUI?.decorateCalendarEvent?.(info);
+                        },
+                        eventDrop: (info) => {
+                            adminUI?.updateCalendarEventPosition?.(info, calendarElement);
+                        },
+                        eventResize: (info) => {
+                            adminUI?.updateCalendarEventPosition?.(info, calendarElement);
+                        },
+                    });
+
+                    calendarElement._fullCalendar = calendarInstance;
+                    calendarInstance.render();
+                    window.requestAnimationFrame(() => calendarInstance.updateSize());
+                } catch (error) {
+                    console.error('Falha ao montar a agenda inline.', error);
+                    calendarElement.innerHTML = '<div class="admin-calendar-fallback">Nao foi possivel carregar a agenda.</div>';
+                }
+            };
+
+            filtersForm.addEventListener('input', (event) => {
+                if (!event.target.closest('[data-table-search]')) {
+                    return;
+                }
+
+                window.clearTimeout(searchTimer);
+                searchTimer = window.setTimeout(() => {
+                    loadRecords();
+                    calendarInstance?.refetchEvents();
+                }, 350);
+            });
+
+            filtersForm.addEventListener('change', (event) => {
+                if (!event.target.closest('[data-table-filter]')) {
+                    return;
+                }
+
+                loadRecords();
+                calendarInstance?.refetchEvents();
+            });
+
+            filtersForm.addEventListener('reset', () => {
+                window.setTimeout(() => {
+                    loadRecords();
+                    calendarInstance?.refetchEvents();
+                }, 0);
+            });
+
+            recordsElement.addEventListener('click', (event) => {
+                const link = event.target.closest('.pagination a');
+
+                if (!link) {
+                    return;
+                }
+
+                event.preventDefault();
+                loadRecords(link.href);
+            });
+
+            if (typeof compactQuery.addEventListener === 'function') {
+                compactQuery.addEventListener('change', () => window.location.reload());
+            } else if (typeof compactQuery.addListener === 'function') {
+                compactQuery.addListener(() => window.location.reload());
+            }
+
+            mountCalendar();
+            loadRecords();
+        })();
+    </script>
+@endpush

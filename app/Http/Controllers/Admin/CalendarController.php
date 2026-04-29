@@ -26,6 +26,11 @@ class CalendarController extends Controller
             ->with('owner:id,name')
             ->whereNotNull('owner_id')
             ->get();
+        $records = (clone $eventsQuery)
+            ->with(['owner:id,name', 'creator:id,name'])
+            ->orderBy('start_at')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.calendar.index', [
             'pageTitle' => 'Agenda',
@@ -62,6 +67,7 @@ class CalendarController extends Controller
                 ->sortByDesc('total')
                 ->take(5)
                 ->values(),
+            'records' => $records,
         ]);
     }
 
