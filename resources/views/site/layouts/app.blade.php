@@ -168,7 +168,7 @@
     @if($branding['favicon_url'])<link rel="icon" href="{{ $branding['favicon_url'] }}">@endif
     @if($icon192)<link rel="apple-touch-icon" href="{{ $icon192 }}">@endif
     @if(!$branding['favicon_url'] && $icon512)<link rel="icon" href="{{ $icon512 }}" sizes="512x512" type="image/png">@endif
-    @foreach($hashtags as $hashtag)
+    @foreach($allHashtags ?? [] as $hashtag)
         <meta property="article:tag" content="{{ $hashtag }}">
     @endforeach
     <link rel="preconnect" href="https://fonts.googleapis.com">

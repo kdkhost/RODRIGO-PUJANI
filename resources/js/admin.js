@@ -27,8 +27,13 @@ window.Swal = Swal;
 window.Chart = Chart;
 window.FullCalendar = {
     Calendar,
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
-    locales: { 'pt-br': ptBrLocale },
+    plugins: [
+        dayGridPlugin.default || dayGridPlugin, 
+        timeGridPlugin.default || timeGridPlugin, 
+        interactionPlugin.default || interactionPlugin, 
+        listPlugin.default || listPlugin
+    ],
+    locales: { 'pt-br': ptBrLocale.default || ptBrLocale },
 };
 
 FilePond.registerPlugin(
