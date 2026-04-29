@@ -193,6 +193,7 @@
 @push('scripts')
     {{-- FullCalendar 6 CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/pt-br.global.min.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -278,8 +279,41 @@
                     if (props.status) {
                         info.el.setAttribute('data-status', props.status);
                     }
+                },
+                eventDrop: async function(info) {
+                    await updateEventPosition(info);
+                },
+                eventResize: async function(info) {
+                    await updateEventPosition(info);
                 }
             });
+
+            async function updateEventPosition(info) {
+                const event = info.event;
+                const moveUrl = event.extendedProps?.moveUrl;
+
+                if (!moveUrl) {
+                    info.revert();
+                    return;
+                }
+
+                try {
+                    await window.axios.patch(moveUrl, {
+                        start_at: event.start ? event.start.toISOString() : null,
+                        end_at: event.end ? event.end.toISOString() : null,
+                        all_day: event.allDay ? 1 : 0,
+                    });
+                    if (window.AdminUI) {
+                        window.AdminUI.showToast('success', 'Agenda atualizada.');
+                        window.AdminUI.refreshTable(document.querySelector('#admin-calendar-events-table'));
+                    }
+                } catch (error) {
+                    info.revert();
+                    if (window.AdminUI) {
+                        window.AdminUI.showToast('error', error.response?.data?.message || 'Não foi possível mover o evento.');
+                    }
+                }
+            }
 
             calendar.render();
 
