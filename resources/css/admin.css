@@ -2940,3 +2940,168 @@ img.admin-avatar {
         align-items: flex-start;
     }
 }
+/* ==========================================================================
+   MODERN CALENDAR (FULLCALENDAR 6)
+   ========================================================================== */
+
+:root {
+    --fc-border-color: rgba(23, 32, 43, 0.08);
+    --fc-daygrid-event-dot-width: 8px;
+    --fc-list-event-dot-width: 10px;
+    --fc-today-bg-color: rgba(196, 154, 60, 0.06);
+    --fc-event-bg-color: var(--admin-primary);
+    --fc-event-border-color: var(--admin-primary);
+    --fc-button-bg-color: #ffffff;
+    --fc-button-border-color: rgba(23, 32, 43, 0.12);
+    --fc-button-text-color: var(--admin-ink);
+    --fc-button-hover-bg-color: #f8f9fa;
+    --fc-button-hover-border-color: rgba(23, 32, 43, 0.2);
+    --fc-button-active-bg-color: var(--admin-primary);
+    --fc-button-active-border-color: var(--admin-primary);
+    --fc-button-active-text-color: #ffffff;
+}
+
+.admin-calendar-shell {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    min-height: 600px;
+}
+
+.fc {
+    font-family: inherit;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--admin-ink);
+}
+
+.fc .fc-button {
+    text-transform: capitalize;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: none !important;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: #fff;
+}
+
+.fc .fc-button-primary {
+    background-color: #fff;
+    border-color: rgba(23, 32, 43, 0.1);
+    color: var(--admin-ink);
+}
+
+.fc .fc-button-primary:hover {
+    background-color: #f8f9fa;
+    border-color: rgba(23, 32, 43, 0.2);
+    color: var(--admin-primary);
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+    border: 1px solid var(--fc-border-color);
+}
+
+.fc-theme-standard .fc-scrollgrid {
+    border: 1px solid var(--fc-border-color);
+    border-radius: 12px;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+    background-color: var(--fc-today-bg-color);
+}
+
+.fc .fc-daygrid-day-number {
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    color: var(--admin-muted);
+}
+
+.fc .fc-col-header-cell-cushion {
+    padding: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--admin-muted);
+    text-decoration: none;
+}
+
+/* Eventos Customizados */
+.admin-calendar-event-shell {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 3px solid transparent;
+    background: rgba(196, 154, 60, 0.1);
+    color: var(--admin-primary-dark);
+}
+
+.fc-event {
+    cursor: pointer;
+    border: none !important;
+    background: transparent !important;
+    padding: 2px 4px !important;
+}
+
+.admin-calendar-event-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-weight: 600;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.admin-calendar-event-time {
+    font-weight: 700;
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.admin-calendar-event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    opacity: 0.9;
+}
+
+.admin-calendar-event-chip {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+/* Status Colors */
+.fc-event[data-status="scheduled"] .admin-calendar-event-shell { border-color: #c49a3c; background: rgba(196, 154, 60, 0.1); color: #8d6a1f; }
+.fc-event[data-status="confirmed"] .admin-calendar-event-shell { border-color: #198754; background: rgba(25, 135, 84, 0.1); color: #0f5132; }
+.fc-event[data-status="done"] .admin-calendar-event-shell { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); color: #1e40af; }
+.fc-event[data-status="canceled"] .admin-calendar-event-shell { border-color: #dc3545; background: rgba(220, 53, 69, 0.1); color: #842029; }
+
+@media (max-width: 767px) {
+    .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 1.1rem;
+    }
+}
