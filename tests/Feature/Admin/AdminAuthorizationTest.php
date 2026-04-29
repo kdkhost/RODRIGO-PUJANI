@@ -396,7 +396,9 @@ class AdminAuthorizationTest extends TestCase
             ->get(route('admin.calendar.index'))
             ->assertOk()
             ->assertSee('Agenda operacional')
-            ->assertSee('Reunião estratégica');
+            ->assertSee('Reunião estratégica')
+            ->assertSee('data-calendar', false)
+            ->assertDontSee('fullcalendar@6', false);
     }
 
     private function fakePngUpload(string $name): UploadedFile

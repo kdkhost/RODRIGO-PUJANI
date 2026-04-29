@@ -45,7 +45,7 @@
                             @if($item->location)
                                 <span>{{ $item->location }}</span>
                             @endif
-                            <span>{{ $visibilityLabels[$item->visibility] ?? ucfirst($item->visibility) }}</span>
+                            <span>{{ $visibilityLabels[$item->visibility ?: 'team'] ?? ucfirst($item->visibility ?: 'team') }}</span>
                         </div>
                     </td>
                     <td>
@@ -73,13 +73,13 @@
                         <div class="admin-entity-meta">Criado por {{ $item->creator?->name ?: 'sistema' }}</div>
                     </td>
                     <td>
-                        <span class="badge {{ $item->display === 'auto' ? 'badge-soft-secondary' : 'badge-soft-warning' }}">
-                            {{ $displayLabels[$item->display] ?? ucfirst($item->display) }}
+                        <span class="badge {{ ($item->display ?: 'auto') === 'auto' ? 'badge-soft-secondary' : 'badge-soft-warning' }}">
+                            {{ $displayLabels[$item->display ?: 'auto'] ?? ucfirst($item->display ?: 'auto') }}
                         </span>
                     </td>
                     <td>
-                        <span class="badge {{ $statusBadges[$item->status] ?? 'badge-soft-secondary' }}">
-                            {{ $statusLabels[$item->status] ?? ucfirst($item->status) }}
+                        <span class="badge {{ $statusBadges[$item->status ?: 'scheduled'] ?? 'badge-soft-secondary' }}">
+                            {{ $statusLabels[$item->status ?: 'scheduled'] ?? ucfirst($item->status ?: 'scheduled') }}
                         </span>
                     </td>
                     <td class="text-end">

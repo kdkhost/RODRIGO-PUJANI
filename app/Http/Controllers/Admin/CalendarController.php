@@ -205,7 +205,7 @@ class CalendarController extends Controller
             'all_day' => ['nullable', 'boolean'],
         ]);
 
-        if (! $event->editable) {
+        if ($event->editable === false) {
             return response()->json(['message' => 'Este evento não permite movimentação.'], 422);
         }
 
@@ -313,7 +313,7 @@ class CalendarController extends Controller
             'canceled' => '#dc3545',
         ];
 
-        $extendedProps = $event->extended_props ?? [];
+        $extendedProps = is_array($event->extended_props) ? $event->extended_props : [];
         $advancedProps = collect($extendedProps)
             ->only([
                 'className',
@@ -329,30 +329,38 @@ class CalendarController extends Controller
             ])
             ->all();
 
+        $status = $event->status ?: 'scheduled';
+        $display = $event->display ?: 'auto';
+        $visibility = $event->visibility ?: 'team';
+        $editable = $event->editable ?? true;
+        $overlap = $event->overlap ?? true;
+
         return [
             'id' => (string) $event->id,
             'title' => $event->title,
             'start' => $event->start_at?->toIso8601String(),
             'end' => $event->end_at?->toIso8601String(),
             'allDay' => $event->all_day,
-            'color' => $event->color ?: ($statusColors[$event->status] ?? '#c49a3c'),
+            'color' => $event->color ?: ($statusColors[$status] ?? '#c49a3c'),
             'textColor' => $event->text_color ?: '#111318',
-            'editable' => $event->editable,
-            'overlap' => $event->overlap,
-            'display' => $event->display,
-            'rendering' => in_array($event->display, ['background', 'inverse-background'], true) ? $event->display : null,
+            'editable' => $editable,
+            'startEditable' => $editable,
+            'durationEditable' => $editable,
+            'overlap' => $overlap,
+            'display' => $display,
+            'rendering' => in_array($display, ['background', 'inverse-background'], true) ? $display : null,
             'classNames' => [
                 'admin-calendar-event-pill',
-                'admin-calendar-status-'.$event->status,
-                'admin-calendar-display-'.$event->display,
+                'admin-calendar-status-'.$status,
+                'admin-calendar-display-'.$display,
             ],
             'extendedProps' => $extendedProps + [
-                'status' => $event->status,
-                'statusLabel' => $this->statusLabel($event->status),
-                'visibility' => $event->visibility,
-                'visibilityLabel' => $this->visibilityLabel($event->visibility),
-                'display' => $event->display,
-                'displayLabel' => $this->displayLabel($event->display),
+                'status' => $status,
+                'statusLabel' => $this->statusLabel($status),
+                'visibility' => $visibility,
+                'visibilityLabel' => $this->visibilityLabel($visibility),
+                'display' => $display,
+                'displayLabel' => $this->displayLabel($display),
                 'category' => $event->category,
                 'location' => $event->location,
                 'description' => strip_tags((string) $event->description),

@@ -10,6 +10,12 @@ import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import Chart from 'chart.js/auto';
+import { Calendar } from '@fullcalendar/core';
+import ptBrLocale from '@fullcalendar/core/locales/pt-br';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import listPlugin from '@fullcalendar/list';
 import { applyAutoPlaceholders, configureToastr } from './shared/ui';
 
 window.bootstrap = bootstrap;
@@ -19,7 +25,11 @@ globalThis.jQuery = $;
 window.toastr = toastr;
 window.Swal = Swal;
 window.Chart = Chart;
-window.Chart = Chart;
+window.FullCalendar = {
+    Calendar,
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+    locales: { 'pt-br': ptBrLocale },
+};
 
 FilePond.registerPlugin(
     FilePondPluginFileValidateSize,
@@ -339,7 +349,7 @@ const AdminUI = {
                 return;
             }
 
-            const paginationLink = event.target.closest('[data-ajax-table] .pagination a');
+            const paginationLink = event.target.closest('[data-ajax-table] .pagination a, [data-ajax-table] .admin-pagination a');
             if (paginationLink) {
                 event.preventDefault();
                 const table = paginationLink.closest('[data-ajax-table]');
@@ -406,9 +416,11 @@ const AdminUI = {
             }
 
             const table = document.querySelector(searchInput.dataset.tableTarget);
+            const toolbar = searchInput.closest('form');
             clearTimeout(searchInput._searchTimer);
             searchInput._searchTimer = setTimeout(() => {
                 this.refreshTable(table);
+                this.refetchCalendar(toolbar?.dataset.calendarToolbar);
             }, 350);
         });
 
@@ -419,7 +431,9 @@ const AdminUI = {
             }
 
             const table = document.querySelector(filterInput.dataset.tableTarget);
+            const toolbar = filterInput.closest('form');
             this.refreshTable(table);
+            this.refetchCalendar(toolbar?.dataset.calendarToolbar);
         });
     },
 
@@ -1253,6 +1267,248 @@ const AdminUI = {
                 this.showToast('warning', 'Não foi possível inicializar um gráfico do painel.');
             }
         });
+    },
+
+    initCalendars(scope) {
+        const fullCalendar = window.FullCalendar;
+
+        if (!fullCalendar?.Calendar) {
+            return;
+        }
+
+        const calendars = scope.matches?.('[data-calendar]')
+            ? [scope]
+            : Array.from(scope.querySelectorAll('[data-calendar]'));
+
+        calendars.forEach((element) => {
+            if (element._fullCalendar) {
+                return;
+            }
+
+            const compactQuery = window.matchMedia('(max-width: 767.98px)');
+            const isCompact = () => compactQuery.matches;
+            const eventsUrl = element.dataset.eventsUrl;
+
+            if (!eventsUrl) {
+                return;
+            }
+
+            const readFilters = () => {
+                const form = document.querySelector(element.dataset.calendarToolbar);
+                const params = {};
+
+                if (!form) {
+                    return params;
+                }
+
+                new FormData(form).forEach((value, key) => {
+                    const normalized = typeof value === 'string' ? value.trim() : value;
+
+                    if (normalized !== '' && normalized !== null && normalized !== undefined) {
+                        params[key] = normalized;
+                    }
+                });
+
+                return params;
+            };
+
+            const resolveHeight = () => isCompact()
+                ? 'auto'
+                : Number(element.dataset.calendarHeight || 650);
+            const resolveContentHeight = () => isCompact()
+                ? 'auto'
+                : Number(element.dataset.calendarContentHeight || 590);
+
+            const calendar = new fullCalendar.Calendar(element, {
+                plugins: fullCalendar.plugins,
+                locales: [fullCalendar.locales['pt-br']],
+                locale: 'pt-br',
+                timeZone: 'local',
+                defaultView: isCompact() ? 'listWeek' : 'dayGridMonth',
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: isCompact()
+                        ? 'dayGridMonth,listWeek'
+                        : 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                },
+                buttonText: {
+                    today: 'Hoje',
+                    month: 'Mês',
+                    week: 'Semana',
+                    day: 'Dia',
+                    list: 'Lista',
+                },
+                allDayText: 'Dia inteiro',
+                noEventsMessage: 'Nenhum evento encontrado.',
+                height: resolveHeight(),
+                contentHeight: resolveContentHeight(),
+                fixedWeekCount: false,
+                showNonCurrentDates: true,
+                eventLimit: isCompact() ? 2 : 4,
+                editable: true,
+                eventStartEditable: true,
+                eventDurationEditable: true,
+                selectable: true,
+                selectMirror: true,
+                nowIndicator: true,
+                navLinks: true,
+                businessHours: true,
+                eventSources: [{
+                    url: eventsUrl,
+                    method: 'GET',
+                    extraParams: readFilters,
+                    failure: () => {
+                        this.showToast('error', 'Não foi possível carregar a agenda.');
+                    },
+                }],
+                loading: (loading) => {
+                    element.classList.toggle('is-loading', loading);
+                },
+                select: (info) => {
+                    const createUrl = element.dataset.createUrl;
+
+                    if (!createUrl) {
+                        calendar.unselect();
+                        return;
+                    }
+
+                    const url = new URL(createUrl, window.location.origin);
+                    url.searchParams.set('start', info.startStr);
+                    url.searchParams.set('end', info.endStr);
+                    url.searchParams.set('all_day', info.allDay ? '1' : '0');
+
+                    this.loadModal(url.toString(), 'Novo evento');
+                    calendar.unselect();
+                },
+                eventClick: (info) => {
+                    info.jsEvent.preventDefault();
+                    this.showCalendarEventPanel(info.event, info.jsEvent);
+                },
+                eventRender: (info) => {
+                    this.decorateCalendarEvent(info);
+                },
+                eventDrop: (info) => {
+                    this.updateCalendarEventPosition(info, element);
+                },
+                eventResize: (info) => {
+                    this.updateCalendarEventPosition(info, element);
+                },
+            });
+
+            element.classList.toggle('is-compact', isCompact());
+            element._fullCalendar = calendar;
+            calendar.render();
+            window.adminCalendar = calendar;
+
+            const syncCompactMode = () => {
+                const compact = isCompact();
+                element.classList.toggle('is-compact', compact);
+
+                if (typeof calendar.setOption === 'function') {
+                    calendar.setOption('height', resolveHeight());
+                    calendar.setOption('contentHeight', resolveContentHeight());
+                    calendar.setOption('eventLimit', compact ? 2 : 4);
+                }
+
+                if (compact && calendar.view?.type !== 'listWeek') {
+                    calendar.changeView('listWeek');
+                    return;
+                }
+
+                calendar.updateSize();
+            };
+
+            if (typeof compactQuery.addEventListener === 'function') {
+                compactQuery.addEventListener('change', syncCompactMode);
+            } else if (typeof compactQuery.addListener === 'function') {
+                compactQuery.addListener(syncCompactMode);
+            }
+
+            window.addEventListener('resize', () => {
+                window.clearTimeout(element._calendarResizeTimer);
+                element._calendarResizeTimer = window.setTimeout(() => calendar.updateSize(), 180);
+            }, { passive: true });
+        });
+    },
+
+    decorateCalendarEvent(info) {
+        const event = info.event;
+        const props = event.extendedProps || {};
+        const status = props.status || 'scheduled';
+        const display = props.display || event.rendering || 'auto';
+
+        info.el.setAttribute('data-status', status);
+        info.el.setAttribute('data-display', display);
+
+        if (props.statusLabel || props.owner || props.category) {
+            info.el.setAttribute('title', [event.title, props.statusLabel, props.owner, props.category].filter(Boolean).join(' - '));
+        }
+
+        if (display === 'background' || display === 'inverse-background' || event.rendering === 'background') {
+            return;
+        }
+
+        const content = info.el.querySelector('.fc-content') || info.el;
+        const timeText = info.timeText
+            ? `<span class="admin-calendar-event-time">${this.escapeHtml(info.timeText)}</span>`
+            : '';
+        const category = props.category
+            ? `<span class="admin-calendar-event-chip">${this.escapeHtml(props.category)}</span>`
+            : '';
+
+        content.innerHTML = `
+            <div class="admin-calendar-event-shell">
+                <div class="admin-calendar-event-heading">
+                    ${timeText}
+                    <span class="admin-calendar-event-title">${this.escapeHtml(event.title)}</span>
+                </div>
+                ${category ? `<div class="admin-calendar-event-meta">${category}</div>` : ''}
+            </div>
+        `;
+    },
+
+    calendarDateForRequest(date, allDay) {
+        if (!date) {
+            return null;
+        }
+
+        if (!allDay) {
+            return date.toISOString();
+        }
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day} 00:00:00`;
+    },
+
+    async updateCalendarEventPosition(info, element) {
+        const event = info.event;
+        const moveUrl = event.extendedProps?.moveUrl;
+
+        if (!moveUrl) {
+            info.revert();
+            return;
+        }
+
+        try {
+            await window.axios.patch(moveUrl, {
+                start_at: this.calendarDateForRequest(event.start, event.allDay),
+                end_at: this.calendarDateForRequest(event.end, event.allDay),
+                all_day: event.allDay ? 1 : 0,
+            });
+
+            this.showToast('success', 'Agenda atualizada.');
+
+            const table = document.querySelector(element.dataset.recordsTarget);
+            this.refreshTable(table);
+            element._fullCalendar?.refetchEvents();
+        } catch (error) {
+            info.revert();
+            this.showToast('error', error.response?.data?.message || 'Não foi possível mover o evento.');
+        }
     },
 
     bindTourGuide() {

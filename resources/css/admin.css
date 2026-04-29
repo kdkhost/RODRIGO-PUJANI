@@ -2813,6 +2813,24 @@ img.admin-avatar {
     background: rgba(255, 255, 255, 0.03);
 }
 
+.admin-table-card .card-footer,
+.admin-calendar-records-card .card-footer {
+    border-top: 1px solid var(--admin-border);
+    background: var(--admin-card-bg) !important;
+}
+
+.admin-table-card .card-footer nav,
+.admin-calendar-records-card .card-footer nav {
+    color: var(--admin-muted);
+}
+
+.admin-table-card .card-footer p,
+.admin-calendar-records-card .card-footer p {
+    margin-bottom: 0;
+    color: var(--admin-muted);
+    font-size: 0.86rem;
+}
+
 @media (max-width: 767.98px) {
     .admin-pagination-wrapper {
         flex-direction: column;
@@ -2941,7 +2959,7 @@ img.admin-avatar {
     }
 }
 /* ==========================================================================
-   MODERN CALENDAR (FULLCALENDAR 6)
+   MODERN CALENDAR (FULLCALENDAR 4)
    ========================================================================== */
 
 :root {
@@ -2962,11 +2980,34 @@ img.admin-avatar {
 }
 
 .admin-calendar-shell {
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
+    border: 1px solid var(--admin-border);
+    border-radius: 1.25rem;
+    background: var(--admin-card-bg);
+    overflow: visible;
     position: relative;
-    min-height: 600px;
+    min-height: 0;
+}
+
+.admin-calendar {
+    position: relative;
+    min-width: 0;
+}
+
+.admin-calendar.is-loading::after {
+    content: "Carregando agenda...";
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    z-index: 5;
+    padding: 0.42rem 0.75rem;
+    border: 1px solid rgba(196, 154, 60, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--admin-primary-dark);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    box-shadow: 0 10px 24px rgba(15, 19, 24, 0.12);
 }
 
 .fc {
@@ -3057,6 +3098,20 @@ img.admin-avatar {
     border: none !important;
     background: transparent !important;
     padding: 2px 4px !important;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.admin-calendar .fc-content {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+[data-bs-theme="dark"] .admin-calendar.is-loading::after {
+    background: rgba(17, 19, 24, 0.94);
+    color: var(--admin-primary);
 }
 
 .admin-calendar-event-heading {
@@ -3064,9 +3119,18 @@ img.admin-avatar {
     align-items: baseline;
     gap: 4px;
     font-weight: 600;
+    min-width: 0;
+    width: 100%;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.admin-calendar-event-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .admin-calendar-event-time {

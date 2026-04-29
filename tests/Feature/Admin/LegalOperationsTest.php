@@ -11,6 +11,7 @@ use App\Models\LegalTask;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class LegalOperationsTest extends TestCase
@@ -431,6 +432,53 @@ class LegalOperationsTest extends TestCase
         ]);
     }
 
+    public function test_calendar_event_can_be_moved_from_fullcalendar_drag_request(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->givePermissionTo(['admin.access', 'calendar.manage']);
+
+        $event = CalendarEvent::query()->create([
+            'title' => 'Audiência de instrução',
+            'category' => 'Audiência',
+            'status' => 'scheduled',
+            'visibility' => 'team',
+            'start_at' => '2026-04-27 09:00:00',
+            'end_at' => '2026-04-27 10:00:00',
+            'editable' => true,
+            'overlap' => true,
+            'display' => 'auto',
+            'owner_id' => $admin->id,
+            'created_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->patchJson(route('admin.calendar.move', $event), [
+                'start_at' => '2026-04-27T13:00:00-03:00',
+                'end_at' => '2026-04-27T14:00:00-03:00',
+                'all_day' => false,
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Agenda atualizada.');
+
+        $event->refresh();
+
+        $this->assertTrue($event->start_at->equalTo(Carbon::parse('2026-04-27T13:00:00-03:00')));
+        $this->assertTrue($event->end_at->equalTo(Carbon::parse('2026-04-27T14:00:00-03:00')));
+
+        $event->forceFill(['editable' => false])->save();
+
+        $this->actingAs($admin)
+            ->patchJson(route('admin.calendar.move', $event), [
+                'start_at' => '2026-04-28T13:00:00-03:00',
+                'end_at' => '2026-04-28T14:00:00-03:00',
+                'all_day' => false,
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Este evento não permite movimentação.');
+    }
+
     public function test_background_all_day_event_is_returned_in_feed_and_records(): void
     {
         $this->seed(PermissionsSeeder::class);
@@ -463,6 +511,8 @@ class LegalOperationsTest extends TestCase
         $feedResponse->assertJsonCount(1);
         $feedResponse->assertJsonPath('0.id', (string) $event->id);
         $feedResponse->assertJsonPath('0.display', 'background');
+        $feedResponse->assertJsonPath('0.rendering', 'background');
+        $feedResponse->assertJsonPath('0.startEditable', true);
 
         $recordsResponse = $this->actingAs($admin)
             ->getJson(route('admin.calendar.records', [
