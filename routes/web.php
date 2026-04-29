@@ -168,6 +168,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/documentation', [DocumentationController::class, 'index'])->name('documentation.index');
     Route::post('/documentation/complete-tour', [DocumentationController::class, 'completeTour'])->name('documentation.complete-tour');
+    Route::post('/documentation/reset-tour', [DocumentationController::class, 'resetTour'])->name('documentation.reset-tour');
 });
 
 Route::middleware('auth')->group(function () {

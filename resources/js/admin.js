@@ -1607,9 +1607,9 @@ const AdminUI = {
     },
     bindTourGuide() {
         const body = document.body;
-        const onboardingCompleted = body.dataset.onboardingCompleted === 'true';
         const role = body.dataset.userRole;
         const onboardingUrl = body.dataset.onboardingUrl;
+        const onboardingResetUrl = body.dataset.onboardingResetUrl;
 
         if (!window.driver || !onboardingUrl) {
             return;
@@ -1692,7 +1692,7 @@ const AdminUI = {
                 element: '.admin-app-footer',
                 popover: {
                     title: 'Tudo pronto!',
-                    description: 'Agora voce conhece o basico. Caso tenha duvidas, acesse o menu Documentacao no final da barra lateral.',
+                    description: 'Agora voce conhece o basico. Use a opcao Reiniciar tour guiado no menu do usuario sempre que quiser rever este fluxo.',
                     side: 'top',
                     align: 'center'
                 }
@@ -1714,6 +1714,9 @@ const AdminUI = {
         if (steps.length === 0) {
             return;
         }
+
+        const autoStorageKey = `admin-tour-auto:${window.location.pathname}`;
+        let autoLaunched = false;
 
         const createDriver = () => {
             const driverObj = window.driver.js.driver({
@@ -1739,6 +1742,34 @@ const AdminUI = {
             return driverObj;
         };
 
+        const launchTour = () => {
+            createDriver().drive();
+        };
+
+        const scheduleAutoTour = () => {
+            if (autoLaunched || body.dataset.onboardingCompleted === 'true') {
+                return;
+            }
+
+            autoLaunched = true;
+            sessionStorage.setItem(autoStorageKey, 'done');
+
+            const fire = () => {
+                window.requestAnimationFrame(() => {
+                    window.setTimeout(() => {
+                        launchTour();
+                    }, 600);
+                });
+            };
+
+            if (document.readyState === 'complete') {
+                fire();
+                return;
+            }
+
+            window.addEventListener('load', fire, { once: true });
+        };
+
         document.querySelectorAll('[data-start-tour]').forEach((trigger) => {
             if (trigger.dataset.tourReady === 'true') {
                 return;
@@ -1746,16 +1777,39 @@ const AdminUI = {
 
             trigger.addEventListener('click', (event) => {
                 event.preventDefault();
-                createDriver().drive();
+                launchTour();
             });
 
             trigger.dataset.tourReady = 'true';
         });
 
-        if (!onboardingCompleted) {
-            window.setTimeout(() => {
-                createDriver().drive();
-            }, 1500);
+        document.querySelectorAll('[data-restart-tour]').forEach((trigger) => {
+            if (trigger.dataset.tourResetReady === 'true') {
+                return;
+            }
+
+            trigger.addEventListener('click', async (event) => {
+                event.preventDefault();
+                try {
+                    if (onboardingResetUrl) {
+                        await window.axios.post(onboardingResetUrl);
+                    }
+
+                    body.dataset.onboardingCompleted = 'false';
+                    sessionStorage.removeItem(autoStorageKey);
+                    window.setTimeout(() => {
+                        launchTour();
+                    }, 180);
+                } catch (error) {
+                    this.showToast('error', error.response?.data?.message || 'Nao foi possivel reiniciar o tour guiado.');
+                }
+            });
+
+            trigger.dataset.tourResetReady = 'true';
+        });
+
+        if (!sessionStorage.getItem(autoStorageKey)) {
+            scheduleAutoTour();
         }
     },
 

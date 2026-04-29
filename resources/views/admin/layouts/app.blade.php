@@ -59,7 +59,8 @@
 <body class="layout-fixed header-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell" 
       data-user-role="{{ $currentUser?->roles->first()?->name ?? 'Usuário' }}"
       data-onboarding-completed="{{ $currentUser?->tour_completed_at ? 'true' : 'false' }}"
-      data-onboarding-url="{{ route('admin.documentation.complete-tour') }}">
+      data-onboarding-url="{{ route('admin.documentation.complete-tour') }}"
+      data-onboarding-reset-url="{{ route('admin.documentation.reset-tour') }}">
     @if ($statusMessage)
         <div data-page-toast data-type="success" data-message="{{ $statusMessage }}"></div>
     @endif
@@ -135,6 +136,9 @@
                             <a href="{{ route('profile.edit') }}" class="dropdown-item">
                                 <i class="bi bi-person-circle me-2"></i>Perfil
                             </a>
+                            <button type="button" class="dropdown-item" data-restart-tour>
+                                <i class="bi bi-signpost-split me-2"></i>Reiniciar tour guiado
+                            </button>
                             <a href="{{ route('site.home') }}" class="dropdown-item" target="_blank" rel="noopener">
                                 <i class="bi bi-globe2 me-2"></i>Ver site
                             </a>

@@ -30,4 +30,16 @@ class DocumentationController extends Controller
 
         return response()->json(['message' => 'Tour marcado como concluído.']);
     }
+
+
+    public function resetTour(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user) {
+            $user->update(['tour_completed_at' => null]);
+        }
+
+        return response()->json(['message' => 'Tour reativado com sucesso.']);
+    }
 }
