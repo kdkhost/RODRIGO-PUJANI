@@ -1605,7 +1605,6 @@ const AdminUI = {
             this.showToast('error', error.response?.data?.message || 'Não foi possível mover o evento.');
         }
     },
-
     bindTourGuide() {
         const body = document.body;
         const onboardingCompleted = body.dataset.onboardingCompleted === 'true';
@@ -1616,96 +1615,87 @@ const AdminUI = {
             return;
         }
 
-        const driverObj = window.driver.js.driver({
-            showProgress: true,
-            allowClose: true,
-            overlayClickBehavior: 'close',
-            nextBtnText: 'Próximo',
-            prevBtnText: 'Anterior',
-            doneBtnText: 'Finalizar',
-            progressText: 'Passo {{current}} de {{total}}',
-            onDeselected: (element, step, { config, state }) => {
-                if (state.activeIndex === config.steps.length - 1) {
-                    this.markOnboardingAsCompleted(onboardingUrl);
+        const commonSteps = [
+            {
+                element: '.app-header',
+                popover: {
+                    title: 'Barra de Ferramentas',
+                    description: 'Aqui voce encontra atalhos rapidos para o site, alternancia de tema e as configuracoes do seu perfil.',
+                    side: 'bottom',
+                    align: 'start'
                 }
             },
-            onDestroyed: () => {
-                this.markOnboardingAsCompleted(onboardingUrl);
-            }
-        });
-
-        const commonSteps = [
-            { 
-                element: '.app-header', 
-                popover: { 
-                    title: 'Barra de Ferramentas', 
-                    description: 'Aqui você encontra atalhos rápidos para o site, alternância de tema e as configurações do seu perfil.', 
-                    side: "bottom", 
-                    align: 'start' 
-                } 
+            {
+                element: '.app-sidebar',
+                popover: {
+                    title: 'Menu de Navegacao',
+                    description: 'Toda a inteligencia do sistema esta organizada nestes modulos. Explore as secoes de acordo com seu acesso.',
+                    side: 'right',
+                    align: 'start'
+                }
             },
-            { 
-                element: '.app-sidebar', 
-                popover: { 
-                    title: 'Menu de Navegação', 
-                    description: 'Toda a inteligência do sistema está organizada nestes módulos. Explore as seções de acordo com seu acesso.', 
-                    side: "right", 
-                    align: 'start' 
-                } 
+            {
+                element: '.admin-page-hero, .app-content',
+                popover: {
+                    title: 'Area de Trabalho',
+                    description: 'Este e o espaco principal onde ficam paineis, formularios, listas, graficos e atalhos do modulo atual.',
+                    side: 'top',
+                    align: 'center'
+                }
             },
         ];
 
         const roleSteps = role === 'Super Admin' || role === 'Administrador'
             ? [
-                { 
-                    element: '[href*="system-settings"]', 
-                    popover: { 
-                        title: 'Configurações Estratégicas', 
-                        description: 'Como administrador, você pode ajustar a marca, SEO, PWA e integrações de segurança por aqui.', 
-                        side: "right", 
-                        align: 'start' 
-                    } 
+                {
+                    element: '[href*="system-settings"]',
+                    popover: {
+                        title: 'Configuracoes Estrategicas',
+                        description: 'Como administrador, voce pode ajustar a marca, SEO, PWA e integracoes de seguranca por aqui.',
+                        side: 'right',
+                        align: 'start'
+                    }
                 },
-                { 
-                    element: '[href*="users"]', 
-                    popover: { 
-                        title: 'Gestão de Usuários', 
-                        description: 'Controle quem tem acesso ao sistema e defina permissões específicas para cada colaborador.', 
-                        side: "right", 
-                        align: 'start' 
-                    } 
+                {
+                    element: '[href*="users"]',
+                    popover: {
+                        title: 'Gestao de Usuarios',
+                        description: 'Controle quem tem acesso ao sistema e defina permissoes especificas para cada colaborador.',
+                        side: 'right',
+                        align: 'start'
+                    }
                 }
             ]
             : [
-                { 
-                    element: '[href*="calendar"]', 
-                    popover: { 
-                        title: 'Sua Agenda', 
-                        description: 'Organize seus prazos e compromissos jurídicos em nosso calendário interativo.', 
-                        side: "right", 
-                        align: 'start' 
-                    } 
+                {
+                    element: '[href*="calendar"]',
+                    popover: {
+                        title: 'Sua Agenda',
+                        description: 'Organize seus prazos e compromissos juridicos em nosso calendario interativo.',
+                        side: 'right',
+                        align: 'start'
+                    }
                 },
-                { 
-                    element: '[href*="legal-cases"]', 
-                    popover: { 
-                        title: 'Processos Judiciais', 
-                        description: 'Gerencie todos os seus casos, sincronize movimentações via DataJud e anexe documentos.', 
-                        side: "right", 
-                        align: 'start' 
-                    } 
+                {
+                    element: '[href*="legal-cases"]',
+                    popover: {
+                        title: 'Processos Judiciais',
+                        description: 'Gerencie seus casos, sincronize movimentacoes e anexe documentos.',
+                        side: 'right',
+                        align: 'start'
+                    }
                 }
             ];
 
         const finalStep = [
-            { 
-                element: '.admin-app-footer', 
-                popover: { 
-                    title: 'Tudo pronto!', 
-                    description: 'Agora você conhece o básico. Caso tenha dúvidas, acesse o menu "Documentação" no final da barra lateral.', 
-                    side: "top", 
-                    align: 'center' 
-                } 
+            {
+                element: '.admin-app-footer',
+                popover: {
+                    title: 'Tudo pronto!',
+                    description: 'Agora voce conhece o basico. Caso tenha duvidas, acesse o menu Documentacao no final da barra lateral.',
+                    side: 'top',
+                    align: 'center'
+                }
             }
         ];
 
@@ -1725,7 +1715,29 @@ const AdminUI = {
             return;
         }
 
-        driverObj.setSteps(steps);
+        const createDriver = () => {
+            const driverObj = window.driver.js.driver({
+                showProgress: true,
+                allowClose: true,
+                overlayClickBehavior: 'close',
+                nextBtnText: 'Proximo',
+                prevBtnText: 'Anterior',
+                doneBtnText: 'Finalizar',
+                progressText: 'Passo {{current}} de {{total}}',
+                onDeselected: (element, step, { config, state }) => {
+                    if (state.activeIndex === config.steps.length - 1) {
+                        this.markOnboardingAsCompleted(onboardingUrl);
+                    }
+                },
+                onDestroyed: () => {
+                    this.markOnboardingAsCompleted(onboardingUrl);
+                }
+            });
+
+            driverObj.setSteps(steps);
+
+            return driverObj;
+        };
 
         document.querySelectorAll('[data-start-tour]').forEach((trigger) => {
             if (trigger.dataset.tourReady === 'true') {
@@ -1734,7 +1746,7 @@ const AdminUI = {
 
             trigger.addEventListener('click', (event) => {
                 event.preventDefault();
-                driverObj.drive();
+                createDriver().drive();
             });
 
             trigger.dataset.tourReady = 'true';
@@ -1742,7 +1754,7 @@ const AdminUI = {
 
         if (!onboardingCompleted) {
             window.setTimeout(() => {
-                driverObj.drive();
+                createDriver().drive();
             }, 1500);
         }
     },
