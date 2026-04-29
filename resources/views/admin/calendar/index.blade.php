@@ -201,7 +201,7 @@
 
 @push('scripts')
     <script>
-        (() => {
+        document.addEventListener('DOMContentLoaded', () => {
             const calendarElement = document.getElementById('admin-calendar');
             const recordsElement = document.getElementById('admin-calendar-events-table');
             const filtersForm = document.getElementById('admin-calendar-filters');
@@ -494,8 +494,26 @@
                 compactQuery.addListener(() => window.location.reload());
             }
 
-            mountCalendar();
             loadRecords();
-        })();
+
+            const bootCalendar = async (attempt = 0) => {
+                if (window.FullCalendar?.Calendar) {
+                    await mountCalendar();
+                    return;
+                }
+
+                if (attempt >= 40) {
+                    calendarElement.innerHTML = '<div class="admin-calendar-fallback">Nao foi possivel carregar a agenda.</div>';
+                    console.error('FullCalendar nao ficou disponivel apos aguardar o bundle do painel.');
+                    return;
+                }
+
+                window.setTimeout(() => {
+                    bootCalendar(attempt + 1);
+                }, 150);
+            };
+
+            bootCalendar();
+        });
     </script>
 @endpush
