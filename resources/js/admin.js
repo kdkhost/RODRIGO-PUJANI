@@ -1746,6 +1746,24 @@ const AdminUI = {
             createDriver().drive();
         };
 
+        const restartTour = async () => {
+            if (onboardingResetUrl) {
+                await window.axios.post(onboardingResetUrl);
+            }
+
+            body.dataset.onboardingCompleted = 'false';
+
+            Object.keys(sessionStorage)
+                .filter((key) => key.startsWith('admin-tour-auto:'))
+                .forEach((key) => sessionStorage.removeItem(key));
+
+            autoLaunched = false;
+
+            window.setTimeout(() => {
+                launchTour();
+            }, 260);
+        };
+
         const scheduleAutoTour = () => {
             if (autoLaunched || body.dataset.onboardingCompleted === 'true') {
                 return;
@@ -1790,16 +1808,9 @@ const AdminUI = {
 
             trigger.addEventListener('click', async (event) => {
                 event.preventDefault();
+                event.stopPropagation();
                 try {
-                    if (onboardingResetUrl) {
-                        await window.axios.post(onboardingResetUrl);
-                    }
-
-                    body.dataset.onboardingCompleted = 'false';
-                    sessionStorage.removeItem(autoStorageKey);
-                    window.setTimeout(() => {
-                        launchTour();
-                    }, 180);
+                    await restartTour();
                 } catch (error) {
                     this.showToast('error', error.response?.data?.message || 'Nao foi possivel reiniciar o tour guiado.');
                 }
