@@ -63,6 +63,10 @@
                 ],
             ],
         ];
+
+        $hasVisitsChartData = collect($visitsByDay)->sum('total') > 0;
+        $hasCaseStatusChartData = $caseStatusBreakdown->sum('total') > 0;
+        $hasTaskStatusChartData = $taskStatusBreakdown->sum('total') > 0;
     @endphp
 
     <div class="app-content-header admin-page-hero admin-dashboard-hero">
@@ -86,7 +90,7 @@
 
     <div class="app-content">
         <div class="container-fluid">
-            <div class="row g-3 mb-4">
+            <div class="row g-3 mb-4 admin-dashboard-stat-grid">
                 @foreach ($overviewCards as $card)
                     <div class="col-6 col-md-4 col-xl-2">
                         <div class="card admin-stat-card admin-stat-{{ $card['tone'] }} h-100">
@@ -109,7 +113,7 @@
                 @endforeach
             </div>
 
-            <div class="row g-4 mb-4">
+            <div class="row g-4 mb-4 admin-dashboard-analytics-grid">
                 <div class="col-md-12 col-xl-6">
                     <div class="card admin-chart-card h-100">
                         <div class="card-header">
@@ -120,7 +124,14 @@
                         </div>
                         <div class="card-body">
                             <div class="admin-chart-frame">
-                                <canvas data-admin-chart='@json($visitsChart)'></canvas>
+                                @if ($hasVisitsChartData)
+                                    <canvas data-admin-chart='@json($visitsChart)'></canvas>
+                                @else
+                                    <div class="admin-chart-empty">
+                                        <strong>Sem visitas registradas no período.</strong>
+                                        <span>Assim que houver tráfego no site, o comportamento dos últimos 14 dias será exibido aqui.</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -136,7 +147,14 @@
                         </div>
                         <div class="card-body">
                             <div class="admin-chart-frame admin-chart-frame-sm">
-                                <canvas data-admin-chart='@json($caseStatusChart)'></canvas>
+                                @if ($hasCaseStatusChartData)
+                                    <canvas data-admin-chart='@json($caseStatusChart)'></canvas>
+                                @else
+                                    <div class="admin-chart-empty admin-chart-empty-compact">
+                                        <strong>Sem processos para consolidar.</strong>
+                                        <span>Os status da carteira aparecerão aqui conforme os processos forem cadastrados.</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -152,7 +170,14 @@
                         </div>
                         <div class="card-body">
                             <div class="admin-chart-frame admin-chart-frame-sm">
-                                <canvas data-admin-chart='@json($taskStatusChart)'></canvas>
+                                @if ($hasTaskStatusChartData)
+                                    <canvas data-admin-chart='@json($taskStatusChart)'></canvas>
+                                @else
+                                    <div class="admin-chart-empty admin-chart-empty-compact">
+                                        <strong>Sem tarefas para distribuir.</strong>
+                                        <span>O pipeline será preenchido quando houver tarefas ativas no sistema.</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

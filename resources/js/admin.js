@@ -1737,10 +1737,30 @@ const adminPluginsReady = Promise.allSettled([
         .forEach((result) => console.error('Admin plugin failed to load.', result.reason));
 });
 
-document.addEventListener('DOMContentLoaded', async () => {
+let adminUiBooted = false;
+
+const bootAdminUi = async () => {
+    if (adminUiBooted) {
+        return;
+    }
+
+    adminUiBooted = true;
+
     try {
         await adminPluginsReady;
     } finally {
         AdminUI.boot();
+        window.setTimeout(() => AdminUI.initCharts(document), 240);
+        window.setTimeout(() => AdminUI.initCharts(document), 900);
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootAdminUi, { once: true });
+} else {
+    bootAdminUi();
+}
+
+window.addEventListener('load', () => {
+    AdminUI.initCharts(document);
+}, { once: true });

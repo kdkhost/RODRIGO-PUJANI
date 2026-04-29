@@ -751,11 +751,17 @@ img.admin-avatar {
 .admin-stat-cyan { color: #0891b2; }
 
 .admin-chart-card .card-body {
+    display: flex;
+    align-items: stretch;
     min-height: 310px;
 }
 
 .admin-chart-frame {
     position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
     min-height: 280px;
 }
 
@@ -778,6 +784,33 @@ img.admin-avatar {
     color: var(--admin-muted);
     font-size: 0.92rem;
     font-weight: 700;
+}
+
+.admin-chart-empty {
+    display: grid;
+    gap: 0.55rem;
+    place-items: center;
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.75rem;
+    text-align: center;
+}
+
+.admin-chart-empty strong {
+    color: var(--admin-ink);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.admin-chart-empty span {
+    color: var(--admin-muted);
+    font-size: 0.86rem;
+    line-height: 1.6;
+}
+
+.admin-chart-empty-compact {
+    max-width: 20rem;
+    padding-inline: 1rem;
 }
 
 .admin-entity-title {
@@ -1125,6 +1158,11 @@ img.admin-avatar {
 .admin-dashboard-highlight-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.admin-dashboard-side-stack {
+    display: grid;
     gap: 1rem;
 }
 
