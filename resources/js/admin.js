@@ -1324,8 +1324,8 @@ const AdminUI = {
                 locales: [fullCalendar.locales['pt-br']],
                 locale: 'pt-br',
                 timeZone: 'local',
-                defaultView: isCompact() ? 'listWeek' : 'dayGridMonth',
-                header: {
+                initialView: isCompact() ? 'listWeek' : 'dayGridMonth',
+                headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: isCompact()
@@ -1345,7 +1345,7 @@ const AdminUI = {
                 contentHeight: resolveContentHeight(),
                 fixedWeekCount: false,
                 showNonCurrentDates: true,
-                eventLimit: isCompact() ? 2 : 4,
+                dayMaxEvents: isCompact() ? 2 : 4,
                 editable: true,
                 eventStartEditable: true,
                 eventDurationEditable: true,
@@ -1354,14 +1354,28 @@ const AdminUI = {
                 nowIndicator: true,
                 navLinks: true,
                 businessHours: true,
-                eventSources: [{
-                    url: eventsUrl,
-                    method: 'GET',
-                    extraParams: readFilters,
-                    failure: () => {
-                        this.showToast('error', 'Não foi possível carregar a agenda.');
-                    },
-                }],
+                events: (fetchInfo, successCallback, failureCallback) => {
+                    const url = new URL(eventsUrl, window.location.origin);
+                    const params = {
+                        start: fetchInfo.startStr,
+                        end: fetchInfo.endStr,
+                        timeZone: fetchInfo.timeZone,
+                        ...readFilters(),
+                    };
+
+                    Object.entries(params).forEach(([key, value]) => {
+                        if (value !== '' && value !== null && value !== undefined) {
+                            url.searchParams.set(key, value);
+                        }
+                    });
+
+                    window.axios.get(url.toString())
+                        .then((response) => successCallback(response.data || []))
+                        .catch((error) => {
+                            this.showToast('error', 'Não foi possível carregar a agenda.');
+                            failureCallback(error);
+                        });
+                },
                 loading: (loading) => {
                     element.classList.toggle('is-loading', loading);
                 },
@@ -1385,7 +1399,8 @@ const AdminUI = {
                     info.jsEvent.preventDefault();
                     this.showCalendarEventPanel(info.event, info.jsEvent);
                 },
-                eventRender: (info) => {
+                eventContent: (info) => this.renderCalendarEventContent(info),
+                eventDidMount: (info) => {
                     this.decorateCalendarEvent(info);
                 },
                 eventDrop: (info) => {
@@ -1408,11 +1423,16 @@ const AdminUI = {
                 if (typeof calendar.setOption === 'function') {
                     calendar.setOption('height', resolveHeight());
                     calendar.setOption('contentHeight', resolveContentHeight());
-                    calendar.setOption('eventLimit', compact ? 2 : 4);
+                    calendar.setOption('dayMaxEvents', compact ? 2 : 4);
                 }
 
                 if (compact && calendar.view?.type !== 'listWeek') {
                     calendar.changeView('listWeek');
+                    return;
+                }
+
+                if (!compact && calendar.view?.type === 'listWeek') {
+                    calendar.changeView('dayGridMonth');
                     return;
                 }
 
@@ -1432,24 +1452,15 @@ const AdminUI = {
         });
     },
 
-    decorateCalendarEvent(info) {
+    renderCalendarEventContent(info) {
         const event = info.event;
         const props = event.extendedProps || {};
-        const status = props.status || 'scheduled';
-        const display = props.display || event.rendering || 'auto';
+        const display = props.display || event.display || 'auto';
 
-        info.el.setAttribute('data-status', status);
-        info.el.setAttribute('data-display', display);
-
-        if (props.statusLabel || props.owner || props.category) {
-            info.el.setAttribute('title', [event.title, props.statusLabel, props.owner, props.category].filter(Boolean).join(' - '));
+        if (display === 'background' || display === 'inverse-background') {
+            return undefined;
         }
 
-        if (display === 'background' || display === 'inverse-background' || event.rendering === 'background') {
-            return;
-        }
-
-        const content = info.el.querySelector('.fc-content') || info.el;
         const timeText = info.timeText
             ? `<span class="admin-calendar-event-time">${this.escapeHtml(info.timeText)}</span>`
             : '';
@@ -1457,7 +1468,8 @@ const AdminUI = {
             ? `<span class="admin-calendar-event-chip">${this.escapeHtml(props.category)}</span>`
             : '';
 
-        content.innerHTML = `
+        return {
+            html: `
             <div class="admin-calendar-event-shell">
                 <div class="admin-calendar-event-heading">
                     ${timeText}
@@ -1465,7 +1477,22 @@ const AdminUI = {
                 </div>
                 ${category ? `<div class="admin-calendar-event-meta">${category}</div>` : ''}
             </div>
-        `;
+            `,
+        };
+    },
+
+    decorateCalendarEvent(info) {
+        const event = info.event;
+        const props = event.extendedProps || {};
+        const status = props.status || 'scheduled';
+        const display = props.display || event.display || 'auto';
+
+        info.el.setAttribute('data-status', status);
+        info.el.setAttribute('data-display', display);
+
+        if (props.statusLabel || props.owner || props.category) {
+            info.el.setAttribute('title', [event.title, props.statusLabel, props.owner, props.category].filter(Boolean).join(' - '));
+        }
     },
 
     calendarDateForRequest(date, allDay) {

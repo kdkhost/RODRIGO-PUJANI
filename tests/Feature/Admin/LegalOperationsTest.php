@@ -511,7 +511,6 @@ class LegalOperationsTest extends TestCase
         $feedResponse->assertJsonCount(1);
         $feedResponse->assertJsonPath('0.id', (string) $event->id);
         $feedResponse->assertJsonPath('0.display', 'background');
-        $feedResponse->assertJsonPath('0.rendering', 'background');
         $feedResponse->assertJsonPath('0.startEditable', true);
 
         $recordsResponse = $this->actingAs($admin)

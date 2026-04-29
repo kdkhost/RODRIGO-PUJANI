@@ -348,7 +348,6 @@ class CalendarController extends Controller
             'durationEditable' => $editable,
             'overlap' => $overlap,
             'display' => $display,
-            'rendering' => in_array($display, ['background', 'inverse-background'], true) ? $display : null,
             'classNames' => [
                 'admin-calendar-event-pill',
                 'admin-calendar-status-'.$status,

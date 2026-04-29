@@ -5,10 +5,6 @@
 @import 'summernote/dist/summernote-lite.min.css';
 @import 'filepond/dist/filepond.min.css';
 @import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
-@import '@fullcalendar/core/main.css';
-@import '@fullcalendar/daygrid/main.css';
-@import '@fullcalendar/timegrid/main.css';
-@import '@fullcalendar/list/main.css';
 
 :root {
     --admin-primary: #c49a3c;
@@ -933,7 +929,7 @@ img.admin-avatar {
 }
 
 
-/* --- Modern FullCalendar 4 --- */
+/* --- Modern FullCalendar 6 --- */
 .admin-calendar-shell {
     border: 1px solid var(--admin-border);
     border-radius: 1.25rem;
@@ -1040,7 +1036,8 @@ img.admin-avatar {
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.18);
 }
 
-.admin-calendar .fc-bgevent {
+.admin-calendar .fc-bgevent,
+.admin-calendar .fc-bg-event {
     opacity: 0.15;
     border-radius: 0.75rem;
 }
@@ -1051,14 +1048,16 @@ img.admin-avatar {
 .admin-calendar-status-done { background: #0d6efd !important; color: #fff !important; }
 .admin-calendar-status-canceled { background: #dc3545 !important; color: #fff !important; }
 
-.admin-calendar .fc-list-item {
+.admin-calendar .fc-list-item,
+.admin-calendar .fc-list-event {
     border-radius: 0.75rem;
     overflow: hidden;
     margin-bottom: 0.5rem;
     border: 1px solid var(--admin-border) !important;
 }
 
-.admin-calendar .fc-list-heading td {
+.admin-calendar .fc-list-heading td,
+.admin-calendar .fc-list-day-cushion {
     background: rgba(15, 19, 24, 0.03) !important;
     font-weight: 800;
     font-size: 0.75rem;
@@ -2603,6 +2602,7 @@ img.admin-avatar {
 
     .admin-calendar.is-compact .fc-view-container,
     .admin-calendar.is-compact .fc-dayGrid-view,
+    .admin-calendar.is-compact .fc-daygrid,
     .admin-calendar.is-compact .fc-list-view,
     .admin-calendar.is-compact .fc-timeGrid-view {
         overflow: visible;
@@ -2630,26 +2630,32 @@ img.admin-avatar {
         font-size: 0.76rem;
     }
 
-    .admin-calendar .fc-day-grid-event {
+    .admin-calendar .fc-day-grid-event,
+    .admin-calendar .fc-daygrid-event {
         margin: 0.08rem 0.12rem;
         padding: 0.08rem 0.18rem;
         border-radius: 0.5rem;
     }
 
-    .admin-calendar .fc-day-grid-event .admin-calendar-event-shell {
+    .admin-calendar .fc-day-grid-event .admin-calendar-event-shell,
+    .admin-calendar .fc-daygrid-event .admin-calendar-event-shell {
         display: block;
     }
 
-    .admin-calendar .fc-day-grid-event .admin-calendar-event-heading {
+    .admin-calendar .fc-day-grid-event .admin-calendar-event-heading,
+    .admin-calendar .fc-daygrid-event .admin-calendar-event-heading {
         display: block;
     }
 
     .admin-calendar .fc-day-grid-event .admin-calendar-event-time,
-    .admin-calendar.is-compact .fc-day-grid-event .admin-calendar-event-meta {
+    .admin-calendar .fc-daygrid-event .admin-calendar-event-time,
+    .admin-calendar.is-compact .fc-day-grid-event .admin-calendar-event-meta,
+    .admin-calendar.is-compact .fc-daygrid-event .admin-calendar-event-meta {
         display: none;
     }
 
-    .admin-calendar .fc-day-grid-event .admin-calendar-event-title {
+    .admin-calendar .fc-day-grid-event .admin-calendar-event-title,
+    .admin-calendar .fc-daygrid-event .admin-calendar-event-title {
         font-size: 0.68rem;
         line-height: 1.2;
     }
