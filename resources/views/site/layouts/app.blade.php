@@ -537,9 +537,9 @@
         $whatsappUrl = $whatsappNumber ? 'https://wa.me/55' . preg_replace('/\D/', '', $whatsappNumber) : null;
     @endphp
 
-    @if($whatsappUrl || ($whatsappMultiple && $whatsappTeamMembers->isNotEmpty()))
+    @if($whatsappUrl || ($whatsappMultiple && collect($whatsappTeamMembers)->isNotEmpty()))
         <div class="whatsapp-container">
-            @if($whatsappMultiple && $whatsappTeamMembers->isNotEmpty())
+            @if($whatsappMultiple && collect($whatsappTeamMembers)->isNotEmpty())
                 <div id="whatsapp-support-box" class="whatsapp-support-box">
                     <div class="whatsapp-support-header">
                         <h3>{{ setting('site.whatsapp_selection_title', 'Escolha um especialista') }}</h3>
