@@ -26,6 +26,17 @@ class CalendarController extends Controller
             ->with('owner:id,name')
             ->whereNotNull('owner_id')
             ->get();
+        $calendarInitialDate = (clone $eventsQuery)
+            ->where('start_at', '>=', now()->startOfDay())
+            ->orderBy('start_at')
+            ->value('start_at');
+
+        if (! $calendarInitialDate) {
+            $calendarInitialDate = (clone $eventsQuery)
+                ->orderBy('start_at')
+                ->value('start_at');
+        }
+
         $records = (clone $eventsQuery)
             ->with(['owner:id,name', 'creator:id,name'])
             ->orderBy('start_at')
@@ -67,6 +78,7 @@ class CalendarController extends Controller
                 ->sortByDesc('total')
                 ->take(5)
                 ->values(),
+            'calendarInitialDate' => $calendarInitialDate ? Carbon::parse($calendarInitialDate)->toDateString() : now()->toDateString(),
             'records' => $records,
         ]);
     }

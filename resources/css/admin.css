@@ -3002,7 +3002,29 @@ img.admin-avatar {
 .admin-calendar {
     position: relative;
     min-width: 0;
-    min-height: 650px;
+    min-height: 0;
+}
+
+.admin-calendar .fc-view-harness,
+.admin-calendar .fc-view-harness-active,
+.admin-calendar .fc-scroller,
+.admin-calendar .fc-scroller-liquid,
+.admin-calendar .fc-scroller-liquid-absolute {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+.admin-calendar .fc-daygrid-body,
+.admin-calendar .fc-daygrid-body-natural,
+.admin-calendar .fc-scrollgrid,
+.admin-calendar .fc-scrollgrid-section-body table,
+.admin-calendar .fc-scrollgrid-sync-table {
+    width: 100% !important;
+}
+
+.admin-calendar .fc-daygrid-day-frame {
+    min-height: 7.25rem;
 }
 
 .admin-calendar.is-loading::after {

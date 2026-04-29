@@ -125,6 +125,7 @@
                                 data-events-url="{{ route('admin.calendar.events') }}"
                                 data-create-url="{{ route('admin.calendar.create') }}"
                                 data-records-target="#admin-calendar-events-table"
+                                data-calendar-initial-date="{{ $calendarInitialDate }}"
                                 data-calendar-height="650"
                                 data-calendar-content-height="590"
                             ></div>
@@ -306,8 +307,11 @@
                         },
                         allDayText: 'Dia inteiro',
                         noEventsMessage: 'Nenhum evento encontrado.',
-                        height: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarHeight || 650),
-                        contentHeight: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarContentHeight || 590),
+                        initialDate: calendarElement.dataset.calendarInitialDate || undefined,
+                        height: 'auto',
+                        contentHeight: 'auto',
+                        expandRows: true,
+                        stickyHeaderDates: false,
                         fixedWeekCount: false,
                         showNonCurrentDates: true,
                         dayMaxEvents: compactQuery.matches ? 2 : 4,
@@ -407,8 +411,11 @@
                             },
                             allDayText: 'Dia inteiro',
                             noEventsMessage: 'Nenhum evento encontrado.',
-                            height: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarHeight || 650),
-                            contentHeight: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarContentHeight || 590),
+                            initialDate: calendarElement.dataset.calendarInitialDate || undefined,
+                            height: 'auto',
+                            contentHeight: 'auto',
+                            expandRows: true,
+                            stickyHeaderDates: false,
                             fixedWeekCount: false,
                             showNonCurrentDates: true,
                             dayMaxEvents: compactQuery.matches ? 2 : 4,
