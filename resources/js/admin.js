@@ -1251,8 +1251,17 @@ const AdminUI = {
             }
 
             try {
+                const chartFactory = window.Chart?.Chart || window.Chart;
+                const context = typeof canvas.getContext === 'function'
+                    ? canvas.getContext('2d')
+                    : null;
+
+                if (typeof chartFactory !== 'function' || !context) {
+                    throw new Error('Chart.js indisponivel ou canvas sem contexto 2D.');
+                }
+
                 const config = JSON.parse(canvas.dataset.adminChart || '{}');
-                const chart = new window.Chart(canvas, {
+                const chart = new chartFactory(context, {
                     ...config,
                     options: {
                         responsive: true,
@@ -1263,8 +1272,28 @@ const AdminUI = {
 
                 canvas._adminChart = chart;
                 canvas.dataset.chartReady = 'true';
+                canvas.closest('.admin-chart-frame')?.classList.remove('is-chart-failed');
+
+                window.requestAnimationFrame(() => {
+                    chart.resize();
+                    chart.update('none');
+                });
+
+                window.setTimeout(() => {
+                    chart.resize();
+                    chart.update('none');
+                }, 180);
             } catch (error) {
-                this.showToast('warning', 'Não foi possível inicializar um gráfico do painel.');
+                console.error('Falha ao inicializar grafico do painel.', error);
+
+                const frame = canvas.closest('.admin-chart-frame');
+                frame?.classList.add('is-chart-failed');
+
+                if (frame && !frame.querySelector('.admin-chart-fallback')) {
+                    frame.insertAdjacentHTML('beforeend', '<div class="admin-chart-fallback">Nao foi possivel carregar este grafico.</div>');
+                }
+
+                this.showToast('warning', 'Nao foi possivel inicializar um grafico do painel.');
             }
         });
     },

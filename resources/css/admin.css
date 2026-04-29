@@ -759,9 +759,25 @@ img.admin-avatar {
     min-height: 280px;
 }
 
+.admin-chart-frame.is-chart-failed canvas {
+    opacity: 0;
+}
+
 .admin-chart-frame canvas {
     width: 100% !important;
     height: 280px !important;
+}
+
+.admin-chart-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--admin-muted);
+    font-size: 0.92rem;
+    font-weight: 700;
 }
 
 .admin-entity-title {
