@@ -355,7 +355,14 @@
                             info.jsEvent.preventDefault();
                             adminUI?.showCalendarEventPanel?.(info.event, info.jsEvent);
                         },
-                        eventContent: (info) => adminUI?.renderCalendarEventContent?.(info),
+                        eventContent: (info) => {
+                            try {
+                                return adminUI?.renderCalendarEventContent?.(info);
+                            } catch (eventContentError) {
+                                console.error('Falha ao renderizar o conteudo visual do evento.', eventContentError);
+                                return undefined;
+                            }
+                        },
                         eventDidMount: (info) => {
                             adminUI?.decorateCalendarEvent?.(info);
                         },
@@ -372,7 +379,73 @@
                     window.requestAnimationFrame(() => calendarInstance.updateSize());
                 } catch (error) {
                     console.error('Falha ao montar a agenda inline.', error);
-                    calendarElement.innerHTML = '<div class="admin-calendar-fallback">Nao foi possivel carregar a agenda.</div>';
+
+                    try {
+                        const fullCalendar = await ensureCalendarDependencies();
+                        const locale = fullCalendar.locales?.['pt-br'];
+
+                        calendarElement.innerHTML = '';
+                        calendarInstance = new fullCalendar.Calendar(calendarElement, {
+                            plugins: fullCalendar.plugins || [],
+                            ...(locale ? { locales: [locale] } : {}),
+                            locale: 'pt-br',
+                            timeZone: 'local',
+                            initialView: compactQuery.matches ? 'listWeek' : 'dayGridMonth',
+                            headerToolbar: {
+                                left: 'prev,next today',
+                                center: 'title',
+                                right: compactQuery.matches
+                                    ? 'dayGridMonth,listWeek'
+                                    : 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+                            },
+                            buttonText: {
+                                today: 'Hoje',
+                                month: 'Mes',
+                                week: 'Semana',
+                                day: 'Dia',
+                                list: 'Lista',
+                            },
+                            allDayText: 'Dia inteiro',
+                            noEventsMessage: 'Nenhum evento encontrado.',
+                            height: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarHeight || 650),
+                            contentHeight: compactQuery.matches ? 'auto' : Number(calendarElement.dataset.calendarContentHeight || 590),
+                            fixedWeekCount: false,
+                            showNonCurrentDates: true,
+                            dayMaxEvents: compactQuery.matches ? 2 : 4,
+                            editable: true,
+                            eventStartEditable: true,
+                            eventDurationEditable: true,
+                            selectable: true,
+                            selectMirror: true,
+                            nowIndicator: true,
+                            navLinks: true,
+                            businessHours: true,
+                            events: async (fetchInfo, successCallback, failureCallback) => {
+                                try {
+                                    const requestUrl = new URL(calendarElement.dataset.eventsUrl, window.location.origin);
+                                    requestUrl.searchParams.set('start', fetchInfo.startStr);
+                                    requestUrl.searchParams.set('end', fetchInfo.endStr);
+                                    requestUrl.searchParams.set('timeZone', fetchInfo.timeZone);
+                                    readFilters().forEach((value, key) => requestUrl.searchParams.set(key, value));
+                                    const payload = await request(requestUrl.toString());
+                                    successCallback(Array.isArray(payload) ? payload : []);
+                                } catch (fallbackError) {
+                                    console.error('Falha ao carregar o feed da agenda no fallback.', fallbackError);
+                                    failureCallback(fallbackError);
+                                }
+                            },
+                            loading: (state) => {
+                                calendarElement.classList.toggle('is-loading', state);
+                            },
+                        });
+
+                        calendarElement._fullCalendar = calendarInstance;
+                        calendarInstance.render();
+                        window.requestAnimationFrame(() => calendarInstance.updateSize());
+                    } catch (fallbackRenderError) {
+                        console.error('Falha ao montar fallback da agenda.', fallbackRenderError);
+                        calendarElement.innerHTML = '<div class="admin-calendar-fallback">Nao foi possivel carregar a agenda.</div>';
+                    }
                 }
             };
 
