@@ -83,14 +83,16 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('publicPages', $publicPages);
 
                 $whatsappMultipleEnabled = ($settings['site.whatsapp_multiple_support']['value'] ?? '0') === '1';
-                $view->with('whatsappTeamMembers', $whatsappMultipleEnabled && Schema::hasTable('team_members')
+                $whatsappTeamMembers = $whatsappMultipleEnabled && Schema::hasTable('team_members')
                     ? Cache::rememberForever('site_whatsapp.team.v1', fn () => TeamMember::query()
                         ->where('is_active', true)
                         ->whereNotNull('whatsapp')
                         ->orderBy('sort_order')
                         ->get(['id', 'name', 'role', 'whatsapp', 'image_path'])
-                        ->all())
-                    : collect());
+                        ->toArray())
+                    : [];
+
+                $view->with('whatsappTeamMembers', collect($whatsappTeamMembers)->map(fn($m) => (object)$m));
             } catch (Throwable) {
                 $view->with('siteSettings', collect());
                 $view->with('publicPages', collect());
