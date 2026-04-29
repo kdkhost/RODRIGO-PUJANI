@@ -38,7 +38,7 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 ## [1.0.3] - 2026-04-26
 
 ### Adicionado
-- Agenda administrativa com FullCalendar 4, visualizacoes mensal/semanal/diaria/lista, filtros, CRUD em modal, selecao, arrastar, redimensionar, eventos de dia inteiro, responsavel, status, cores, URL, local e propriedades extras em JSON.
+- Agenda administrativa com FullCalendar 6, visualizacoes mensal/semanal/diaria/lista, filtros, CRUD em modal, selecao, arrastar, redimensionar, eventos de dia inteiro, responsavel, status, cores, URL, local e propriedades extras em JSON.
 - Summernote em portugues com toolbar completa, imagens, videos, tabelas, cores, fullscreen e codeview nos campos ricos do painel.
 - Impersonate administrativo para acessar usuarios ativos sem senha, com permissao granular e barra de encerramento de sessao impersonada.
 - Preloader configuravel pelo painel com ativar/desativar, escopo site/painel, estilos, cores, marca, mensagem, logo, duracao minima e CSS personalizado.

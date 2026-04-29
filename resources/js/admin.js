@@ -357,7 +357,7 @@ const AdminUI = {
                 return;
             }
 
-            if (!event.target.closest('.fc-event, .fc-list-item, [data-calendar-event-panel]')) {
+            if (!event.target.closest('.fc-event, .fc-list-event, [data-calendar-event-panel]')) {
                 this.hideCalendarEventPanel();
             }
         });

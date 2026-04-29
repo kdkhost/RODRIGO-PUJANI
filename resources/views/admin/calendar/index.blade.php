@@ -119,6 +119,7 @@
                                 id="admin-calendar"
                                 class="admin-calendar"
                                 data-calendar
+                                data-calendar-version="6"
                                 data-calendar-toolbar="#admin-calendar-filters"
                                 data-events-url="{{ route('admin.calendar.events') }}"
                                 data-create-url="{{ route('admin.calendar.create') }}"

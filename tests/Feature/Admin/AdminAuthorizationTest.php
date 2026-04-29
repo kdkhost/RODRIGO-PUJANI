@@ -398,6 +398,7 @@ class AdminAuthorizationTest extends TestCase
             ->assertSee('Agenda operacional')
             ->assertSee('Reunião estratégica')
             ->assertSee('data-calendar', false)
+            ->assertSee('data-calendar-version="6"', false)
             ->assertDontSee('fullcalendar@6', false);
     }
 
