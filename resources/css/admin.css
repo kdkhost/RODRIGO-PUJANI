@@ -2374,6 +2374,27 @@ img.admin-avatar {
     border-radius: 0.72rem;
 }
 
+.admin-profile-avatar-preview {
+    width: 100%;
+    max-width: 96px;
+    aspect-ratio: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(196, 154, 60, 0.22);
+    border-radius: 999px;
+    background: rgba(196, 154, 60, 0.1);
+    color: var(--admin-gold);
+    font-weight: 850;
+    overflow: hidden;
+}
+
+.admin-profile-avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .admin-upload-preview-panel {
     margin-top: 0.7rem;
     border: 1px solid rgba(196, 154, 60, 0.18);

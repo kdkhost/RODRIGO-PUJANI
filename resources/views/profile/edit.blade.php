@@ -150,22 +150,36 @@
                                                     @error('timezone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                 </div>
 
-                                                <div class="col-12">
-                                                    <label for="avatar" class="form-label">Foto do perfil</label>
-                                                    <input
-                                                        id="avatar"
-                                                        name="avatar"
-                                                        type="file"
-                                                        class="form-control @error('avatar') is-invalid @enderror"
-                                                        data-filepond
-                                                        data-accepted="image/png,image/jpeg,image/webp"
-                                                        data-current-url="{{ $avatarUrl ?: '' }}"
-                                                        data-current-name="{{ $user->avatar_path ? basename($user->avatar_path) : '' }}"
-                                                    >
-                                                    @error('avatar')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                                                    @if($avatarUrl)
-                                                        <div class="small text-muted mt-2">Foto atual: <a href="{{ $avatarUrl }}" target="_blank" rel="noopener">{{ $user->avatar_path }}</a></div>
-                                                    @endif
+                                                <div class="col-12 admin-upload-compact">
+                                                    <div class="row g-3 align-items-start">
+                                                        <div class="col-lg-10">
+                                                            <label for="avatar" class="form-label">Foto do perfil</label>
+                                                            <input
+                                                                id="avatar"
+                                                                name="avatar"
+                                                                type="file"
+                                                                class="form-control @error('avatar') is-invalid @enderror"
+                                                                data-filepond
+                                                                data-accepted="image/png,image/jpeg,image/webp"
+                                                                data-current-url="{{ $avatarUrl ?: '' }}"
+                                                                data-current-name="{{ $user->avatar_path ? basename($user->avatar_path) : '' }}"
+                                                            >
+                                                            @error('avatar')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                                            @if($avatarUrl)
+                                                                <div class="small text-muted mt-2">Foto atual: <a href="{{ $avatarUrl }}" target="_blank" rel="noopener">{{ $user->avatar_path }}</a></div>
+                                                            @endif
+                                                        </div>
+                                                        <div class="col-lg-2">
+                                                            <label class="form-label">Preview</label>
+                                                            <div class="admin-profile-avatar-preview">
+                                                                @if($avatarUrl)
+                                                                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}">
+                                                                @else
+                                                                    <span>{{ $initials }}</span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
