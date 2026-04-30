@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\TeamMember;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,13 @@ class TeamMemberController extends AdminCrudController
     protected array $searchable = ['name', 'slug', 'role', 'oab_number'];
     protected string $defaultSort = 'sort_order';
     protected string $defaultDirection = 'asc';
+
+    protected function indexQuery(Request $request): Builder
+    {
+        return TeamMember::query()->with([
+            'linkedUser' => fn (Builder $query) => $query->visibleTo($request->user())->with('roles'),
+        ]);
+    }
 
     protected function rules(Request $request, ?Model $record = null): array
     {

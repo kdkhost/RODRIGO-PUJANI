@@ -9,7 +9,7 @@
         <div class="col-md-6"><label class="form-label">Slug</label><input type="text" name="slug" class="form-control" value="{{ old('slug', $record->slug) }}"></div>
         <div class="col-md-6"><label class="form-label">Cargo</label><input type="text" name="role" class="form-control" value="{{ old('role', $record->role) }}"></div>
         <div class="col-md-6"><label class="form-label">OAB</label><input type="text" name="oab_number" class="form-control" value="{{ old('oab_number', $record->oab_number) }}"></div>
-        <div class="col-md-4"><label class="form-label">E-mail</label><input type="email" name="email" class="form-control" value="{{ old('email', $record->email) }}"></div>
+        <div class="col-md-4"><label class="form-label">E-mail</label><input type="email" name="email" class="form-control" value="{{ old('email', $record->email) }}"><div class="form-text">Se existir um usuário com este mesmo e-mail, o login poderá ser ativado ou desativado pela listagem da equipe.</div></div>
         <div class="col-md-4"><label class="form-label">Telefone</label><input type="text" name="phone" class="form-control" data-mask="phone" value="{{ old('phone', $record->phone) }}"></div>
         <div class="col-md-4"><label class="form-label">WhatsApp</label><input type="text" name="whatsapp" class="form-control" data-mask="phone" value="{{ old('whatsapp', $record->whatsapp) }}"></div>
         <div class="col-md-6"><label class="form-label">LinkedIn</label><input type="url" name="linkedin_url" class="form-control" value="{{ old('linkedin_url', $record->linkedin_url) }}"></div>
