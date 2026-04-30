@@ -114,22 +114,47 @@ const AdminUI = {
 
     bindLiveClocks() {
         const clocks = Array.from(document.querySelectorAll('[data-live-clock]'));
+        const timezoneSelect = document.querySelector('[data-user-timezone-select]');
 
         if (clocks.length === 0) {
             return;
         }
 
-        const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
+        const fallbackTimezone = 'America/Sao_Paulo';
+        const formatterCache = new Map();
 
-        const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-        });
+        const getTimezone = (clock) => (
+            clock.dataset.liveClockTimezone
+            || timezoneSelect?.value
+            || document.body.dataset.userTimezone
+            || Intl.DateTimeFormat().resolvedOptions().timeZone
+            || fallbackTimezone
+        );
+
+        const getFormatters = (timezone) => {
+            if (! formatterCache.has(timezone)) {
+                try {
+                    formatterCache.set(timezone, {
+                        date: new Intl.DateTimeFormat('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            timeZone: timezone,
+                        }),
+                        time: new Intl.DateTimeFormat('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            timeZone: timezone,
+                        }),
+                    });
+                } catch (error) {
+                    return getFormatters(fallbackTimezone);
+                }
+            }
+
+            return formatterCache.get(timezone);
+        };
 
         const syncClock = () => {
             const now = new Date();
@@ -137,16 +162,23 @@ const AdminUI = {
             clocks.forEach((clock) => {
                 const dateTarget = clock.querySelector('[data-live-clock-date]');
                 const timeTarget = clock.querySelector('[data-live-clock-time]');
+                const timezone = getTimezone(clock);
+                const formatters = getFormatters(timezone);
 
                 if (dateTarget) {
-                    dateTarget.textContent = dateFormatter.format(now);
+                    dateTarget.textContent = formatters.date.format(now);
                 }
 
                 if (timeTarget) {
-                    timeTarget.textContent = timeFormatter.format(now);
+                    timeTarget.textContent = formatters.time.format(now);
                 }
             });
         };
+
+        timezoneSelect?.addEventListener('change', () => {
+            document.body.dataset.userTimezone = timezoneSelect.value;
+            syncClock();
+        });
 
         syncClock();
         window.setInterval(syncClock, 1000);

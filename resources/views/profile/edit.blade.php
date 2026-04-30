@@ -146,7 +146,17 @@
 
                                                 <div class="col-md-4">
                                                     <label for="profile_timezone" class="form-label">Fuso horário</label>
-                                                    <input id="profile_timezone" name="timezone" type="text" class="form-control @error('timezone') is-invalid @enderror" value="{{ old('timezone', $user->timezone ?: config('app.timezone')) }}">
+                                                    <select
+                                                        id="profile_timezone"
+                                                        name="timezone"
+                                                        class="form-select @error('timezone') is-invalid @enderror"
+                                                        data-user-timezone-select
+                                                    >
+                                                        @php($selectedTimezone = old('timezone', $user->timezone ?: config('app.timezone')))
+                                                        @foreach($timezones as $timezone)
+                                                            <option value="{{ $timezone }}" @selected($selectedTimezone === $timezone)>{{ $timezone }}</option>
+                                                        @endforeach
+                                                    </select>
                                                     @error('timezone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                 </div>
 

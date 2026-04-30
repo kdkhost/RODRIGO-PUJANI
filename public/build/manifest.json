@@ -70,7 +70,7 @@
     "src": "node_modules/summernote/dist/font/summernote.woff2"
   },
   "resources/css/admin.css": {
-    "file": "assets/admin-bUsnXIxr.css",
+    "file": "assets/admin-Bu0WHQKP.css",
     "src": "resources/css/admin.css",
     "isEntry": true,
     "name": "admin",
@@ -97,7 +97,7 @@
     ]
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-BN7paAp2.js",
+    "file": "assets/admin-CE3k1Mbr.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true,

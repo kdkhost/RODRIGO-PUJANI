@@ -59,6 +59,7 @@
 </head>
 <body class="layout-fixed header-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell" 
       data-user-role="{{ $currentUser?->roles->first()?->name ?? 'Usuário' }}"
+      data-user-timezone="{{ $currentUser?->timezone ?: config('app.timezone') }}"
       data-onboarding-completed="{{ $currentUser?->tour_completed_at ? 'true' : 'false' }}"
       data-onboarding-url="{{ route('admin.documentation.complete-tour') }}"
       data-onboarding-reset-url="{{ route('admin.documentation.reset-tour') }}">
