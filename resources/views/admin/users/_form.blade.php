@@ -2,6 +2,8 @@
     $isEdit = $record->exists;
     $selectedRole = old('role_name', $record->roles->pluck('name')->first());
     $roleLocked = $record->exists && $record->isSuperAdmin();
+    $avatarPath = (string) ($record->avatar_path ?? '');
+    $avatarUrl = $avatarPath !== '' ? site_asset_url($avatarPath) : null;
 @endphp
 <form action="{{ $isEdit ? route($routeBase.'.update', $record->id) : route($routeBase.'.store') }}" method="POST" data-ajax-form enctype="multipart/form-data">
     @csrf
@@ -31,9 +33,6 @@
                         </select>
                     </div>
                     <div class="col-12 admin-upload-compact">
-                        @php
-                            $avatarUrl = $record->avatar_path ? site_asset_url($record->avatar_path) : null;
-                        @endphp
                         <div class="row g-3 align-items-start">
                             <div class="col-lg-6">
                                 <label class="form-label">Avatar</label>
@@ -44,7 +43,7 @@
                                     data-filepond
                                     data-accepted="image/png,image/jpeg,image/webp"
                                     data-current-url="{{ $avatarUrl ?: '' }}"
-                                    data-current-name="{{ $record->avatar_path ? basename($record->avatar_path) : '' }}"
+                                    data-current-name="{{ $avatarPath !== '' ? basename($avatarPath) : '' }}"
                                 >
                             </div>
                             <div class="col-lg-6">
@@ -61,7 +60,7 @@
                                                     <span>Avatar</span>
                                                 </div>
                                                 <div class="admin-upload-preview-meta">
-                                                    <span class="admin-upload-extension">{{ strtoupper(pathinfo($record->avatar_path, PATHINFO_EXTENSION)) ?: 'IMG' }}</span>
+                                                    <span class="admin-upload-extension">{{ strtoupper(pathinfo($avatarPath, PATHINFO_EXTENSION)) ?: 'IMG' }}</span>
                                                     <span>Imagem atual do cadastro</span>
                                                 </div>
                                             </div>
