@@ -140,6 +140,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->middleware('permission:testimonials.manage')
         ->name('testimonials.toggle-active');
 
+    Route::patch('/practice-areas/{record}/toggle-active', [PracticeAreaController::class, 'toggleActive'])
+        ->middleware('permission:practice-areas.manage')
+        ->name('practice-areas.toggle-active');
+
     Route::get('/contact-messages/notifications/feed', [AdminContactMessageController::class, 'notifications'])
         ->middleware('permission:contact-messages.manage')
         ->name('contact-messages.notifications');

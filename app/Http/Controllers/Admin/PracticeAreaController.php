@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\PracticeArea;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PracticeAreaController extends AdminCrudController
@@ -39,5 +40,28 @@ class PracticeAreaController extends AdminCrudController
         $validated['image_path'] = $this->storeMediaFile($request, 'image', 'practice-areas', $record?->image_path);
 
         return $validated;
+    }
+
+    public function toggleActive(Request $request, string $record): JsonResponse
+    {
+        /** @var PracticeArea $entity */
+        $entity = $this->resolveRecord($record);
+
+        $entity->forceFill([
+            'is_active' => ! $entity->is_active,
+        ])->save();
+
+        activity_log(
+            $this->module,
+            $entity->is_active ? 'activated' : 'deactivated',
+            $entity,
+            ['is_active' => $entity->is_active],
+            $entity->is_active ? 'Área ativada.' : 'Área desativada.'
+        );
+
+        return response()->json([
+            'message' => $entity->is_active ? 'Área ativada com sucesso.' : 'Área desativada com sucesso.',
+            'tableTarget' => '#admin-resource-table',
+        ]);
     }
 }
