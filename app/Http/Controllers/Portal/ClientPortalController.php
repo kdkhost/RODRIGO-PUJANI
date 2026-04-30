@@ -169,7 +169,11 @@ class ClientPortalController extends Controller
         $client = $this->portalClient($request);
 
         $legalCase = $this->portalCasesQuery($client)
-            ->with(['primaryLawyer:id,name,email,phone', 'client:id,name,whatsapp,email'])
+            ->with([
+                'primaryLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
+                'supervisingLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
+                'client:id,name,whatsapp,email',
+            ])
             ->findOrFail($case);
 
         $updates = $legalCase->updates()
@@ -185,7 +189,7 @@ class ClientPortalController extends Controller
         return view('site.portal.case', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
-            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
+            'portalWhatsappContacts' => $this->portalWhatsappContacts($client, $legalCase),
             'legalCase' => $legalCase,
             'updates' => $updates,
             'documents' => $documents,
@@ -351,15 +355,24 @@ class ClientPortalController extends Controller
             });
     }
 
-    private function portalWhatsappContacts(Client $client): Collection
+    private function portalWhatsappContacts(Client $client, ?LegalCase $legalCase = null): Collection
     {
-        return $this->portalCasesQuery($client)
-            ->whereNotIn('status', ['closed', 'archived'])
-            ->with([
-                'primaryLawyer:id,name,email,phone,whatsapp,avatar_path',
-                'supervisingLawyer:id,name,email,phone,whatsapp,avatar_path',
-            ])
-            ->get()
+        $lawyerRelations = [
+            'primaryLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
+            'supervisingLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
+        ];
+
+        $cases = $legalCase
+            ? collect([$legalCase->loadMissing($lawyerRelations)])
+            : $this->portalCasesQuery($client)
+                ->whereNotIn('status', ['closed', 'archived'])
+                ->with($lawyerRelations)
+                ->get();
+
+        return $cases
+            ->filter(fn (LegalCase $case): bool => (int) $case->client_id === (int) $client->id)
+            ->filter(fn (LegalCase $case): bool => (bool) $case->is_active && (bool) $case->portal_visible)
+            ->filter(fn (LegalCase $case): bool => ! in_array($case->status, ['closed', 'archived'], true))
             ->flatMap(function (LegalCase $legalCase): array {
                 return [
                     [
@@ -374,6 +387,8 @@ class ClientPortalController extends Controller
                     ],
                 ];
             })
+            ->filter(fn (array $item): bool => filled($item['lawyer']?->id))
+            ->filter(fn (array $item): bool => (bool) ($item['lawyer']?->is_active ?? false))
             ->filter(fn (array $item): bool => filled($item['lawyer']?->whatsapp))
             ->unique(fn (array $item): ?int => $item['lawyer']?->id)
             ->map(function (array $item): array {
