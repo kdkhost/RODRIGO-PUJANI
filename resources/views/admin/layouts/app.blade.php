@@ -58,6 +58,7 @@
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 </head>
 <body class="layout-fixed header-fixed sidebar-expand-lg bg-body-tertiary admin-premium-shell" 
+      data-user-id="{{ $currentUser?->id }}"
       data-user-role="{{ $currentUser?->roles->first()?->name ?? 'Usuário' }}"
       data-user-timezone="{{ $currentUser?->timezone ?: config('app.timezone') }}"
       data-onboarding-completed="{{ $currentUser?->tour_completed_at ? 'true' : 'false' }}"

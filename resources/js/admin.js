@@ -1897,9 +1897,9 @@ const AdminUI = {
     },
     bindTourGuide() {
         const body = document.body;
+        const userId = body.dataset.userId || 'usuario';
         const role = body.dataset.userRole;
         const onboardingUrl = body.dataset.onboardingUrl;
-        const onboardingResetUrl = body.dataset.onboardingResetUrl;
 
         if (!onboardingUrl) {
             return;
@@ -2005,8 +2005,22 @@ const AdminUI = {
             return;
         }
 
-        const autoStorageKey = `admin-tour-auto:${window.location.pathname}`;
+        const autoStorageKey = `admin-tour-auto-completed:${userId}`;
         let autoLaunched = false;
+        const readAutoCompleted = () => {
+            try {
+                return window.localStorage.getItem(autoStorageKey) === 'true';
+            } catch (error) {
+                return false;
+            }
+        };
+        const writeAutoCompleted = () => {
+            try {
+                window.localStorage.setItem(autoStorageKey, 'true');
+            } catch (error) {
+                // localStorage pode estar bloqueado; o banco continua sendo a fonte principal.
+            }
+        };
 
         const resolveDriverFactory = () => window.driver?.js?.driver || window.driver?.driver || null;
         const waitForDriver = () => new Promise((resolve, reject) => {
@@ -2054,24 +2068,19 @@ const AdminUI = {
             return driverObj;
         };
 
-        const launchTour = async () => {
+        const launchTour = async ({ automatic = false } = {}) => {
+            if (automatic) {
+                autoLaunched = true;
+                writeAutoCompleted();
+                body.dataset.onboardingCompleted = 'true';
+                this.markOnboardingAsCompleted(onboardingUrl);
+            }
+
             const driverObj = await createDriver();
             driverObj.drive();
         };
 
         const restartTour = async () => {
-            if (onboardingResetUrl) {
-                await window.axios.post(onboardingResetUrl);
-            }
-
-            body.dataset.onboardingCompleted = 'false';
-
-            Object.keys(sessionStorage)
-                .filter((key) => key.startsWith('admin-tour-auto:'))
-                .forEach((key) => sessionStorage.removeItem(key));
-
-            autoLaunched = false;
-
             window.setTimeout(() => {
                 launchTour().catch((error) => {
                     this.showToast('error', error.message || 'Nao foi possivel iniciar o tour guiado.');
@@ -2080,16 +2089,14 @@ const AdminUI = {
         };
 
         const scheduleAutoTour = () => {
-            if (autoLaunched || body.dataset.onboardingCompleted === 'true') {
+            if (autoLaunched || body.dataset.onboardingCompleted === 'true' || readAutoCompleted()) {
                 return;
             }
-
-            autoLaunched = true;
 
             const fire = () => {
                 window.requestAnimationFrame(() => {
                     window.setTimeout(() => {
-                        launchTour().catch((error) => {
+                        launchTour({ automatic: true }).catch((error) => {
                             autoLaunched = false;
                             console.error('Falha ao iniciar tour guiado.', error);
                         });
