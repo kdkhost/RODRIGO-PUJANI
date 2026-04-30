@@ -37,7 +37,7 @@ class ProfileUpdateRequest extends FormRequest
             'address_district' => ['nullable', 'string', 'max:255'],
             'address_city' => ['nullable', 'string', 'max:255'],
             'address_state' => ['nullable', 'string', 'size:2'],
-            'timezone' => ['nullable', 'string', 'max:255'],
+            'timezone' => ['nullable', 'string', Rule::in(timezone_identifiers_list())],
             'avatar' => ['nullable', 'image', 'max:4096'],
         ];
     }

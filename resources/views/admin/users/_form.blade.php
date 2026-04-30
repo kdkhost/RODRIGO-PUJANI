@@ -21,18 +21,63 @@
                     <div class="col-md-4"><label class="form-label">Telefone alternativo</label><input type="text" name="alternate_phone" data-mask="phone" class="form-control" value="{{ old('alternate_phone', $record->alternate_phone) }}" placeholder="(11) 3000-0000"></div>
                     <div class="col-md-4"><label class="form-label">CPF ou CNPJ</label><input type="text" name="document_number" data-mask="cpf-cnpj" class="form-control" value="{{ old('document_number', $record->document_number) }}" placeholder="000.000.000-00"></div>
                     <div class="col-md-4"><label class="form-label">Data de nascimento</label><input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $record->birth_date?->format('Y-m-d')) }}"></div>
-                    <div class="col-md-4"><label class="form-label">Fuso horário</label><input type="text" name="timezone" class="form-control" value="{{ old('timezone', $record->timezone ?? 'America/Sao_Paulo') }}" placeholder="America/Sao_Paulo"></div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fuso horário</label>
+                        <select name="timezone" class="form-select">
+                            @php($selectedTimezone = old('timezone', $record->timezone ?? 'America/Sao_Paulo'))
+                            @foreach($timezones as $timezone)
+                                <option value="{{ $timezone }}" @selected($selectedTimezone === $timezone)>{{ $timezone }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-12">
-                        <label class="form-label">Avatar</label>
-                        <input
-                            type="file"
-                            name="avatar"
-                            class="form-control"
-                            data-filepond
-                            data-accepted="image/png,image/jpeg,image/webp"
-                            data-current-url="{{ $record->avatar_path ? site_asset_url($record->avatar_path) : '' }}"
-                            data-current-name="{{ $record->avatar_path ? basename($record->avatar_path) : '' }}"
-                        >
+                        @php
+                            $avatarUrl = $record->avatar_path ? site_asset_url($record->avatar_path) : null;
+                        @endphp
+                        <div class="row g-3 align-items-start">
+                            <div class="col-lg-8">
+                                <label class="form-label">Avatar</label>
+                                <input
+                                    type="file"
+                                    name="avatar"
+                                    class="form-control"
+                                    data-filepond
+                                    data-accepted="image/png,image/jpeg,image/webp"
+                                    data-current-url="{{ $avatarUrl ?: '' }}"
+                                    data-current-name="{{ $record->avatar_path ? basename($record->avatar_path) : '' }}"
+                                >
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="form-label">Preview atual</label>
+                                <div class="admin-upload-preview-panel h-100">
+                                    @if($avatarUrl)
+                                        <div class="admin-upload-preview-item">
+                                            <div class="admin-upload-preview-media">
+                                                <img src="{{ $avatarUrl }}" alt="{{ $record->name }}">
+                                            </div>
+                                            <div class="admin-upload-preview-info">
+                                                <div class="admin-upload-preview-title">
+                                                    <strong>{{ $record->name ?: 'Usuário' }}</strong>
+                                                    <span>Avatar</span>
+                                                </div>
+                                                <div class="admin-upload-preview-meta">
+                                                    <span class="admin-upload-extension">{{ strtoupper(pathinfo($record->avatar_path, PATHINFO_EXTENSION)) ?: 'IMG' }}</span>
+                                                    <span>Imagem atual do cadastro</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="admin-upload-preview-empty">
+                                            <i class="bi bi-person-bounding-box"></i>
+                                            <div>
+                                                <strong>Nenhuma foto cadastrada</strong>
+                                                <span>Envie uma imagem para exibir no perfil e nas listagens.</span>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -20,6 +20,7 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'pageTitle' => 'Meu Perfil',
             'user' => $request->user(),
+            'timezones' => timezone_identifiers_list(),
         ]);
     }
 

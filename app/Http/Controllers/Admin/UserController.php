@@ -39,6 +39,7 @@ class UserController extends AdminCrudController
                 )
                 ->orderBy('name')
                 ->get(),
+            'timezones' => timezone_identifiers_list(),
         ];
     }
 
@@ -71,7 +72,7 @@ class UserController extends AdminCrudController
             'address_city' => ['nullable', 'string', 'max:255'],
             'address_state' => ['nullable', 'string', 'size:2'],
             'avatar' => ['nullable', 'image', 'max:4096'],
-            'timezone' => ['nullable', 'string', 'max:255'],
+            'timezone' => ['nullable', 'string', Rule::in(timezone_identifiers_list())],
             'password' => $passwordRule,
             'role_name' => $roleRule,
             'role_names' => ['prohibited'],
