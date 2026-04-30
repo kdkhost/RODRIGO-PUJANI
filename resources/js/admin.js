@@ -1869,7 +1869,7 @@ const AdminUI = {
         const onboardingUrl = body.dataset.onboardingUrl;
         const onboardingResetUrl = body.dataset.onboardingResetUrl;
 
-        if (!window.driver || !onboardingUrl) {
+        if (!onboardingUrl) {
             return;
         }
 
@@ -1976,8 +1976,31 @@ const AdminUI = {
         const autoStorageKey = `admin-tour-auto:${window.location.pathname}`;
         let autoLaunched = false;
 
-        const createDriver = () => {
-            const driverObj = window.driver.js.driver({
+        const resolveDriverFactory = () => window.driver?.js?.driver || window.driver?.driver || null;
+        const waitForDriver = () => new Promise((resolve, reject) => {
+            const startedAt = Date.now();
+            const tick = () => {
+                const factory = resolveDriverFactory();
+
+                if (factory) {
+                    resolve(factory);
+                    return;
+                }
+
+                if (Date.now() - startedAt > 5000) {
+                    reject(new Error('Driver.js nao foi carregado.'));
+                    return;
+                }
+
+                window.setTimeout(tick, 120);
+            };
+
+            tick();
+        });
+
+        const createDriver = async () => {
+            const driverFactory = await waitForDriver();
+            const driverObj = driverFactory({
                 showProgress: true,
                 allowClose: true,
                 overlayClickBehavior: 'close',
@@ -2000,8 +2023,9 @@ const AdminUI = {
             return driverObj;
         };
 
-        const launchTour = () => {
-            createDriver().drive();
+        const launchTour = async () => {
+            const driverObj = await createDriver();
+            driverObj.drive();
         };
 
         const restartTour = async () => {
@@ -2018,7 +2042,9 @@ const AdminUI = {
             autoLaunched = false;
 
             window.setTimeout(() => {
-                launchTour();
+                launchTour().catch((error) => {
+                    this.showToast('error', error.message || 'Nao foi possivel iniciar o tour guiado.');
+                });
             }, 260);
         };
 
@@ -2028,12 +2054,14 @@ const AdminUI = {
             }
 
             autoLaunched = true;
-            sessionStorage.setItem(autoStorageKey, 'done');
 
             const fire = () => {
                 window.requestAnimationFrame(() => {
                     window.setTimeout(() => {
-                        launchTour();
+                        launchTour().catch((error) => {
+                            autoLaunched = false;
+                            console.error('Falha ao iniciar tour guiado.', error);
+                        });
                     }, 600);
                 });
             };
@@ -2053,7 +2081,9 @@ const AdminUI = {
 
             trigger.addEventListener('click', (event) => {
                 event.preventDefault();
-                launchTour();
+                launchTour().catch((error) => {
+                    this.showToast('error', error.message || 'Nao foi possivel iniciar o tour guiado.');
+                });
             });
 
             trigger.dataset.tourReady = 'true';
@@ -2077,9 +2107,7 @@ const AdminUI = {
             trigger.dataset.tourResetReady = 'true';
         });
 
-        if (!sessionStorage.getItem(autoStorageKey)) {
-            scheduleAutoTour();
-        }
+        scheduleAutoTour();
     },
 
     async markOnboardingAsCompleted(url) {

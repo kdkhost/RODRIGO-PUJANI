@@ -100,6 +100,17 @@ body {
     position: relative;
 }
 
+.admin-tour-restart-button {
+    color: var(--admin-gold);
+}
+
+.admin-tour-restart-button:hover,
+.admin-tour-restart-button:focus {
+    border-color: rgba(196, 154, 60, 0.46);
+    background: rgba(196, 154, 60, 0.12);
+    color: var(--admin-gold-strong);
+}
+
 .admin-notification-badge {
     position: absolute;
     top: -0.32rem;

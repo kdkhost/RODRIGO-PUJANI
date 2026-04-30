@@ -112,6 +112,17 @@
                             <i class="bi bi-box-arrow-up-right me-1"></i>Ver site
                         </a>
                     </li>
+                    <li class="nav-item me-2">
+                        <button
+                            class="btn btn-sm btn-outline-secondary admin-topbar-square-button admin-tour-restart-button"
+                            type="button"
+                            data-restart-tour
+                            title="Reiniciar tour guiado"
+                            aria-label="Reiniciar tour guiado"
+                        >
+                            <i class="bi bi-signpost-split"></i>
+                        </button>
+                    </li>
                     @if($contactNotificationEnabled)
                         <li class="nav-item dropdown me-2">
                             <button
