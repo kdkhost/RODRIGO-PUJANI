@@ -238,6 +238,31 @@ body:not(.portal-body) .site-scroll-top {
     padding: clamp(1.2rem, 3vw, 2rem);
 }
 
+.portal-shell-full {
+    display: block;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top right, rgba(196, 154, 60, 0.14), transparent 24rem),
+        linear-gradient(135deg, #f5f7fb 0%, #eef2f7 100%);
+}
+
+.portal-shell-full .portal-panel {
+    display: none;
+}
+
+.portal-shell-full .portal-content {
+    min-height: 100vh;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: clamp(1rem, 2.6vw, 2rem);
+}
+
+.portal-shell-full .portal-card {
+    width: 100%;
+    min-height: calc(100vh - clamp(1rem, 2.6vw, 2rem) * 2);
+    border-radius: 0.8rem;
+}
+
 .portal-form-heading {
     margin-bottom: 1.5rem;
 }

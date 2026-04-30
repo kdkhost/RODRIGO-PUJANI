@@ -4,6 +4,8 @@
     $pageTitle = $legalCase->title;
 @endphp
 
+@section('portal_full_width', true)
+
 @section('content')
     <div class="portal-dashboard-header">
         <div>

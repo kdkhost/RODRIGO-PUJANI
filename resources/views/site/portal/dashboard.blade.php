@@ -4,6 +4,8 @@
     $pageTitle = 'Meu acompanhamento';
 @endphp
 
+@section('portal_full_width', true)
+
 @section('content')
     @php
         $caseStatusChart = [

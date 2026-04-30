@@ -36,7 +36,7 @@
         <div data-page-toast data-type="warning" data-message="{{ $message }}"></div>
     @endforeach
 
-    <main class="portal-shell">
+    <main class="portal-shell @hasSection('portal_full_width') portal-shell-full @endif">
         <section class="portal-panel">
             <div class="portal-panel-bg"></div>
             <div class="portal-panel-overlay"></div>
