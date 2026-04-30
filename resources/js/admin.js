@@ -524,7 +524,7 @@ const AdminUI = {
             }
 
             list.innerHTML = items.map((item) => `
-                <a class="admin-notification-item ${item.is_unread ? 'is-unread' : ''}" href="${this.escapeHtml(item.manage_url)}" data-modal-url="${this.escapeHtml(item.manage_url)}" data-modal-title="Gerenciar mensagem">
+                <a class="admin-notification-item ${item.is_unread ? 'is-unread' : ''}" href="${this.escapeHtml(item.manage_url)}" data-message-id="${this.escapeHtml(item.id)}" data-modal-url="${this.escapeHtml(item.manage_url)}" data-modal-title="Gerenciar mensagem">
                     <div class="admin-notification-item-top">
                         <strong>${this.escapeHtml(item.name)}</strong>
                         <time>${this.escapeHtml(item.created_at || '')}</time>
@@ -679,7 +679,12 @@ const AdminUI = {
             const response = await window.axios.patch(endpoint);
             const badge = document.querySelector('[data-admin-notifications-badge]');
             const toggle = document.querySelector('[data-admin-notifications-toggle]');
+            const notificationItem = document.querySelector(`[data-message-id="${messageId}"]`);
             const unreadCount = Number(response.data?.unread_count || 0);
+
+            if (notificationItem) {
+                notificationItem.classList.remove('is-unread');
+            }
 
             if (badge) {
                 badge.textContent = String(unreadCount > 99 ? '99+' : unreadCount);
