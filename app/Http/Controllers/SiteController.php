@@ -412,6 +412,22 @@ JS;
         }
 
         window.localStorage?.removeItem('site-pwa-promo-dismissed-v1');
+        window.sessionStorage?.clear?.();
+
+        if ('indexedDB' in window && typeof indexedDB.databases === 'function') {
+            const databases = await indexedDB.databases();
+            await Promise.all(
+                databases
+                    .map((item) => item?.name)
+                    .filter(Boolean)
+                    .map((name) => new Promise((resolve) => {
+                        const request = indexedDB.deleteDatabase(name);
+                        request.onsuccess = () => resolve(true);
+                        request.onerror = () => resolve(false);
+                        request.onblocked = () => resolve(false);
+                    }))
+            );
+        }
     } catch (error) {
         console.warn('Não foi possível limpar todos os dados locais do PWA.', error);
     }
