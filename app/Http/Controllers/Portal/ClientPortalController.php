@@ -171,7 +171,6 @@ class ClientPortalController extends Controller
         $legalCase = $this->portalCasesQuery($client)
             ->with([
                 'primaryLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
-                'supervisingLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
                 'client:id,name,whatsapp,email',
             ])
             ->findOrFail($case);
@@ -359,7 +358,6 @@ class ClientPortalController extends Controller
     {
         $lawyerRelations = [
             'primaryLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
-            'supervisingLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
         ];
 
         $cases = $legalCase
@@ -378,11 +376,6 @@ class ClientPortalController extends Controller
                     [
                         'lawyer' => $legalCase->primaryLawyer,
                         'role' => 'Advogado responsável',
-                        'case' => $legalCase->title,
-                    ],
-                    [
-                        'lawyer' => $legalCase->supervisingLawyer,
-                        'role' => 'Supervisor jurídico',
                         'case' => $legalCase->title,
                     ],
                 ];
