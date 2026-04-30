@@ -842,7 +842,16 @@ const AdminUI = {
         this.modalInstance.show();
 
         try {
-            const response = await window.axios.get(url);
+            const modalUrl = new URL(url, window.location.origin);
+            modalUrl.searchParams.set('_', String(Date.now()));
+
+            const response = await window.axios.get(modalUrl.toString(), {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    Pragma: 'no-cache',
+                    Expires: '0',
+                },
+            });
             modal.querySelector('.modal-title').textContent = response.data.title || title;
             modal.querySelector('.modal-body').innerHTML = response.data.html;
             this.initPlugins(modal);
