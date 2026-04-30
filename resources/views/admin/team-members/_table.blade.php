@@ -9,6 +9,7 @@
             <th>Profissional</th>
             <th>Atuação</th>
             <th>Contato</th>
+            <th>Status</th>
             <th>Login</th>
             <th class="text-end">Ações</th>
         </tr>
@@ -57,6 +58,19 @@
                     <div class="admin-entity-meta">{{ $item->phone ?: ($item->whatsapp ?: 'Sem telefone cadastrado') }}</div>
                 </td>
                 <td>
+                    <button
+                        type="button"
+                        class="admin-status-toggle {{ $item->is_active ? 'is-active' : 'is-inactive' }}"
+                        data-toggle-url="{{ route('admin.team-members.toggle-active', $item->id) }}"
+                        data-table-target="#admin-resource-table"
+                        data-toggle-title="{{ $item->is_active ? 'Desativar profissional?' : 'Ativar profissional?' }}"
+                        data-toggle-text="{{ $item->is_active ? 'O profissional ficará oculto das áreas que dependem do cadastro ativo até nova ativação.' : 'O profissional voltará a ficar ativo no cadastro da equipe.' }}"
+                        data-toggle-button="{{ $item->is_active ? 'Desativar' : 'Ativar' }}"
+                    >
+                        <span></span>{{ $item->is_active ? 'Ativo' : 'Inativo' }}
+                    </button>
+                </td>
+                <td>
                     @if($linkedUser)
                         @if($canToggleLogin)
                             <button
@@ -88,7 +102,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="5" class="text-center py-4 text-muted">Nenhum membro cadastrado.</td></tr>
+            <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum membro cadastrado.</td></tr>
         @endforelse
         </tbody>
     </table>

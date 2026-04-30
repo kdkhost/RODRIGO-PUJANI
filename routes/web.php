@@ -132,6 +132,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->middleware('permission:users.manage')
         ->name('users.toggle-active');
 
+    Route::patch('/team-members/{record}/toggle-active', [TeamMemberController::class, 'toggleActive'])
+        ->middleware('permission:team-members.manage')
+        ->name('team-members.toggle-active');
+
     Route::middleware('role:Super Admin')
         ->prefix('system-files')
         ->name('system-files.')

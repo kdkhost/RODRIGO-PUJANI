@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\TeamMember;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TeamMemberController extends AdminCrudController
@@ -57,5 +58,28 @@ class TeamMemberController extends AdminCrudController
         $validated['image_path'] = $this->storeMediaFile($request, 'image', 'team', $record?->image_path);
 
         return $validated;
+    }
+
+    public function toggleActive(Request $request, string $record): JsonResponse
+    {
+        /** @var TeamMember $entity */
+        $entity = $this->resolveRecord($record);
+
+        $entity->forceFill([
+            'is_active' => ! $entity->is_active,
+        ])->save();
+
+        activity_log(
+            $this->module,
+            $entity->is_active ? 'activated' : 'deactivated',
+            $entity,
+            ['is_active' => $entity->is_active],
+            $entity->is_active ? 'Profissional ativado.' : 'Profissional desativado.'
+        );
+
+        return response()->json([
+            'message' => $entity->is_active ? 'Profissional ativado com sucesso.' : 'Profissional desativado com sucesso.',
+            'tableTarget' => '#admin-resource-table',
+        ]);
     }
 }
