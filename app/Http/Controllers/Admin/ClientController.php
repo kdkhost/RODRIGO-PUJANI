@@ -125,26 +125,26 @@ class ClientController extends AdminCrudController
     private function portalEditableFieldOptions(): array
     {
         return [
-            'name' => 'Nome / razÃ£o social',
+            'name' => 'Nome / razão social',
             'trade_name' => 'Nome fantasia',
             'document_number' => 'CPF/CNPJ',
             'birth_date' => 'Data de nascimento',
-            'profession' => 'ProfissÃ£o / segmento',
+            'profession' => 'Profissão / segmento',
             'email' => 'E-mail',
             'phone' => 'Telefone',
             'whatsapp' => 'WhatsApp',
             'alternate_phone' => 'Telefone alternativo',
             'address_zip' => 'CEP',
             'address_street' => 'Logradouro',
-            'address_number' => 'NÃºmero',
+            'address_number' => 'Número',
             'address_complement' => 'Complemento',
             'address_district' => 'Bairro',
             'address_city' => 'Cidade',
             'address_state' => 'UF',
-            'legal_representative_name' => 'ResponsÃ¡vel legal (nome)',
-            'legal_representative_document' => 'ResponsÃ¡vel legal (CPF)',
-            'legal_representative_email' => 'ResponsÃ¡vel legal (e-mail)',
-            'legal_representative_phone' => 'ResponsÃ¡vel legal (telefone)',
+            'legal_representative_name' => 'Responsável legal (nome)',
+            'legal_representative_document' => 'Responsável legal (CPF)',
+            'legal_representative_email' => 'Responsável legal (e-mail)',
+            'legal_representative_phone' => 'Responsável legal (telefone)',
         ];
     }
 

@@ -2,6 +2,17 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.6] - 2026-04-30
+
+### Corrigido
+- Padronizacao de textos em PT-BR nos formulários administrativos e do portal do cliente, com acentuação/pontuação revisadas.
+- Revisão de encoding no repositório para garantir arquivos em UTF-8 sem BOM.
+
+### Adicionado
+- Hook de commit versionado em `.githooks/pre-commit` para bloquear qualquer arquivo com UTF-8 BOM.
+- Script utilitário `tools/check-no-bom.ps1` para validação manual (repositório completo ou apenas arquivos staged).
+- Documentação no `README.md` com regra de encoding e ativação do hook local.
+
 ## [1.0.5] - 2026-04-27
 
 ### Adicionado

@@ -2,6 +2,21 @@
 
 Sistema institucional e administrativo desenvolvido em Laravel 13 para operacao em hospedagem compartilhada, com publicacao sem `/public`, painel administrativo customizado, PWA e instalador web.
 
+## Padrão de encoding (obrigatório)
+
+- Todo o projeto usa `UTF-8 sem BOM`.
+- Antes de commitar, valide com:
+
+```bash
+powershell -ExecutionPolicy Bypass -File tools/check-no-bom.ps1 -StagedOnly
+```
+
+- Para bloquear BOM automaticamente no commit, ative o hook versionado:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Requisitos
 
 - PHP 8.4 ou superior

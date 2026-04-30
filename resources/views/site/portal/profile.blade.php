@@ -23,7 +23,7 @@
         <div>
             <span>Cadastro do cliente</span>
             <h2>Meu perfil</h2>
-            <p>Atualize sua foto e, quando liberado pelo escritorio, mantenha seus dados cadastrais e de contato em dia.</p>
+            <p>Atualize sua foto e, quando liberado pelo escritório, mantenha seus dados cadastrais e de contato em dia.</p>
         </div>
         <a href="{{ route('portal.dashboard') }}" class="portal-secondary-button">Voltar ao painel</a>
     </div>
@@ -34,26 +34,26 @@
 
         @unless($canEditRegistration)
             <div class="portal-status portal-status-info">
-                A atualizacao cadastral esta bloqueada pelo escritorio. Voce pode trocar apenas a foto de perfil.
+                A atualização cadastral está bloqueada pelo escritório. Você pode trocar apenas a foto de perfil.
             </div>
         @endunless
 
         <section class="portal-section">
             <div class="portal-section-heading">
-                <h3>Identificacao</h3>
+                <h3>Identificação</h3>
             </div>
 
             <div class="portal-profile-grid">
                 <div class="portal-field">
                     <label for="person_type">Tipo de cadastro</label>
                     <select id="person_type" name="person_type" class="portal-input" data-portal-person-type required @disabled(true)>
-                        <option value="individual" @selected($personType === 'individual')>Pessoa fisica</option>
-                        <option value="company" @selected($personType === 'company')>Pessoa juridica</option>
+                        <option value="individual" @selected($personType === 'individual')>Pessoa física</option>
+                        <option value="company" @selected($personType === 'company')>Pessoa jurídica</option>
                     </select>
                 </div>
                 <div class="portal-field portal-field-wide">
-                    <label for="name" data-portal-name-label>{{ $isCompany ? 'Razao social' : 'Nome completo' }}</label>
-                    <input id="name" type="text" name="name" class="portal-input @error('name') portal-input-error @enderror" value="{{ old('name', $client->name) }}" required placeholder="{{ $isCompany ? 'Razao social' : 'Nome completo' }}" @disabled(! $isEditable('name'))>
+                    <label for="name" data-portal-name-label>{{ $isCompany ? 'Razão social' : 'Nome completo' }}</label>
+                    <input id="name" type="text" name="name" class="portal-input @error('name') portal-input-error @enderror" value="{{ old('name', $client->name) }}" required placeholder="{{ $isCompany ? 'Razão social' : 'Nome completo' }}" @disabled(! $isEditable('name'))>
                 </div>
                 <div class="portal-field {{ $isCompany ? '' : 'portal-hidden' }}" data-portal-company-field>
                     <label for="trade_name">Nome fantasia</label>
@@ -68,8 +68,8 @@
                     <input id="birth_date" type="date" name="birth_date" class="portal-input" value="{{ old('birth_date', $client->birth_date?->format('Y-m-d')) }}" @disabled(! $isEditable('birth_date'))>
                 </div>
                 <div class="portal-field">
-                    <label for="profession">Profissao / segmento</label>
-                    <input id="profession" type="text" name="profession" class="portal-input" value="{{ old('profession', $client->profession) }}" placeholder="Profissao ou segmento" @disabled(! $isEditable('profession'))>
+                    <label for="profession">Profissão / segmento</label>
+                    <input id="profession" type="text" name="profession" class="portal-input" value="{{ old('profession', $client->profession) }}" placeholder="Profissão ou segmento" @disabled(! $isEditable('profession'))>
                 </div>
             </div>
         </section>
@@ -77,13 +77,13 @@
         @if($isCompany)
             <section class="portal-section portal-section-spaced">
                 <div class="portal-section-heading">
-                    <h3>Responsavel legal</h3>
+                    <h3>Responsável legal</h3>
                 </div>
 
                 <div class="portal-profile-grid">
                     <div class="portal-field">
                         <label for="legal_representative_name">Nome</label>
-                        <input id="legal_representative_name" type="text" name="legal_representative_name" class="portal-input" value="{{ old('legal_representative_name', $metadata['legal_representative_name'] ?? '') }}" placeholder="Nome do responsavel legal" @disabled(! $isEditable('legal_representative_name'))>
+                        <input id="legal_representative_name" type="text" name="legal_representative_name" class="portal-input" value="{{ old('legal_representative_name', $metadata['legal_representative_name'] ?? '') }}" placeholder="Nome do responsável legal" @disabled(! $isEditable('legal_representative_name'))>
                     </div>
                     <div class="portal-field">
                         <label for="legal_representative_document">CPF</label>
@@ -158,7 +158,7 @@
 
         <section class="portal-section portal-section-spaced">
             <div class="portal-section-heading">
-                <h3>Endereco completo</h3>
+                <h3>Endereço completo</h3>
             </div>
 
             <div class="portal-profile-grid">
@@ -171,8 +171,8 @@
                     <input id="address_street" type="text" name="address_street" class="portal-input" value="{{ old('address_street', $client->address_street) }}" placeholder="Rua, avenida, travessa" @disabled(! $isEditable('address_street'))>
                 </div>
                 <div class="portal-field">
-                    <label for="address_number">Numero</label>
-                    <input id="address_number" type="text" name="address_number" class="portal-input" value="{{ old('address_number', $client->address_number) }}" placeholder="Numero" @disabled(! $isEditable('address_number'))>
+                    <label for="address_number">Número</label>
+                    <input id="address_number" type="text" name="address_number" class="portal-input" value="{{ old('address_number', $client->address_number) }}" placeholder="Número" @disabled(! $isEditable('address_number'))>
                 </div>
                 <div class="portal-field">
                     <label for="address_complement">Complemento</label>
@@ -200,7 +200,7 @@
         @endif
 
         <div class="portal-profile-actions">
-            <button type="submit" class="portal-button">{{ $canEditRegistration ? 'Salvar alteracoes' : 'Salvar foto' }}</button>
+            <button type="submit" class="portal-button">{{ $canEditRegistration ? 'Salvar alterações' : 'Salvar foto' }}</button>
         </div>
     </form>
 @endsection

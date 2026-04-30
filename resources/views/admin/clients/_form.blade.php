@@ -14,12 +14,12 @@
         <div class="col-md-4">
             <label class="form-label">Tipo de cadastro</label>
             <select name="person_type" class="form-select" required>
-                <option value="individual" @selected(old('person_type', $record->person_type ?: 'individual') === 'individual')>Pessoa fisica</option>
-                <option value="company" @selected(old('person_type', $record->person_type) === 'company')>Pessoa juridica</option>
+                <option value="individual" @selected(old('person_type', $record->person_type ?: 'individual') === 'individual')>Pessoa física</option>
+                <option value="company" @selected(old('person_type', $record->person_type) === 'company')>Pessoa jurídica</option>
             </select>
         </div>
         <div class="col-md-8">
-            <label class="form-label">Nome / razao social</label>
+            <label class="form-label">Nome / razão social</label>
             <input type="text" name="name" class="form-control" value="{{ old('name', $record->name) }}" required>
         </div>
 
@@ -50,11 +50,11 @@
             <input type="text" name="alternate_phone" data-mask="phone" class="form-control" value="{{ old('alternate_phone', $record->alternate_phone) }}">
         </div>
         <div class="col-md-4">
-            <label class="form-label">Data de referencia</label>
+            <label class="form-label">Data de referência</label>
             <input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $record->birth_date?->format('Y-m-d')) }}">
         </div>
         <div class="col-md-4">
-            <label class="form-label">Profissao / segmento</label>
+            <label class="form-label">Profissão / segmento</label>
             <input type="text" name="profession" class="form-control" value="{{ old('profession', $record->profession) }}">
         </div>
 
@@ -67,7 +67,7 @@
             <input type="text" name="address_street" class="form-control" value="{{ old('address_street', $record->address_street) }}">
         </div>
         <div class="col-md-2">
-            <label class="form-label">Numero</label>
+            <label class="form-label">Número</label>
             <input type="text" name="address_number" class="form-control" value="{{ old('address_number', $record->address_number) }}">
         </div>
 
@@ -89,7 +89,7 @@
         </div>
 
         <div class="col-md-8">
-            <label class="form-label">Advogado responsavel</label>
+            <label class="form-label">Advogado responsável</label>
             <select name="assigned_lawyer_id" class="form-select" @disabled(! $canChooseLawyer)>
                 <option value="">Definir depois</option>
                 @foreach($lawyers as $lawyer)
@@ -124,19 +124,19 @@
                     </div>
                     <div class="col-md-4 form-check ps-5">
                         <input type="checkbox" class="form-check-input" id="client_portal_profile_update_allowed" name="portal_profile_update_allowed" value="1" @checked(old('portal_profile_update_allowed', $record->portal_profile_update_allowed))>
-                        <label class="form-check-label" for="client_portal_profile_update_allowed">Permitir edicao cadastral</label>
+                        <label class="form-check-label" for="client_portal_profile_update_allowed">Permitir edição cadastral</label>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Codigo de acesso</label>
+                        <label class="form-label">Código de acesso</label>
                         <div class="input-group">
-                            <input type="text" name="portal_access_code" class="form-control" value="{{ old('portal_access_code') }}" placeholder="{{ $record->portal_access_code ? 'Deixe em branco para manter o codigo atual' : 'Informe ou gere um codigo de acesso' }}">
+                            <input type="text" name="portal_access_code" class="form-control" value="{{ old('portal_access_code') }}" placeholder="{{ $record->portal_access_code ? 'Deixe em branco para manter o código atual' : 'Informe ou gere um código de acesso' }}">
                             <button class="btn btn-outline-secondary" type="button" data-generate-client-code>Gerar</button>
                         </div>
                         <div class="form-text">
                             @if($record->portal_access_code)
-                                Ultima alteracao: {{ $record->portal_access_code_updated_at?->format('d/m/Y H:i') ?: 'nao registrada' }}.
+                                Última alteração: {{ $record->portal_access_code_updated_at?->format('d/m/Y H:i') ?: 'não registrada' }}.
                             @else
-                                Defina um codigo com no minimo 6 caracteres para o primeiro acesso.
+                                Defina um código com no mínimo 6 caracteres para o primeiro acesso.
                             @endif
                         </div>
                     </div>
@@ -148,10 +148,10 @@
                             <option value="whatsapp" @selected($portalNotifyPreference === 'whatsapp')>Somente WhatsApp</option>
                             <option value="none" @selected($portalNotifyPreference === 'none')>Desativado</option>
                         </select>
-                        <div class="form-text">Defina como o cliente recebe recados e atualizacoes.</div>
+                        <div class="form-text">Defina como o cliente recebe recados e atualizações.</div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Campos permitidos para edicao no portal</label>
+                        <label class="form-label">Campos permitidos para edição no portal</label>
                         <div class="row g-2">
                             @foreach($portalEditableFieldOptions as $fieldKey => $fieldLabel)
                                 <div class="col-md-4">
