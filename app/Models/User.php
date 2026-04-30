@@ -31,6 +31,8 @@ use Spatie\Permission\Traits\HasRoles;
     'avatar_path',
     'timezone',
     'is_active',
+    'pref_receive_internal_messages',
+    'pref_receive_whatsapp_messages',
     'password',
     'last_login_at',
     'last_login_ip',
@@ -40,6 +42,8 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles;
+
+    public const PROTECTED_ROOT_USER_ID = 1;
 
     /**
      * Get the attributes that should be cast.
@@ -52,6 +56,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'birth_date' => 'date',
             'is_active' => 'boolean',
+            'pref_receive_internal_messages' => 'boolean',
+            'pref_receive_whatsapp_messages' => 'boolean',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -79,6 +85,8 @@ class User extends Authenticatable
 
     public function scopeVisibleTo(Builder $query, ?self $viewer): Builder
     {
+        $query->whereKeyNot(self::PROTECTED_ROOT_USER_ID);
+
         if ($viewer?->isSuperAdmin()) {
             return $query;
         }
@@ -102,7 +110,7 @@ class User extends Authenticatable
 
     public function canBeImpersonatedBy(?self $actor): bool
     {
-        if (! $actor || $actor->is($this) || ! $this->is_active) {
+        if (! $actor || $actor->is($this) || $this->isProtectedRootUser() || ! $this->is_active) {
             return false;
         }
 
@@ -115,7 +123,7 @@ class User extends Authenticatable
 
     public function canBeDeletedBy(?self $actor): bool
     {
-        if (! $actor || $actor->is($this) || $this->isSuperAdmin()) {
+        if (! $actor || $actor->is($this) || $this->isProtectedRootUser() || $this->isSuperAdmin()) {
             return false;
         }
 
@@ -124,11 +132,16 @@ class User extends Authenticatable
 
     public function canHaveStatusChangedBy(?self $actor): bool
     {
-        if (! $actor || $actor->is($this) || $this->isSuperAdmin()) {
+        if (! $actor || $actor->is($this) || $this->isProtectedRootUser() || $this->isSuperAdmin()) {
             return false;
         }
 
         return $actor->canManageOtherUsers();
+    }
+
+    public function isProtectedRootUser(): bool
+    {
+        return (int) $this->getKey() === self::PROTECTED_ROOT_USER_ID;
     }
 
     public function activityLogs(): HasMany

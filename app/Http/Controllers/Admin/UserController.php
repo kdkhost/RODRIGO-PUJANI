@@ -73,6 +73,8 @@ class UserController extends AdminCrudController
             'address_state' => ['nullable', 'string', 'size:2'],
             'avatar' => ['nullable', 'image', 'max:4096'],
             'timezone' => ['nullable', 'string', Rule::in(timezone_identifiers_list())],
+            'pref_receive_internal_messages' => ['nullable', 'boolean'],
+            'pref_receive_whatsapp_messages' => ['nullable', 'boolean'],
             'password' => $passwordRule,
             'role_name' => $roleRule,
             'role_names' => ['prohibited'],
@@ -82,7 +84,7 @@ class UserController extends AdminCrudController
     protected function mutateData(array $validated, Request $request, ?Model $record = null): array
     {
         unset($validated['avatar'], $validated['role_name'], $validated['role_names']);
-        $validated += $this->booleanData($request, ['is_active']);
+        $validated += $this->booleanData($request, ['is_active', 'pref_receive_internal_messages', 'pref_receive_whatsapp_messages']);
 
         if ($record instanceof User && $record->exists && $record->isSuperAdmin()) {
             $validated['is_active'] = true;

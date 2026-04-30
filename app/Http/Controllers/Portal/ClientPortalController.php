@@ -198,11 +198,15 @@ class ClientPortalController extends Controller
     public function profile(Request $request): View
     {
         $client = $this->portalClient($request);
+        $editableFields = $this->portalEditableFields($client);
+        $resolvedPersonType = $this->resolvePersonType($client);
 
         return view('site.portal.profile', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
             'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
+            'editableFields' => $editableFields,
+            'resolvedPersonType' => $resolvedPersonType,
         ]);
     }
 
@@ -239,6 +243,8 @@ class ClientPortalController extends Controller
     public function updateProfile(Request $request): RedirectResponse
     {
         $client = $this->portalClient($request);
+        $editableFields = $this->portalEditableFields($client);
+        $resolvedPersonType = $this->resolvePersonType($client);
 
         $request->validate([
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
@@ -248,8 +254,8 @@ class ClientPortalController extends Controller
 
         if ($canUpdateRegistration) {
             $validated = $request->validate([
-                'person_type' => ['required', Rule::in(['individual', 'company'])],
-                'name' => ['required', 'string', 'max:255'],
+                'person_type' => ['nullable', Rule::in(['individual', 'company'])],
+                'name' => ['nullable', 'string', 'max:255'],
                 'trade_name' => ['nullable', 'string', 'max:255'],
                 'document_number' => ['nullable', 'string', 'max:32'],
                 'email' => ['nullable', 'email', 'max:255'],
@@ -265,17 +271,52 @@ class ClientPortalController extends Controller
                 'address_district' => ['nullable', 'string', 'max:255'],
                 'address_city' => ['nullable', 'string', 'max:255'],
                 'address_state' => ['nullable', 'string', 'max:8'],
+                'legal_representative_name' => ['nullable', 'string', 'max:255'],
+                'legal_representative_document' => ['nullable', 'string', 'max:32'],
+                'legal_representative_email' => ['nullable', 'email', 'max:255'],
+                'legal_representative_phone' => ['nullable', 'string', 'max:30'],
             ]);
 
+            $validated['person_type'] = $resolvedPersonType;
             $validated['address_state'] = filled($validated['address_state'] ?? null)
                 ? strtoupper((string) $validated['address_state'])
                 : null;
-
-            if (($validated['person_type'] ?? null) === 'individual') {
-                unset($validated['trade_name']);
+            if ($resolvedPersonType === 'individual') {
+                unset(
+                    $validated['trade_name'],
+                    $validated['legal_representative_name'],
+                    $validated['legal_representative_document'],
+                    $validated['legal_representative_email'],
+                    $validated['legal_representative_phone']
+                );
             }
 
-            $client->fill($validated);
+            $allowedClientFields = collect([
+                'name', 'trade_name', 'document_number', 'email', 'phone', 'whatsapp', 'alternate_phone', 'birth_date', 'profession',
+                'address_zip', 'address_street', 'address_number', 'address_complement', 'address_district', 'address_city', 'address_state',
+            ]);
+            $fillable = $allowedClientFields
+                ->filter(fn (string $field): bool => in_array($field, $editableFields, true))
+                ->values()
+                ->all();
+
+            $payload = collect($validated)
+                ->only($fillable)
+                ->all();
+
+            if (in_array('name', $editableFields, true) && blank($payload['name'] ?? null)) {
+                $payload['name'] = $client->name;
+            }
+
+            $client->fill($payload);
+
+            $metadata = is_array($client->metadata) ? $client->metadata : [];
+            foreach (['legal_representative_name', 'legal_representative_document', 'legal_representative_email', 'legal_representative_phone'] as $field) {
+                if (in_array($field, $editableFields, true) && array_key_exists($field, $validated)) {
+                    $metadata[$field] = $validated[$field];
+                }
+            }
+            $client->metadata = $metadata;
         }
 
         if ($request->hasFile('avatar')) {
@@ -356,8 +397,13 @@ class ClientPortalController extends Controller
 
     private function portalWhatsappContacts(Client $client, ?LegalCase $legalCase = null): Collection
     {
+        $clientChannelPreference = $this->portalNotificationPreference($client);
+        if (in_array($clientChannelPreference, ['none', 'internal'], true)) {
+            return collect();
+        }
+
         $lawyerRelations = [
-            'primaryLawyer:id,name,email,phone,whatsapp,avatar_path,is_active',
+            'primaryLawyer:id,name,email,phone,whatsapp,avatar_path,is_active,pref_receive_whatsapp_messages',
         ];
 
         $cases = $legalCase
@@ -382,6 +428,7 @@ class ClientPortalController extends Controller
             })
             ->filter(fn (array $item): bool => filled($item['lawyer']?->id))
             ->filter(fn (array $item): bool => (bool) ($item['lawyer']?->is_active ?? false))
+            ->filter(fn (array $item): bool => (bool) ($item['lawyer']?->pref_receive_whatsapp_messages ?? true))
             ->filter(fn (array $item): bool => filled($item['lawyer']?->whatsapp))
             ->unique(fn (array $item): ?int => $item['lawyer']?->id)
             ->map(function (array $item): array {
@@ -398,6 +445,44 @@ class ClientPortalController extends Controller
             })
             ->filter(fn (array $item): bool => strlen($item['whatsapp']) >= 10)
             ->values();
+    }
+
+    private function portalNotificationPreference(Client $client): string
+    {
+        $metadata = is_array($client->metadata) ? $client->metadata : [];
+        $preference = (string) ($metadata['portal_notification_preference'] ?? 'both');
+
+        return in_array($preference, ['both', 'internal', 'whatsapp', 'none'], true)
+            ? $preference
+            : 'both';
+    }
+
+    private function portalEditableFields(Client $client): array
+    {
+        $defaults = [
+            'name', 'trade_name', 'document_number', 'email', 'phone', 'whatsapp', 'alternate_phone', 'birth_date', 'profession',
+            'address_zip', 'address_street', 'address_number', 'address_complement', 'address_district', 'address_city', 'address_state',
+            'legal_representative_name', 'legal_representative_document', 'legal_representative_email', 'legal_representative_phone',
+        ];
+
+        $metadata = is_array($client->metadata) ? $client->metadata : [];
+        $editable = array_map('strval', (array) ($metadata['portal_editable_fields'] ?? $defaults));
+
+        return array_values(array_intersect($defaults, $editable));
+    }
+
+    private function resolvePersonType(Client $client): string
+    {
+        $document = preg_replace('/\D+/', '', (string) $client->document_number);
+        if (strlen($document) > 11) {
+            return 'company';
+        }
+
+        if (strlen($document) === 11) {
+            return 'individual';
+        }
+
+        return $client->person_type === 'company' ? 'company' : 'individual';
     }
 
     private function portalPanel(): array
