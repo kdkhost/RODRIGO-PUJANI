@@ -162,6 +162,14 @@
                             @yield('content')
                         </div>
                     </section>
+
+                    <footer class="portal-client-footer" data-portal-tour-footer>
+                        <div>
+                            <strong>Portal seguro do cliente</strong>
+                            <span>Acompanhamento reservado de processos, documentos e prazos.</span>
+                        </div>
+                        <small>&copy; {{ now()->year }} {{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}</small>
+                    </footer>
                 </div>
             </section>
         @else

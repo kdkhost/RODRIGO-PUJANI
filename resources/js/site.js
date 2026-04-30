@@ -462,6 +462,15 @@ const SiteUI = {
                     align: 'start',
                 },
             },
+            {
+                element: '[data-portal-tour-footer]',
+                popover: {
+                    title: 'Rodapé do portal',
+                    description: 'No rodapé ficam as informações institucionais do ambiente reservado do cliente.',
+                    side: 'top',
+                    align: 'center',
+                },
+            },
         ].filter((step) => document.querySelector(step.element));
 
         if (steps.length === 0) {

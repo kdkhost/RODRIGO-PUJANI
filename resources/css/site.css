@@ -356,6 +356,9 @@ body:not(.portal-body) .site-scroll-top {
 
 .portal-client-main {
     min-width: 0;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
 }
 
 .portal-client-topbar {
@@ -443,6 +446,7 @@ body:not(.portal-body) .site-scroll-top {
 }
 
 .portal-shell-full .portal-content {
+    flex: 1 1 auto;
     min-height: calc(100vh - 70px);
 }
 
@@ -473,6 +477,33 @@ body:not(.portal-body) .site-scroll-top {
 .portal-body .driver-popover-prev-btn,
 .portal-body .driver-popover-close-btn {
     border-radius: 0.45rem;
+}
+
+.portal-client-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid rgba(16, 24, 40, 0.08);
+    background: rgba(255, 255, 255, 0.82);
+    color: #667085;
+    padding: 1rem clamp(1rem, 2.6vw, 2rem);
+    backdrop-filter: blur(14px);
+}
+
+.portal-client-footer strong,
+.portal-client-footer span {
+    display: block;
+}
+
+.portal-client-footer strong {
+    color: #141b24;
+    font-weight: 850;
+}
+
+.portal-client-footer span,
+.portal-client-footer small {
+    font-size: 0.86rem;
 }
 
 .portal-client-avatar-link img {
@@ -1059,6 +1090,11 @@ body:not(.portal-body) .site-scroll-top {
     .portal-client-user {
         width: 100%;
         flex-wrap: wrap;
+    }
+
+    .portal-client-footer {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .portal-client-user form {
