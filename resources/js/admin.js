@@ -68,6 +68,7 @@ const AdminUI = {
         this.ensureCalendarEventPanel();
         this.flushPageToasts();
         this.bindBackToTop();
+        this.bindLiveClocks();
         this.bindDocumentEvents();
         this.bindTourGuide();
         this.initNotificationCenter();
@@ -109,6 +110,46 @@ const AdminUI = {
 
         syncVisibility();
         window.addEventListener('scroll', syncVisibility, { passive: true });
+    },
+
+    bindLiveClocks() {
+        const clocks = Array.from(document.querySelectorAll('[data-live-clock]'));
+
+        if (clocks.length === 0) {
+            return;
+        }
+
+        const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+
+        const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        });
+
+        const syncClock = () => {
+            const now = new Date();
+
+            clocks.forEach((clock) => {
+                const dateTarget = clock.querySelector('[data-live-clock-date]');
+                const timeTarget = clock.querySelector('[data-live-clock-time]');
+
+                if (dateTarget) {
+                    dateTarget.textContent = dateFormatter.format(now);
+                }
+
+                if (timeTarget) {
+                    timeTarget.textContent = timeFormatter.format(now);
+                }
+            });
+        };
+
+        syncClock();
+        window.setInterval(syncClock, 1000);
     },
 
     ensureModal() {

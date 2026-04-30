@@ -77,11 +77,11 @@
                     <h1>{{ $pageTitle }}</h1>
                     <p>{{ $dashboardScopeLabel }} com prazos, agenda, produção e sinais de demanda em uma visão única.</p>
                 </div>
-                <div class="admin-hero-stamp">
+                <div class="admin-hero-stamp" data-live-clock>
                     <i class="bi bi-calendar2-check"></i>
                     <div>
-                        <strong>{{ now()->format('d/m/Y') }}</strong>
-                        <small>{{ now()->format('H:i') }}</small>
+                        <strong data-live-clock-date>{{ now()->format('d/m/Y') }}</strong>
+                        <small data-live-clock-time>{{ now()->format('H:i:s') }}</small>
                     </div>
                 </div>
             </div>
