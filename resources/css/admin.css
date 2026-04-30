@@ -2362,6 +2362,18 @@ img.admin-avatar {
     margin-bottom: 0;
 }
 
+.admin-upload-compact .filepond--root {
+    min-height: auto;
+}
+
+.admin-upload-compact .filepond--drop-label {
+    min-height: 110px;
+}
+
+.admin-upload-compact .filepond--panel-root {
+    border-radius: 0.72rem;
+}
+
 .admin-upload-preview-panel {
     margin-top: 0.7rem;
     border: 1px solid rgba(196, 154, 60, 0.18);
