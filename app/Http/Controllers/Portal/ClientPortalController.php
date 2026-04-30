@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -109,6 +110,7 @@ class ClientPortalController extends Controller
         return view('site.portal.dashboard', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
+            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
             'cases' => $cases,
             'recentUpdates' => $recentUpdates,
             'sharedDocuments' => $sharedDocuments,
@@ -185,6 +187,7 @@ class ClientPortalController extends Controller
         return view('site.portal.case', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
+            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
             'legalCase' => $legalCase,
             'updates' => $updates,
             'documents' => $documents,
@@ -198,6 +201,7 @@ class ClientPortalController extends Controller
         return view('site.portal.profile', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
+            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
         ]);
     }
 
@@ -291,6 +295,47 @@ class ClientPortalController extends Controller
             ->where('client_id', $client->id)
             ->where('is_active', true)
             ->where('portal_visible', true);
+    }
+
+    private function portalWhatsappContacts(Client $client): Collection
+    {
+        return $this->portalCasesQuery($client)
+            ->whereNotIn('status', ['closed', 'archived'])
+            ->with([
+                'primaryLawyer:id,name,email,phone,whatsapp,avatar_path',
+                'supervisingLawyer:id,name,email,phone,whatsapp,avatar_path',
+            ])
+            ->get()
+            ->flatMap(function (LegalCase $legalCase): array {
+                return [
+                    [
+                        'lawyer' => $legalCase->primaryLawyer,
+                        'role' => 'Advogado responsável',
+                        'case' => $legalCase->title,
+                    ],
+                    [
+                        'lawyer' => $legalCase->supervisingLawyer,
+                        'role' => 'Supervisor jurídico',
+                        'case' => $legalCase->title,
+                    ],
+                ];
+            })
+            ->filter(fn (array $item): bool => filled($item['lawyer']?->whatsapp))
+            ->unique(fn (array $item): ?int => $item['lawyer']?->id)
+            ->map(function (array $item): array {
+                $lawyer = $item['lawyer'];
+
+                return [
+                    'id' => $lawyer->id,
+                    'name' => $lawyer->name,
+                    'role' => $item['role'],
+                    'case' => $item['case'],
+                    'whatsapp' => preg_replace('/\D+/', '', (string) $lawyer->whatsapp),
+                    'avatar_url' => $lawyer->avatar_path ? site_asset_url($lawyer->avatar_path) : null,
+                ];
+            })
+            ->filter(fn (array $item): bool => strlen($item['whatsapp']) >= 10)
+            ->values();
     }
 
     private function portalPanel(): array

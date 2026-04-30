@@ -9,6 +9,7 @@
         ->take(2)
         ->map(fn ($part) => mb_substr($part, 0, 1))
         ->implode('');
+    $portalWhatsappContacts = collect($portalWhatsappContacts ?? []);
 @endphp
 <!DOCTYPE html>
 <html
@@ -170,6 +171,52 @@
                         </div>
                         <small>&copy; {{ now()->year }} {{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}</small>
                     </footer>
+
+                    @if($portalWhatsappContacts->isNotEmpty())
+                        <div class="portal-whatsapp-container" data-portal-tour-whatsapp>
+                            <div id="whatsapp-support-box" class="portal-whatsapp-box">
+                                <div class="portal-whatsapp-head">
+                                    <span>Atendimento liberado</span>
+                                    <strong>Fale com o advogado do processo</strong>
+                                    <p>Disponível enquanto houver processo em andamento no seu portal.</p>
+                                </div>
+                                <div class="portal-whatsapp-list">
+                                    @foreach($portalWhatsappContacts as $contact)
+                                        @php
+                                            $digits = preg_replace('/\D+/', '', (string) $contact['whatsapp']);
+                                            $waNumber = str_starts_with($digits, '55') ? $digits : '55'.$digits;
+                                            $message = rawurlencode('Olá, sou cliente do portal e gostaria de falar sobre o processo '.$contact['case'].'.');
+                                        @endphp
+                                        <a
+                                            href="https://wa.me/{{ $waNumber }}?text={{ $message }}"
+                                            class="portal-whatsapp-item"
+                                            target="_blank"
+                                            rel="noopener"
+                                        >
+                                            <span class="portal-whatsapp-avatar">
+                                                @if($contact['avatar_url'])
+                                                    <img src="{{ $contact['avatar_url'] }}" alt="{{ $contact['name'] }}">
+                                                @else
+                                                    <i class="bi bi-person"></i>
+                                                @endif
+                                            </span>
+                                            <span class="portal-whatsapp-info">
+                                                <strong>{{ $contact['name'] }}</strong>
+                                                <small>{{ $contact['role'] }}</small>
+                                                <em>{{ str($contact['case'])->limit(46) }}</em>
+                                            </span>
+                                            <span class="portal-whatsapp-action">
+                                                <i class="bi bi-whatsapp"></i>
+                                            </span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <button type="button" id="whatsapp-toggle" class="portal-whatsapp-toggle" aria-label="Abrir contatos por WhatsApp">
+                                <i class="bi bi-whatsapp"></i>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </section>
         @else

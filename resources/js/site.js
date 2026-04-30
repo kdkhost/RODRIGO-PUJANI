@@ -471,6 +471,15 @@ const SiteUI = {
                     align: 'center',
                 },
             },
+            {
+                element: '[data-portal-tour-whatsapp]',
+                popover: {
+                    title: 'WhatsApp do processo',
+                    description: 'Quando houver processo em andamento, este botão mostra somente os advogados vinculados ao seu caso. Ao encerrar o processo, o contato deixa de aparecer.',
+                    side: 'left',
+                    align: 'end',
+                },
+            },
         ].filter((step) => document.querySelector(step.element));
 
         if (steps.length === 0) {

@@ -506,6 +506,167 @@ body:not(.portal-body) .site-scroll-top {
     font-size: 0.86rem;
 }
 
+.portal-whatsapp-container {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 60;
+}
+
+.portal-whatsapp-toggle {
+    width: 58px;
+    height: 58px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(37, 211, 102, 0.3);
+    border-radius: 999px;
+    background: #25d366;
+    color: #fff;
+    box-shadow: 0 18px 36px rgba(37, 211, 102, 0.28);
+    font-size: 1.45rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-whatsapp-toggle:hover,
+.portal-whatsapp-toggle.active {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 22px 44px rgba(37, 211, 102, 0.38);
+}
+
+.portal-whatsapp-box {
+    position: absolute;
+    right: 0;
+    bottom: 4.8rem;
+    width: min(92vw, 390px);
+    border: 1px solid rgba(196, 154, 60, 0.22);
+    border-radius: 0.8rem;
+    background: rgba(18, 24, 32, 0.98);
+    color: #f7ecd8;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.32);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    overflow: hidden;
+}
+
+.portal-whatsapp-box.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.portal-whatsapp-head {
+    padding: 1rem 1rem 0.85rem;
+    border-bottom: 1px solid rgba(247, 236, 216, 0.08);
+}
+
+.portal-whatsapp-head span {
+    display: block;
+    color: #d8b463;
+    font-size: 0.68rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.portal-whatsapp-head strong {
+    display: block;
+    margin-top: 0.35rem;
+    color: #fff7e6;
+    font-size: 1.05rem;
+    font-weight: 850;
+}
+
+.portal-whatsapp-head p {
+    margin-top: 0.35rem;
+    color: rgba(247, 236, 216, 0.64);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.portal-whatsapp-list {
+    display: grid;
+    gap: 0.5rem;
+    max-height: min(420px, 58vh);
+    overflow: auto;
+    padding: 0.85rem;
+}
+
+.portal-whatsapp-item {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr) 38px;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid rgba(247, 236, 216, 0.08);
+    border-radius: 0.65rem;
+    background: rgba(255, 255, 255, 0.055);
+    color: inherit;
+    padding: 0.75rem;
+    text-decoration: none;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.portal-whatsapp-item:hover {
+    border-color: rgba(37, 211, 102, 0.35);
+    background: rgba(37, 211, 102, 0.1);
+    color: inherit;
+    transform: translateY(-1px);
+}
+
+.portal-whatsapp-avatar {
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(196, 154, 60, 0.14);
+    color: #d8b463;
+}
+
+.portal-whatsapp-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.portal-whatsapp-info strong,
+.portal-whatsapp-info small,
+.portal-whatsapp-info em {
+    display: block;
+}
+
+.portal-whatsapp-info strong {
+    color: #fff7e6;
+    font-weight: 850;
+}
+
+.portal-whatsapp-info small {
+    color: rgba(247, 236, 216, 0.68);
+    font-size: 0.78rem;
+}
+
+.portal-whatsapp-info em {
+    margin-top: 0.2rem;
+    color: rgba(247, 236, 216, 0.48);
+    font-size: 0.75rem;
+    font-style: normal;
+}
+
+.portal-whatsapp-action {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(37, 211, 102, 0.16);
+    color: #25d366;
+}
+
 .portal-client-avatar-link img {
     width: 100%;
     height: 100%;
