@@ -26,8 +26,12 @@
         <link rel="apple-touch-icon" href="{{ $branding['favicon_url'] }}">
     @endif
     @vite(['resources/css/site.css', 'resources/js/site.js'])
+    @if($portalFullWidth)
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css">
+        <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    @endif
 </head>
-<body class="portal-body">
+<body class="portal-body" @if($portalFullWidth) data-portal-client-id="{{ $portalClient?->id }}" data-portal-tour-enabled="true" @endif>
     @if (session('portal_status'))
         <div data-page-toast data-type="success" data-message="{{ session('portal_status') }}"></div>
     @endif
@@ -88,7 +92,7 @@
 
         @if($portalFullWidth)
             <section class="portal-client-app">
-                <aside class="portal-client-sidebar">
+                <aside class="portal-client-sidebar" data-portal-tour-sidebar>
                     <a href="{{ route('portal.dashboard') }}" class="portal-client-brand">
                         @if($portalPanel['brand']['logo_url'] ?? null)
                             <img src="{{ $portalPanel['brand']['logo_url'] }}" alt="{{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}">
@@ -99,7 +103,7 @@
                         <small>Portal do cliente</small>
                     </a>
 
-                    <nav class="portal-client-nav" aria-label="Navegação do portal do cliente">
+                    <nav class="portal-client-nav" aria-label="Navegação do portal do cliente" data-portal-tour-nav>
                         <a href="{{ route('portal.dashboard') }}" class="{{ request()->routeIs('portal.dashboard') ? 'active' : '' }}">
                             <i class="bi bi-speedometer2"></i>
                             <span>Painel</span>
@@ -120,12 +124,21 @@
                 </aside>
 
                 <div class="portal-client-main">
-                    <header class="portal-client-topbar">
-                        <div>
+                    <header class="portal-client-topbar" data-portal-tour-topbar>
+                        <div class="portal-client-title">
                             <span>Portal do cliente</span>
                             <strong>{{ $pageTitle ?? 'Painel' }}</strong>
                         </div>
                         <div class="portal-client-user">
+                            <button
+                                type="button"
+                                class="portal-client-icon-button"
+                                data-portal-restart-tour
+                                title="Reiniciar tour guiado"
+                                aria-label="Reiniciar tour guiado"
+                            >
+                                <i class="bi bi-signpost-split"></i>
+                            </button>
                             <a href="{{ route('portal.profile') }}" class="portal-client-avatar-link" aria-label="Abrir perfil">
                                 @if($portalAvatarUrl)
                                     <img src="{{ $portalAvatarUrl }}" alt="{{ $portalClient?->name }}">
@@ -144,7 +157,7 @@
                         </div>
                     </header>
 
-                    <section class="portal-content">
+                    <section class="portal-content" data-portal-tour-content>
                         <div class="portal-card">
                             @yield('content')
                         </div>

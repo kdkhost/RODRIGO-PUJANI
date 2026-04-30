@@ -30,6 +30,7 @@ const SiteUI = {
             this.bindInputMasks,
             this.bindCepAutofill,
             this.bindPortalAvatarPreview,
+            this.bindPortalTour,
             this.bindParallax,
             this.bindContactForm,
             this.bindPwa,
@@ -390,6 +391,156 @@ const SiteUI = {
 
             input.dataset.avatarPreviewReady = 'true';
         });
+    },
+
+    bindPortalTour() {
+        const body = document.body;
+
+        if (body.dataset.portalTourEnabled !== 'true') {
+            return;
+        }
+
+        const clientId = body.dataset.portalClientId || 'cliente';
+        const storageKey = `client-portal-tour-completed:${clientId}`;
+        const restartButtons = Array.from(document.querySelectorAll('[data-portal-restart-tour]'));
+        const resolveDriverFactory = () => window.driver?.js?.driver || window.driver?.driver || null;
+        const waitForDriver = () => new Promise((resolve, reject) => {
+            const startedAt = Date.now();
+            const tick = () => {
+                const factory = resolveDriverFactory();
+
+                if (factory) {
+                    resolve(factory);
+                    return;
+                }
+
+                if (Date.now() - startedAt > 5000) {
+                    reject(new Error('Driver.js não foi carregado.'));
+                    return;
+                }
+
+                window.setTimeout(tick, 120);
+            };
+
+            tick();
+        });
+
+        const steps = [
+            {
+                element: '[data-portal-tour-sidebar]',
+                popover: {
+                    title: 'Menu do portal',
+                    description: 'Use este menu para acessar seu painel, seus dados cadastrais, processos e documentos compartilhados.',
+                    side: 'right',
+                    align: 'start',
+                },
+            },
+            {
+                element: '[data-portal-tour-topbar]',
+                popover: {
+                    title: 'Barra superior',
+                    description: 'Aqui ficam seu perfil, o botão para reiniciar este tour e a opção de sair com segurança.',
+                    side: 'bottom',
+                    align: 'end',
+                },
+            },
+            {
+                element: '[data-portal-tour-content]',
+                popover: {
+                    title: 'Área de acompanhamento',
+                    description: 'Nesta área você acompanha indicadores, próximos marcos, documentos, processos e movimentações liberadas pelo escritório.',
+                    side: 'top',
+                    align: 'center',
+                },
+            },
+            {
+                element: '.portal-client-nav a[href*="perfil"]',
+                popover: {
+                    title: 'Atualização cadastral',
+                    description: 'Mantenha telefone, WhatsApp, endereço e foto atualizados para facilitar a comunicação com a equipe jurídica.',
+                    side: 'right',
+                    align: 'start',
+                },
+            },
+        ].filter((step) => document.querySelector(step.element));
+
+        if (steps.length === 0) {
+            return;
+        }
+
+        const createDriver = async () => {
+            const driverFactory = await waitForDriver();
+
+            return driverFactory({
+                steps,
+                showProgress: true,
+                allowClose: true,
+                overlayClickBehavior: 'close',
+                nextBtnText: 'Próximo',
+                prevBtnText: 'Anterior',
+                doneBtnText: 'Finalizar',
+                progressText: 'Passo {{current}} de {{total}}',
+            });
+        };
+
+        const markCompleted = () => {
+            try {
+                window.localStorage.setItem(storageKey, 'true');
+            } catch (error) {
+                // O tour continua funcional mesmo se o navegador bloquear armazenamento local.
+            }
+        };
+
+        const hasCompleted = () => {
+            try {
+                return window.localStorage.getItem(storageKey) === 'true';
+            } catch (error) {
+                return false;
+            }
+        };
+
+        const launchTour = async ({ automatic = false } = {}) => {
+            if (automatic) {
+                markCompleted();
+            }
+
+            const driverObj = await createDriver();
+            driverObj.drive();
+        };
+
+        restartButtons.forEach((button) => {
+            if (button.dataset.portalTourReady === 'true') {
+                return;
+            }
+
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                launchTour().catch((error) => {
+                    showToast('error', error.message || 'Não foi possível iniciar o tour guiado.');
+                });
+            });
+
+            button.dataset.portalTourReady = 'true';
+        });
+
+        if (hasCompleted()) {
+            return;
+        }
+
+        const fire = () => {
+            window.setTimeout(() => {
+                launchTour({ automatic: true }).catch((error) => {
+                    console.warn('Falha ao iniciar o tour do portal do cliente.', error);
+                });
+            }, 700);
+        };
+
+        if (document.readyState === 'complete') {
+            fire();
+            return;
+        }
+
+        window.addEventListener('load', fire, { once: true });
     },
 
     applyMask(maskType, value) {

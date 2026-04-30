@@ -242,8 +242,8 @@ body:not(.portal-body) .site-scroll-top {
     display: block;
     min-height: 100vh;
     background:
-        radial-gradient(circle at top right, rgba(196, 154, 60, 0.14), transparent 24rem),
-        linear-gradient(135deg, #f5f7fb 0%, #eef2f7 100%);
+        radial-gradient(circle at top right, rgba(196, 154, 60, 0.12), transparent 24rem),
+        linear-gradient(135deg, #eef2f7 0%, #f8fafc 100%);
 }
 
 .portal-shell-full .portal-panel {
@@ -266,7 +266,7 @@ body:not(.portal-body) .site-scroll-top {
 .portal-client-app {
     min-height: 100vh;
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 248px minmax(0, 1fr);
     background: #eef2f7;
 }
 
@@ -274,12 +274,13 @@ body:not(.portal-body) .site-scroll-top {
     position: sticky;
     top: 0;
     height: 100vh;
-    border-right: 1px solid rgba(16, 24, 40, 0.1);
+    border-right: 1px solid rgba(196, 154, 60, 0.12);
     background:
-        linear-gradient(180deg, rgba(15, 20, 28, 0.96), rgba(7, 12, 18, 0.98)),
+        linear-gradient(180deg, rgba(18, 24, 32, 0.98), rgba(8, 13, 19, 0.995)),
         url('/assets/site/premium/hero-home.jpg') center / cover;
     color: #f7ecd8;
-    padding: 1.25rem;
+    padding: 1rem 0.8rem;
+    box-shadow: 18px 0 48px rgba(15, 23, 42, 0.08);
 }
 
 .portal-client-brand {
@@ -289,6 +290,8 @@ body:not(.portal-body) .site-scroll-top {
     gap: 0.75rem;
     color: inherit;
     text-decoration: none;
+    padding: 0.15rem 0.15rem 1.1rem;
+    border-bottom: 1px solid rgba(247, 236, 216, 0.08);
 }
 
 .portal-client-brand img,
@@ -326,8 +329,8 @@ body:not(.portal-body) .site-scroll-top {
 
 .portal-client-nav {
     display: grid;
-    gap: 0.45rem;
-    margin-top: 2rem;
+    gap: 0.38rem;
+    margin-top: 1.35rem;
 }
 
 .portal-client-nav a {
@@ -336,11 +339,12 @@ body:not(.portal-body) .site-scroll-top {
     gap: 0.75rem;
     min-height: 44px;
     border: 1px solid transparent;
-    border-radius: 0.55rem;
+    border-radius: 0.5rem;
     color: rgba(247, 236, 216, 0.78);
     padding: 0 0.85rem;
     font-weight: 800;
     text-decoration: none;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .portal-client-nav a:hover,
@@ -358,15 +362,16 @@ body:not(.portal-body) .site-scroll-top {
     position: sticky;
     top: 0;
     z-index: 20;
-    min-height: 72px;
+    min-height: 70px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     border-bottom: 1px solid rgba(16, 24, 40, 0.08);
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.75rem clamp(1rem, 2.6vw, 2rem);
+    background: rgba(255, 255, 255, 0.94);
+    padding: 0.65rem clamp(1rem, 2.6vw, 2rem);
     backdrop-filter: blur(18px);
+    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.04);
 }
 
 .portal-client-topbar > div:first-child span {
@@ -389,6 +394,26 @@ body:not(.portal-body) .site-scroll-top {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+}
+
+.portal-client-icon-button {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(16, 24, 40, 0.12);
+    border-radius: 0.55rem;
+    background: rgba(255, 255, 255, 0.86);
+    color: #667085;
+    transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.portal-client-icon-button:hover {
+    border-color: rgba(196, 154, 60, 0.42);
+    background: rgba(196, 154, 60, 0.1);
+    color: #8d6a1f;
+    transform: translateY(-1px);
 }
 
 .portal-client-user strong,
@@ -415,6 +440,39 @@ body:not(.portal-body) .site-scroll-top {
     color: #8d6a1f;
     font-weight: 850;
     text-decoration: none;
+}
+
+.portal-shell-full .portal-content {
+    min-height: calc(100vh - 70px);
+}
+
+.portal-shell-full .portal-card {
+    border-color: rgba(16, 24, 40, 0.08);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+}
+
+.portal-body .driver-popover {
+    border-radius: 0.7rem;
+    border: 1px solid rgba(196, 154, 60, 0.22);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.portal-body .driver-popover-title {
+    color: #141b24;
+    font-family: 'Jost', sans-serif;
+    font-weight: 850;
+}
+
+.portal-body .driver-popover-description {
+    color: #667085;
+    font-family: 'Jost', sans-serif;
+}
+
+.portal-body .driver-popover-next-btn,
+.portal-body .driver-popover-prev-btn,
+.portal-body .driver-popover-close-btn {
+    border-radius: 0.45rem;
 }
 
 .portal-client-avatar-link img {
