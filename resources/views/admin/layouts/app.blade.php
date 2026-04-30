@@ -135,6 +135,7 @@
                                 data-admin-notifications-toggle
                                 data-notifications-feed-url="{{ route('admin.contact-messages.notifications') }}"
                                 data-notifications-mark-url-template="{{ route('admin.contact-messages.mark-viewed', '__ID__') }}"
+                                data-notifications-index-url="{{ route('admin.contact-messages.index') }}"
                             >
                                 <i class="bi bi-bell"></i>
                                 <span class="admin-notification-badge d-none" data-admin-notifications-badge>0</span>

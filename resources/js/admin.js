@@ -533,6 +533,7 @@ const AdminUI = {
         }
 
         const feedUrl = toggle.dataset.notificationsFeedUrl || '/admin/contact-messages/notifications/feed';
+        const indexUrl = toggle.dataset.notificationsIndexUrl || '/admin/contact-messages';
         this.notificationFeedUrl = feedUrl;
         this.notificationMarkUrlTemplate = toggle.dataset.notificationsMarkUrlTemplate || null;
         const refreshMessagesTable = () => {
@@ -544,19 +545,24 @@ const AdminUI = {
         };
 
         const renderItems = (items) => {
-            if (!Array.isArray(items) || items.length === 0) {
+            const unreadItems = Array.isArray(items)
+                ? items.filter((item) => item.is_unread !== false)
+                : [];
+
+            if (unreadItems.length === 0) {
                 list.innerHTML = `
                     <div class="admin-notification-empty">
                         <i class="bi bi-bell-slash"></i>
-                        <strong>Nenhuma mensagem nova.</strong>
+                        <strong>Nenhuma mensagem não lida.</strong>
                         <span>As novas entradas do formulário do site aparecerão aqui.</span>
+                        <a href="${this.escapeHtml(indexUrl)}" class="btn btn-sm btn-outline-secondary">Ler todas</a>
                     </div>
                 `;
                 return;
             }
 
-            list.innerHTML = items.map((item) => `
-                <a class="admin-notification-item ${item.is_unread ? 'is-unread' : ''}" href="${this.escapeHtml(item.manage_url)}" data-message-id="${this.escapeHtml(item.id)}" data-modal-url="${this.escapeHtml(item.manage_url)}" data-modal-title="Gerenciar mensagem">
+            list.innerHTML = unreadItems.map((item) => `
+                <a class="admin-notification-item is-unread" href="${this.escapeHtml(item.manage_url)}" data-message-id="${this.escapeHtml(item.id)}" data-modal-url="${this.escapeHtml(item.manage_url)}" data-modal-title="Gerenciar mensagem">
                     <div class="admin-notification-item-top">
                         <strong>${this.escapeHtml(item.name)}</strong>
                         <time>${this.escapeHtml(item.created_at || '')}</time>
@@ -567,7 +573,6 @@ const AdminUI = {
                 </a>
             `).join('');
         };
-
         const syncBadge = (count) => {
             const normalized = Number(count || 0);
             this.notificationUnreadCount = normalized;
@@ -715,7 +720,21 @@ const AdminUI = {
             const unreadCount = Number(response.data?.unread_count || 0);
 
             if (notificationItem) {
-                notificationItem.classList.remove('is-unread');
+                notificationItem.remove();
+            }
+
+            const notificationList = document.querySelector('[data-admin-notifications-list]');
+            const hasUnreadItems = notificationList?.querySelector('[data-message-id]');
+
+            if (notificationList && !hasUnreadItems) {
+                notificationList.innerHTML = `
+                    <div class="admin-notification-empty">
+                        <i class="bi bi-bell-slash"></i>
+                        <strong>Nenhuma mensagem não lida.</strong>
+                        <span>As novas entradas do formulário do site aparecerão aqui.</span>
+                        <a href="${this.escapeHtml(toggle?.dataset.notificationsIndexUrl || '/admin/contact-messages')}" class="btn btn-sm btn-outline-secondary">Ler todas</a>
+                    </div>
+                `;
             }
 
             if (badge) {

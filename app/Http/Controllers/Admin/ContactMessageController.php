@@ -47,7 +47,7 @@ class ContactMessageController extends AdminCrudController
         $since = $request->integer('since_id');
         $unreadQuery = ContactMessage::query()->whereNull('viewed_at');
 
-        $items = ContactMessage::query()
+        $items = (clone $unreadQuery)
             ->latest('id')
             ->limit(8)
             ->get()
@@ -80,6 +80,7 @@ class ContactMessageController extends AdminCrudController
             'unread_count' => (clone $unreadQuery)->count(),
             'new_count' => $since > 0 ? (clone $unreadQuery)->where('id', '>', $since)->count() : 0,
             'latest_id' => ContactMessage::query()->max('id') ?: 0,
+            'index_url' => route('admin.contact-messages.index'),
             'items' => $items,
         ]);
     }
