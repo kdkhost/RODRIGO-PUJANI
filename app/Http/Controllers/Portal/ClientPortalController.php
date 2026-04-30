@@ -7,9 +7,11 @@ use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocument;
 use App\Services\RecaptchaService;
+use App\Support\PublicUpload;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -187,6 +189,64 @@ class ClientPortalController extends Controller
             'updates' => $updates,
             'documents' => $documents,
         ]);
+    }
+
+    public function profile(Request $request): View
+    {
+        $client = $this->portalClient($request);
+
+        return view('site.portal.profile', [
+            'portalPanel' => $this->portalPanel(),
+            'client' => $client,
+        ]);
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $client = $this->portalClient($request);
+
+        $validated = $request->validate([
+            'person_type' => ['required', Rule::in(['individual', 'company'])],
+            'name' => ['required', 'string', 'max:255'],
+            'trade_name' => ['nullable', 'string', 'max:255'],
+            'document_number' => ['nullable', 'string', 'max:32'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'whatsapp' => ['nullable', 'string', 'max:30'],
+            'alternate_phone' => ['nullable', 'string', 'max:30'],
+            'birth_date' => ['nullable', 'date'],
+            'profession' => ['nullable', 'string', 'max:255'],
+            'address_zip' => ['nullable', 'string', 'max:12'],
+            'address_street' => ['nullable', 'string', 'max:255'],
+            'address_number' => ['nullable', 'string', 'max:20'],
+            'address_complement' => ['nullable', 'string', 'max:255'],
+            'address_district' => ['nullable', 'string', 'max:255'],
+            'address_city' => ['nullable', 'string', 'max:255'],
+            'address_state' => ['nullable', 'string', 'max:8'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+        ]);
+
+        unset($validated['avatar']);
+        $validated['address_state'] = filled($validated['address_state'] ?? null)
+            ? strtoupper((string) $validated['address_state'])
+            : null;
+
+        $client->fill($validated);
+
+        if ($request->hasFile('avatar')) {
+            $client->avatar_path = PublicUpload::store(
+                $request->file('avatar'),
+                'client-avatars',
+                $client->avatar_path,
+                null,
+            );
+        }
+
+        $client->save();
+
+        return redirect()
+            ->route('portal.profile')
+            ->with('portal_status', 'Dados cadastrais atualizados com sucesso.');
     }
 
     public function downloadDocument(Request $request, string $document): BinaryFileResponse

@@ -28,6 +28,8 @@ const SiteUI = {
             this.bindObserver,
             this.bindCounters,
             this.bindInputMasks,
+            this.bindCepAutofill,
+            this.bindPortalAvatarPreview,
             this.bindParallax,
             this.bindContactForm,
             this.bindPwa,
@@ -315,6 +317,78 @@ const SiteUI = {
             input.addEventListener('blur', applyMask);
             applyMask();
             input.dataset.siteMaskReady = 'true';
+        });
+    },
+
+    bindCepAutofill() {
+        document.querySelectorAll('[data-cep-autofill]').forEach((input) => {
+            if (input.dataset.cepAutofillReady === 'true') {
+                return;
+            }
+
+            const form = input.closest('form') || document;
+            const fillAddress = async () => {
+                const cep = String(input.value || '').replace(/\D/g, '');
+
+                if (cep.length !== 8) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    const data = await response.json();
+
+                    if (data.erro) {
+                        return;
+                    }
+
+                    const mappings = {
+                        address_street: data.logradouro,
+                        address_district: data.bairro,
+                        address_city: data.localidade,
+                        address_state: data.uf,
+                    };
+
+                    Object.entries(mappings).forEach(([name, value]) => {
+                        const field = form.querySelector(`[name="${name}"]`);
+
+                        if (field && !field.value && value) {
+                            field.value = value;
+                            field.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    });
+                } catch (error) {
+                    console.warn('Nao foi possivel consultar o CEP.', error);
+                }
+            };
+
+            input.addEventListener('blur', fillAddress);
+            input.dataset.cepAutofillReady = 'true';
+        });
+    },
+
+    bindPortalAvatarPreview() {
+        document.querySelectorAll('[data-portal-avatar-input]').forEach((input) => {
+            if (input.dataset.avatarPreviewReady === 'true') {
+                return;
+            }
+
+            input.addEventListener('change', () => {
+                const file = input.files?.[0];
+                const preview = document.querySelector('[data-portal-avatar-preview]');
+
+                if (!file || !preview || !file.type.startsWith('image/')) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.innerHTML = `<img src="${reader.result}" alt="Preview da foto">`;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            input.dataset.avatarPreviewReady = 'true';
         });
     },
 

@@ -15,10 +15,6 @@
         </div>
         <div class="portal-header-actions">
             <a href="{{ route('portal.dashboard') }}" class="portal-secondary-button">Voltar ao painel</a>
-            <form action="{{ route('portal.logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="portal-secondary-button">Sair</button>
-            </form>
         </div>
     </div>
 

@@ -74,10 +74,8 @@
             <h2>{{ $client->name }}</h2>
             <p>{{ $client->assignedLawyer?->name ? 'Responsável: '.$client->assignedLawyer->name : 'Acompanhamento jurídico disponível no painel reservado.' }}</p>
         </div>
-        <form action="{{ route('portal.logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="portal-secondary-button">Sair</button>
-        </form>
+        <a href="{{ route('portal.profile') }}" class="portal-secondary-button">Atualizar cadastro</a>
+
     </div>
 
     <div class="portal-stats-grid portal-stats-grid-expanded">
@@ -189,7 +187,7 @@
             <h3>Processos em acompanhamento</h3>
         </div>
 
-        <div class="portal-case-grid">
+        <div class="portal-case-grid" id="portal-processos">
             @forelse($cases as $legalCase)
                 <article class="portal-case-card">
                     <div class="portal-case-topline">

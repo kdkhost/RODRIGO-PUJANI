@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'alternate_phone',
     'birth_date',
     'profession',
+    'avatar_path',
     'address_zip',
     'address_street',
     'address_number',

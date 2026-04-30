@@ -63,6 +63,8 @@ Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
 
         Route::middleware('portal.client')->group(function (): void {
             Route::get('/painel', [PortalClientPortalController::class, 'dashboard'])->name('dashboard');
+            Route::get('/perfil', [PortalClientPortalController::class, 'profile'])->name('profile');
+            Route::put('/perfil', [PortalClientPortalController::class, 'updateProfile'])->name('profile.update');
             Route::get('/processos/{case}', [PortalClientPortalController::class, 'showCase'])->name('cases.show');
             Route::get('/documentos/{document}', [PortalClientPortalController::class, 'downloadDocument'])->name('documents.download');
         });
