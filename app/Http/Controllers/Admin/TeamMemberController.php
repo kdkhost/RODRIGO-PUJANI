@@ -22,7 +22,7 @@ class TeamMemberController extends AdminCrudController
     protected function indexQuery(Request $request): Builder
     {
         return TeamMember::query()->with([
-            'linkedUser' => fn (Builder $query) => $query->visibleTo($request->user())->with('roles'),
+            'linkedUser' => fn ($query) => $query->visibleTo($request->user())->with('roles'),
         ]);
     }
 
