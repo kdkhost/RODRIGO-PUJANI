@@ -70,7 +70,7 @@
     "src": "node_modules/summernote/dist/font/summernote.woff2"
   },
   "resources/css/admin.css": {
-    "file": "assets/admin-Bu0WHQKP.css",
+    "file": "assets/admin-xNKHZRZx.css",
     "src": "resources/css/admin.css",
     "isEntry": true,
     "name": "admin",
@@ -88,7 +88,7 @@
     ]
   },
   "resources/css/site.css": {
-    "file": "assets/site-BJrMz32z.css",
+    "file": "assets/site-Bpt-MjTZ.css",
     "src": "resources/css/site.css",
     "isEntry": true,
     "name": "site",
@@ -97,7 +97,7 @@
     ]
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-BwYthE1c.js",
+    "file": "assets/admin-BEWugaou.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true,
@@ -126,13 +126,14 @@
     ]
   },
   "resources/js/site.js": {
-    "file": "assets/site-Dmp__7x0.js",
+    "file": "assets/site-C2Q-9w7U.js",
     "name": "site",
     "src": "resources/js/site.js",
     "isEntry": true,
     "imports": [
       "_ui-K-bnh-yZ.js",
       "_vendor-analytics-BrQe1gDG.js",
+      "_vendor-forms-C7wvFY0-.js",
       "_vendor-core-CNVHzkfz.js",
       "_vendor-admin-ui-Bf8_ubM0.js"
     ]

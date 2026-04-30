@@ -102,11 +102,19 @@
             </div>
 
             <div class="portal-avatar-editor">
-                <label class="portal-avatar-upload" for="avatar">
-                    <input id="avatar" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" data-portal-avatar-input>
-                    <span>Arraste uma imagem ou clique para selecionar</span>
-                    <small>PNG, JPG ou WEBP até 4 MB</small>
-                </label>
+                <div class="portal-avatar-upload">
+                    <input
+                        id="avatar"
+                        type="file"
+                        name="avatar"
+                        accept="image/png,image/jpeg,image/webp"
+                        data-portal-filepond
+                        data-portal-avatar-input
+                        data-accepted="image/png,image/jpeg,image/webp"
+                        data-max-file-size="4MB"
+                        data-preview-target="[data-portal-avatar-preview]"
+                    >
+                </div>
                 <div class="portal-avatar-preview" data-portal-avatar-preview>
                     @if($avatarUrl)
                         <img src="{{ $avatarUrl }}" alt="{{ $client->name }}">

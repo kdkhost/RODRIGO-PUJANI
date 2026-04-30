@@ -626,10 +626,15 @@ img.admin-avatar {
 }
 
 .admin-sidebar-menu .nav-treeview {
+    display: none;
     margin: 0.18rem 0 0.45rem 1.06rem;
     padding: 0.2rem 0 0.2rem 0.48rem;
     border-left: 1px solid rgba(196, 154, 60, 0.16);
     background: transparent !important;
+}
+
+.admin-sidebar-menu > .nav-item.menu-open > .nav-treeview {
+    display: block;
 }
 
 .admin-sidebar-menu .nav-treeview > .nav-item > .nav-link {

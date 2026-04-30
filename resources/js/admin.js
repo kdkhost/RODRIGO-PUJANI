@@ -70,6 +70,7 @@ const AdminUI = {
         this.bindBackToTop();
         this.bindLiveClocks();
         this.bindDocumentEvents();
+        this.bindSidebarAccordion();
         this.bindTourGuide();
         this.initNotificationCenter();
         this.initPlugins(document);
@@ -521,6 +522,46 @@ const AdminUI = {
             this.refreshTable(table);
             this.refetchCalendar(toolbar?.dataset.calendarToolbar);
         });
+    },
+
+    bindSidebarAccordion() {
+        const menu = document.querySelector('.admin-sidebar-menu');
+
+        if (!menu || menu.dataset.adminSidebarReady === 'true') {
+            return;
+        }
+
+        menu.addEventListener('click', (event) => {
+            const trigger = event.target.closest('.admin-sidebar-parent-link');
+
+            if (!trigger || !menu.contains(trigger)) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const item = trigger.closest('.nav-item');
+
+            if (!item) {
+                return;
+            }
+
+            const shouldOpen = !item.classList.contains('menu-open');
+            const accordion = menu.dataset.accordion !== 'false';
+
+            if (accordion) {
+                menu.querySelectorAll(':scope > .nav-item.menu-open').forEach((openItem) => {
+                    if (openItem !== item) {
+                        openItem.classList.remove('menu-open');
+                    }
+                });
+            }
+
+            item.classList.toggle('menu-open', shouldOpen);
+        }, true);
+
+        menu.dataset.adminSidebarReady = 'true';
     },
 
     initNotificationCenter() {

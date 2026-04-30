@@ -1,6 +1,10 @@
 import './bootstrap';
 
 import Chart from 'chart.js/auto';
+import * as FilePond from 'filepond';
+import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
+import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
+import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import {
     appendRecaptchaToken,
     applyAutoPlaceholders,
@@ -9,6 +13,12 @@ import {
     flushPageToasts,
     showToast,
 } from './shared/ui';
+
+FilePond.registerPlugin(
+    FilePondPluginFileValidateSize,
+    FilePondPluginFileValidateType,
+    FilePondPluginImagePreview,
+);
 
 const SiteUI = {
     deferredInstallPrompt: null,
@@ -31,6 +41,7 @@ const SiteUI = {
             this.bindInputMasks,
             this.bindCepAutofill,
             this.bindPortalProfileType,
+            this.bindPortalUploads,
             this.bindPortalAvatarPreview,
             this.bindPortalTour,
             this.bindParallax,
@@ -519,6 +530,57 @@ const SiteUI = {
         select.addEventListener('change', sync);
         sync();
         select.dataset.portalPersonTypeReady = 'true';
+    },
+
+    bindPortalUploads() {
+        document.querySelectorAll('[data-portal-filepond]').forEach((input) => {
+            if (input.dataset.portalFilepondReady === 'true') {
+                return;
+            }
+
+            try {
+                const accepted = input.dataset.accepted
+                    ? input.dataset.accepted.split(',').map((item) => item.trim()).filter(Boolean)
+                    : null;
+
+                const pond = FilePond.create(input, {
+                    allowMultiple: input.hasAttribute('multiple'),
+                    credits: false,
+                    storeAsFile: true,
+                    acceptedFileTypes: accepted,
+                    maxFileSize: input.dataset.maxFileSize || '4MB',
+                    labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione arquivos</span>',
+                    labelFileTypeNotAllowed: 'Tipo de arquivo não permitido',
+                    fileValidateTypeLabelExpectedTypes: 'Tipos aceitos: {allTypes}',
+                    labelMaxFileSizeExceeded: 'Arquivo muito grande',
+                    labelMaxFileSize: 'Tamanho máximo: {filesize}',
+                    labelTapToCancel: 'toque para cancelar',
+                    labelTapToRetry: 'toque para tentar novamente',
+                    labelTapToUndo: 'toque para desfazer',
+                });
+
+                const updatePreview = () => {
+                    const file = pond.getFiles()?.[0]?.file;
+                    const preview = document.querySelector(input.dataset.previewTarget || '[data-portal-avatar-preview]');
+
+                    if (!file || !preview || !file.type.startsWith('image/')) {
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        preview.innerHTML = `<img src="${reader.result}" alt="Preview da foto">`;
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                pond.on('addfile', updatePreview);
+                pond.on('updatefiles', updatePreview);
+                input.dataset.portalFilepondReady = 'true';
+            } catch (error) {
+                console.error('FilePond do portal não pôde ser iniciado.', error);
+            }
+        });
     },
 
     bindPortalAvatarPreview() {
