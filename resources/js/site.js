@@ -18,6 +18,7 @@ const SiteUI = {
         flushPageToasts();
         applyAutoPlaceholders();
         bindRecaptchaForms(document);
+        this.bindPortalTheme();
         this.initCharts();
 
         [
@@ -46,6 +47,8 @@ const SiteUI = {
     },
 
     initCharts() {
+        this.applyPortalChartTheme(document.documentElement.dataset.portalTheme === 'dark' ? 'dark' : 'light');
+
         document.querySelectorAll('[data-site-chart]').forEach((canvas) => {
             if (canvas.dataset.chartReady === 'true') {
                 return;
@@ -67,6 +70,104 @@ const SiteUI = {
             } catch (error) {
                 console.error('Falha ao inicializar gráfico do portal.', error);
             }
+        });
+    },
+
+    bindPortalTheme() {
+        const root = document.documentElement;
+        const buttons = Array.from(document.querySelectorAll('[data-portal-theme-toggle]'));
+        const storageKey = 'portal-client-theme';
+        const resolveTheme = () => {
+            try {
+                const stored = window.localStorage.getItem(storageKey);
+
+                if (stored === 'dark' || stored === 'light') {
+                    return stored;
+                }
+            } catch (error) {
+                // O tema continua funcional mesmo se o navegador bloquear localStorage.
+            }
+
+            return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        };
+
+        const updateControls = (theme) => {
+            buttons.forEach((button) => {
+                const icon = button.querySelector('[data-portal-theme-icon]');
+                const nextLabel = theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro';
+
+                button.title = nextLabel;
+                button.setAttribute('aria-label', nextLabel);
+
+                if (icon) {
+                    icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+                }
+            });
+        };
+
+        const setTheme = (theme, persist = true) => {
+            root.dataset.portalTheme = theme;
+            root.style.colorScheme = theme;
+            this.applyPortalChartTheme(theme);
+            updateControls(theme);
+
+            if (persist) {
+                try {
+                    window.localStorage.setItem(storageKey, theme);
+                } catch (error) {
+                    // O usuário ainda consegue alternar o tema durante a sessão.
+                }
+            }
+        };
+
+        setTheme(root.dataset.portalTheme === 'dark' || root.dataset.portalTheme === 'light'
+            ? root.dataset.portalTheme
+            : resolveTheme(), false);
+
+        buttons.forEach((button) => {
+            if (button.dataset.portalThemeReady === 'true') {
+                return;
+            }
+
+            button.addEventListener('click', () => {
+                const current = root.dataset.portalTheme === 'dark' ? 'dark' : 'light';
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            });
+
+            button.dataset.portalThemeReady = 'true';
+        });
+    },
+
+    applyPortalChartTheme(theme) {
+        const isDark = theme === 'dark';
+        const textColor = isDark ? '#c6d3e1' : '#667085';
+        const gridColor = isDark ? 'rgba(198, 211, 225, 0.12)' : 'rgba(16, 24, 40, 0.08)';
+
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = gridColor;
+
+        document.querySelectorAll('[data-site-chart]').forEach((canvas) => {
+            const chart = canvas._siteChart;
+
+            if (!chart) {
+                return;
+            }
+
+            if (chart.options.plugins?.legend?.labels) {
+                chart.options.plugins.legend.labels.color = textColor;
+            }
+
+            Object.values(chart.options.scales || {}).forEach((scale) => {
+                if (scale.ticks) {
+                    scale.ticks.color = textColor;
+                }
+
+                if (scale.grid) {
+                    scale.grid.color = gridColor;
+                }
+            });
+
+            chart.update('none');
         });
     },
 
@@ -510,6 +611,15 @@ const SiteUI = {
                 popover: {
                     title: 'Atualização cadastral',
                     description: 'Mantenha telefone, WhatsApp, endereço e foto atualizados para facilitar a comunicação com a equipe jurídica.',
+                    side: 'right',
+                    align: 'start',
+                },
+            },
+            {
+                element: '.portal-client-nav a[href*="documentos"]',
+                popover: {
+                    title: 'Documentos compartilhados',
+                    description: 'Acesse em uma tela própria todos os arquivos liberados pelo escritório para consulta e download.',
                     side: 'right',
                     align: 'start',
                 },

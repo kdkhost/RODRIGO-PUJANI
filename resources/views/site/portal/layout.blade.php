@@ -26,13 +26,27 @@
         <link rel="icon" href="{{ $branding['favicon_url'] }}">
         <link rel="apple-touch-icon" href="{{ $branding['favicon_url'] }}">
     @endif
+    <script>
+        (function () {
+            try {
+                var stored = window.localStorage.getItem('portal-client-theme');
+                var preferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                var theme = stored === 'dark' || stored === 'light' ? stored : preferred;
+                document.documentElement.setAttribute('data-portal-theme', theme);
+                document.documentElement.style.colorScheme = theme;
+            } catch (error) {
+                document.documentElement.setAttribute('data-portal-theme', 'light');
+                document.documentElement.style.colorScheme = 'light';
+            }
+        })();
+    </script>
     @vite(['resources/css/site.css', 'resources/js/site.js'])
     @if($portalFullWidth)
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css">
         <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
     @endif
 </head>
-<body class="portal-body" @if($portalFullWidth) data-portal-client-id="{{ $portalClient?->id }}" data-portal-tour-enabled="true" @endif>
+<body class="portal-body {{ $portalFullWidth ? 'portal-client-body' : '' }}" @if($portalFullWidth) data-portal-client-id="{{ $portalClient?->id }}" data-portal-tour-enabled="true" @endif>
     @if (session('portal_status'))
         <div data-page-toast data-type="success" data-message="{{ session('portal_status') }}"></div>
     @endif
@@ -117,7 +131,7 @@
                             <i class="bi bi-briefcase"></i>
                             <span>Processos</span>
                         </a>
-                        <a href="{{ route('portal.dashboard') }}#portal-documentos">
+                        <a href="{{ route('portal.documents.index') }}" class="{{ request()->routeIs('portal.documents.*') ? 'active' : '' }}">
                             <i class="bi bi-folder2-open"></i>
                             <span>Documentos</span>
                         </a>
@@ -139,6 +153,15 @@
                                 aria-label="Reiniciar tour guiado"
                             >
                                 <i class="bi bi-signpost-split"></i>
+                            </button>
+                            <button
+                                type="button"
+                                class="portal-client-icon-button"
+                                data-portal-theme-toggle
+                                title="Alternar tema"
+                                aria-label="Alternar tema"
+                            >
+                                <i class="bi bi-moon-stars" data-portal-theme-icon></i>
                             </button>
                             <a href="{{ route('portal.profile') }}" class="portal-client-avatar-link" aria-label="Abrir perfil">
                                 @if($portalAvatarUrl)

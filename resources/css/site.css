@@ -1083,6 +1083,109 @@ body:not(.portal-body) .site-scroll-top {
     text-decoration: none;
 }
 
+.portal-document-list-detailed {
+    gap: 0.85rem;
+}
+
+.portal-document-card {
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid rgba(16, 24, 40, 0.08);
+    border-radius: 0.55rem;
+    background: #fbfcfe;
+    padding: 0.95rem;
+}
+
+.portal-document-icon {
+    width: 58px;
+    height: 58px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(196, 154, 60, 0.22);
+    border-radius: 0.55rem;
+    background: rgba(196, 154, 60, 0.1);
+    color: #8d6a1f;
+}
+
+.portal-document-icon i {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.portal-document-icon small {
+    margin-top: 0.22rem;
+    font-size: 0.65rem;
+    font-weight: 850;
+}
+
+.portal-document-content {
+    min-width: 0;
+}
+
+.portal-document-content strong,
+.portal-document-content span,
+.portal-document-content em {
+    display: block;
+}
+
+.portal-document-content strong {
+    color: #141b24;
+    font-weight: 850;
+}
+
+.portal-document-content span,
+.portal-document-content em {
+    color: #667085;
+    font-size: 0.88rem;
+}
+
+.portal-document-content em {
+    margin-top: 0.18rem;
+    font-style: normal;
+}
+
+.portal-category-list {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.portal-category-list > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.3rem 0.75rem;
+    border: 1px solid rgba(16, 24, 40, 0.08);
+    border-radius: 0.5rem;
+    background: #fbfcfe;
+    padding: 0.9rem 1rem;
+}
+
+.portal-category-list span,
+.portal-category-list strong,
+.portal-category-list small {
+    display: block;
+}
+
+.portal-category-list span {
+    color: #141b24;
+    font-weight: 850;
+}
+
+.portal-category-list strong {
+    color: #8d6a1f;
+    font-size: 1.35rem;
+    font-weight: 850;
+}
+
+.portal-category-list small {
+    grid-column: 1 / -1;
+    color: #667085;
+}
+
 .portal-document-item strong,
 .portal-timeline-item strong {
     display: block;
@@ -1172,6 +1275,127 @@ body:not(.portal-body) .site-scroll-top {
 .portal-rich-text ul,
 .portal-rich-text ol {
     padding-left: 1.2rem;
+}
+
+[data-portal-theme="dark"] .portal-client-body {
+    background:
+        radial-gradient(circle at top right, rgba(196, 154, 60, 0.13), transparent 26rem),
+        linear-gradient(135deg, #080d13 0%, #111922 100%);
+    color: #e8eef6;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-shell-full {
+    background:
+        radial-gradient(circle at top right, rgba(196, 154, 60, 0.12), transparent 28rem),
+        linear-gradient(135deg, #080d13 0%, #101821 100%);
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-client-app {
+    background: #080d13;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-client-topbar,
+[data-portal-theme="dark"] .portal-client-body .portal-client-footer {
+    border-color: rgba(198, 211, 225, 0.1);
+    background: rgba(15, 22, 30, 0.94);
+    color: #c6d3e1;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-client-topbar > div:first-child strong,
+[data-portal-theme="dark"] .portal-client-body .portal-client-footer strong,
+[data-portal-theme="dark"] .portal-client-body .portal-form-heading h2,
+[data-portal-theme="dark"] .portal-client-body .portal-dashboard-header h2,
+[data-portal-theme="dark"] .portal-client-body .portal-section-heading h3,
+[data-portal-theme="dark"] .portal-client-body .portal-stat-card strong,
+[data-portal-theme="dark"] .portal-client-body .portal-case-card h4,
+[data-portal-theme="dark"] .portal-client-body .portal-document-item strong,
+[data-portal-theme="dark"] .portal-client-body .portal-timeline-item strong,
+[data-portal-theme="dark"] .portal-client-body .portal-empty-state strong,
+[data-portal-theme="dark"] .portal-client-body .portal-case-meta dd,
+[data-portal-theme="dark"] .portal-client-body .portal-document-content strong,
+[data-portal-theme="dark"] .portal-client-body .portal-category-list span {
+    color: #f8fbff;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-client-user small,
+[data-portal-theme="dark"] .portal-client-body .portal-form-heading p,
+[data-portal-theme="dark"] .portal-client-body .portal-dashboard-header p,
+[data-portal-theme="dark"] .portal-client-body .portal-case-card > p,
+[data-portal-theme="dark"] .portal-client-body .portal-stat-card span,
+[data-portal-theme="dark"] .portal-client-body .portal-case-topline small,
+[data-portal-theme="dark"] .portal-client-body .portal-document-item span,
+[data-portal-theme="dark"] .portal-client-body .portal-empty-state span,
+[data-portal-theme="dark"] .portal-client-body .portal-timeline-item span,
+[data-portal-theme="dark"] .portal-client-body .portal-timeline-header small,
+[data-portal-theme="dark"] .portal-client-body .portal-rich-text,
+[data-portal-theme="dark"] .portal-client-body .portal-case-meta dt,
+[data-portal-theme="dark"] .portal-client-body .portal-document-content span,
+[data-portal-theme="dark"] .portal-client-body .portal-document-content em,
+[data-portal-theme="dark"] .portal-client-body .portal-category-list small {
+    color: #9fb0c4;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-card,
+[data-portal-theme="dark"] .portal-client-body .portal-stat-card,
+[data-portal-theme="dark"] .portal-client-body .portal-case-card,
+[data-portal-theme="dark"] .portal-client-body .portal-section,
+[data-portal-theme="dark"] .portal-client-body .portal-document-item,
+[data-portal-theme="dark"] .portal-client-body .portal-timeline-item,
+[data-portal-theme="dark"] .portal-client-body .portal-empty-state,
+[data-portal-theme="dark"] .portal-client-body .portal-document-card,
+[data-portal-theme="dark"] .portal-client-body .portal-category-list > div {
+    border-color: rgba(198, 211, 225, 0.1);
+    background: #111922;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-card {
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-client-icon-button,
+[data-portal-theme="dark"] .portal-client-body .portal-secondary-button {
+    border-color: rgba(198, 211, 225, 0.16);
+    background: rgba(17, 25, 34, 0.9);
+    color: #c6d3e1;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-client-icon-button:hover,
+[data-portal-theme="dark"] .portal-client-body .portal-secondary-button:hover,
+[data-portal-theme="dark"] .portal-client-body .portal-link-button:hover {
+    border-color: rgba(196, 154, 60, 0.46);
+    background: rgba(196, 154, 60, 0.14);
+    color: #f7ecd8;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-input {
+    border-color: rgba(198, 211, 225, 0.12);
+    background: #0d141c;
+    color: #f8fbff;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-input:disabled {
+    background: #151f2a;
+    color: #8ea1b6;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-field label {
+    color: #aac0d8;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-avatar-upload {
+    border-color: rgba(198, 211, 225, 0.16);
+    background: #0d141c;
+    color: #9fb0c4;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-avatar-upload span {
+    color: #f8fbff;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-status-info {
+    border-color: rgba(196, 154, 60, 0.28);
+    background: rgba(196, 154, 60, 0.14);
+    color: #f4e4b8;
 }
 
 @media (max-width: 1100px) {
@@ -1289,5 +1513,13 @@ body:not(.portal-body) .site-scroll-top {
 
     .portal-card {
         padding: 1rem;
+    }
+
+    .portal-document-card {
+        grid-template-columns: 52px minmax(0, 1fr);
+    }
+
+    .portal-document-card .portal-link-button {
+        grid-column: 1 / -1;
     }
 }

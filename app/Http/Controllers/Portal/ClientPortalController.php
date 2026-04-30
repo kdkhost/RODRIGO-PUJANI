@@ -84,9 +84,7 @@ class ClientPortalController extends Controller
             ->limit(8)
             ->get();
 
-        $sharedDocuments = LegalDocument::query()
-            ->where('client_id', $client->id)
-            ->where('shared_with_client', true)
+        $sharedDocuments = $this->portalDocumentsQuery($client)
             ->orderByDesc('created_at')
             ->limit(8)
             ->get();
@@ -205,6 +203,36 @@ class ClientPortalController extends Controller
         ]);
     }
 
+    public function documents(Request $request): View
+    {
+        $client = $this->portalClient($request);
+        $documents = $this->portalDocumentsQuery($client)
+            ->with('legalCase:id,title,process_number,status,practice_area')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('site.portal.documents', [
+            'portalPanel' => $this->portalPanel(),
+            'client' => $client,
+            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
+            'documents' => $documents,
+            'documentStats' => [
+                'total' => $documents->count(),
+                'categories' => $documents->pluck('category')->filter()->unique()->count(),
+                'cases' => $documents->pluck('legal_case_id')->filter()->unique()->count(),
+                'latest' => $documents->sortByDesc('created_at')->first()?->created_at,
+            ],
+            'documentsByCategory' => $documents
+                ->groupBy(fn (LegalDocument $document) => $document->category ?: 'Documento')
+                ->map(fn (Collection $group, string $category): array => [
+                    'label' => $category,
+                    'total' => $group->count(),
+                    'latest' => $group->sortByDesc('created_at')->first()?->created_at,
+                ])
+                ->values(),
+        ]);
+    }
+
     public function updateProfile(Request $request): RedirectResponse
     {
         $client = $this->portalClient($request);
@@ -269,10 +297,8 @@ class ClientPortalController extends Controller
     {
         $client = $this->portalClient($request);
 
-        $legalDocument = LegalDocument::query()
+        $legalDocument = $this->portalDocumentsQuery($client)
             ->whereKey($document)
-            ->where('client_id', $client->id)
-            ->where('shared_with_client', true)
             ->firstOrFail();
 
         $path = public_path(ltrim((string) $legalDocument->path, '/'));
@@ -307,6 +333,22 @@ class ClientPortalController extends Controller
             ->where('client_id', $client->id)
             ->where('is_active', true)
             ->where('portal_visible', true);
+    }
+
+    private function portalDocumentsQuery(Client $client)
+    {
+        return LegalDocument::query()
+            ->where('shared_with_client', true)
+            ->where(function ($query) use ($client): void {
+                $query
+                    ->where('client_id', $client->id)
+                    ->orWhereHas('legalCase', function ($caseQuery) use ($client): void {
+                        $caseQuery
+                            ->where('client_id', $client->id)
+                            ->where('is_active', true)
+                            ->where('portal_visible', true);
+                    });
+            });
     }
 
     private function portalWhatsappContacts(Client $client): Collection
