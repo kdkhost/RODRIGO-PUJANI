@@ -30,12 +30,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 admin-upload-compact">
                         @php
                             $avatarUrl = $record->avatar_path ? site_asset_url($record->avatar_path) : null;
                         @endphp
                         <div class="row g-3 align-items-start">
-                            <div class="col-lg-8">
+                            <div class="col-lg-6">
                                 <label class="form-label">Avatar</label>
                                 <input
                                     type="file"
@@ -47,7 +47,7 @@
                                     data-current-name="{{ $record->avatar_path ? basename($record->avatar_path) : '' }}"
                                 >
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-6">
                                 <label class="form-label">Preview atual</label>
                                 <div class="admin-upload-preview-panel h-100">
                                     @if($avatarUrl)
