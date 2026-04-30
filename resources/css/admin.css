@@ -2374,6 +2374,18 @@ img.admin-avatar {
     border-radius: 0.72rem;
 }
 
+.admin-profile-avatar-preview-column {
+    display: flex;
+    min-height: 151px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.admin-profile-avatar-preview-column .form-label {
+    margin-bottom: 0.65rem;
+}
+
 .admin-profile-avatar-preview {
     width: 100%;
     max-width: 96px;

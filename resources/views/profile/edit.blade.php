@@ -169,8 +169,8 @@
                                                                 <div class="small text-muted mt-2">Foto atual: <a href="{{ $avatarUrl }}" target="_blank" rel="noopener">{{ $user->avatar_path }}</a></div>
                                                             @endif
                                                         </div>
-                                                        <div class="col-lg-2">
-                                                            <label class="form-label">Preview</label>
+                                                        <div class="col-lg-2 admin-profile-avatar-preview-column">
+                                                            <label class="form-label text-center w-100">Preview</label>
                                                             <div class="admin-profile-avatar-preview">
                                                                 @if($avatarUrl)
                                                                     <img src="{{ $avatarUrl }}" alt="{{ $user->name }}">
