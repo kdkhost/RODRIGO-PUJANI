@@ -119,7 +119,11 @@
                         <input type="checkbox" class="form-check-input" id="client_portal_enabled" name="portal_enabled" value="1" @checked(old('portal_enabled', $record->portal_enabled))>
                         <label class="form-check-label" for="client_portal_enabled">Permitir acesso ao portal</label>
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-4 form-check ps-5">
+                        <input type="checkbox" class="form-check-input" id="client_portal_profile_update_allowed" name="portal_profile_update_allowed" value="1" @checked(old('portal_profile_update_allowed', $record->portal_profile_update_allowed))>
+                        <label class="form-check-label" for="client_portal_profile_update_allowed">Permitir edição cadastral</label>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Código de acesso</label>
                         <div class="input-group">
                             <input type="text" name="portal_access_code" class="form-control" value="{{ old('portal_access_code') }}" placeholder="{{ $record->portal_access_code ? 'Deixe em branco para manter o código atual' : 'Informe ou gere um código de acesso' }}">

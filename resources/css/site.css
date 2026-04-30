@@ -889,6 +889,23 @@ body:not(.portal-body) .site-scroll-top {
     color: #b42318;
 }
 
+.portal-status-info {
+    border: 1px solid rgba(196, 154, 60, 0.2);
+    background: rgba(196, 154, 60, 0.1);
+    color: #8d6a1f;
+}
+
+.portal-hidden {
+    display: none !important;
+}
+
+.portal-input:disabled {
+    background: #eef2f7;
+    color: #667085;
+    cursor: not-allowed;
+    opacity: 0.86;
+}
+
 .portal-dashboard-header,
 .portal-case-detail-grid,
 .portal-dashboard-grid {

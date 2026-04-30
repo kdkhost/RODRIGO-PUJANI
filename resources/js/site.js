@@ -29,6 +29,7 @@ const SiteUI = {
             this.bindCounters,
             this.bindInputMasks,
             this.bindCepAutofill,
+            this.bindPortalProfileType,
             this.bindPortalAvatarPreview,
             this.bindPortalTour,
             this.bindParallax,
@@ -366,6 +367,57 @@ const SiteUI = {
             input.addEventListener('blur', fillAddress);
             input.dataset.cepAutofillReady = 'true';
         });
+    },
+
+    bindPortalProfileType() {
+        const select = document.querySelector('[data-portal-person-type]');
+
+        if (!select || select.dataset.portalPersonTypeReady === 'true') {
+            return;
+        }
+
+        const documentInput = document.querySelector('[data-portal-document-field]');
+        const documentLabel = document.querySelector('[data-portal-document-label]');
+        const nameInput = document.querySelector('#name');
+        const nameLabel = document.querySelector('[data-portal-name-label]');
+        const companyFields = Array.from(document.querySelectorAll('[data-portal-company-field]'));
+
+        const sync = () => {
+            const isCompany = select.value === 'company';
+
+            if (documentInput) {
+                documentInput.dataset.mask = isCompany ? 'cnpj' : 'cpf';
+                documentInput.placeholder = isCompany ? '00.000.000/0000-00' : '000.000.000-00';
+                documentInput.value = this.applyMask(documentInput.dataset.mask, documentInput.value);
+            }
+
+            if (documentLabel) {
+                documentLabel.textContent = isCompany ? 'CNPJ' : 'CPF';
+            }
+
+            if (nameInput) {
+                nameInput.placeholder = isCompany ? 'Razão social' : 'Nome completo';
+            }
+
+            if (nameLabel) {
+                nameLabel.textContent = isCompany ? 'Razão social' : 'Nome completo';
+            }
+
+            companyFields.forEach((wrapper) => {
+                wrapper.classList.toggle('portal-hidden', !isCompany);
+                wrapper.querySelectorAll('input, select, textarea').forEach((field) => {
+                    if (field.dataset.lockedByPortal === 'true') {
+                        return;
+                    }
+
+                    field.disabled = !isCompany;
+                });
+            });
+        };
+
+        select.addEventListener('change', sync);
+        sync();
+        select.dataset.portalPersonTypeReady = 'true';
     },
 
     bindPortalAvatarPreview() {

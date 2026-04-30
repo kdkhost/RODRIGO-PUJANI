@@ -81,7 +81,7 @@ class ClientController extends AdminCrudController
 
     protected function mutateData(array $validated, Request $request, ?Model $record = null): array
     {
-        $validated += $this->booleanData($request, ['is_active', 'portal_enabled']);
+        $validated += $this->booleanData($request, ['is_active', 'portal_enabled', 'portal_profile_update_allowed']);
         $validated['created_by'] ??= $record?->created_by ?: $request->user()?->id;
         $validated['address_state'] = filled($validated['address_state'] ?? null)
             ? strtoupper((string) $validated['address_state'])
@@ -99,6 +99,7 @@ class ClientController extends AdminCrudController
         }
 
         if (! $validated['portal_enabled']) {
+            $validated['portal_profile_update_allowed'] = false;
             $validated['portal_access_code'] = null;
             $validated['portal_access_code_updated_at'] = null;
             $validated['portal_last_login_at'] = null;

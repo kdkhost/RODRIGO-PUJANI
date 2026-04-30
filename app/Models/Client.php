@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'created_by',
     'is_active',
     'portal_enabled',
+    'portal_profile_update_allowed',
     'portal_access_code',
     'portal_access_code_updated_at',
     'portal_last_login_at',
@@ -47,6 +48,7 @@ class Client extends Model
             'metadata' => 'array',
             'is_active' => 'boolean',
             'portal_enabled' => 'boolean',
+            'portal_profile_update_allowed' => 'boolean',
             'portal_access_code_updated_at' => 'datetime',
             'portal_last_login_at' => 'datetime',
         ];
