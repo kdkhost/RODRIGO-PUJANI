@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Testimonial;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TestimonialController extends AdminCrudController
@@ -38,5 +39,28 @@ class TestimonialController extends AdminCrudController
         $validated['image_path'] = $this->storeMediaFile($request, 'image', 'testimonials', $record?->image_path);
 
         return $validated;
+    }
+
+    public function toggleActive(Request $request, string $record): JsonResponse
+    {
+        /** @var Testimonial $entity */
+        $entity = $this->resolveRecord($record);
+
+        $entity->forceFill([
+            'is_active' => ! $entity->is_active,
+        ])->save();
+
+        activity_log(
+            $this->module,
+            $entity->is_active ? 'activated' : 'deactivated',
+            $entity,
+            ['is_active' => $entity->is_active],
+            $entity->is_active ? 'Depoimento ativado.' : 'Depoimento desativado.'
+        );
+
+        return response()->json([
+            'message' => $entity->is_active ? 'Depoimento ativado com sucesso.' : 'Depoimento desativado com sucesso.',
+            'tableTarget' => '#admin-resource-table',
+        ]);
     }
 }
