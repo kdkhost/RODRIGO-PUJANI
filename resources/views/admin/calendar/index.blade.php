@@ -216,6 +216,11 @@
             let calendarInstance = null;
             let searchTimer = null;
 
+            const syncCalendarViewState = (viewType) => {
+                calendarElement.classList.toggle('is-timegrid', String(viewType || '').startsWith('timeGrid'));
+                calendarElement.classList.toggle('is-listview', String(viewType || '').startsWith('list'));
+            };
+
             const request = async (url) => {
                 if (window.axios) {
                     const response = await window.axios.get(url);
@@ -340,6 +345,10 @@
                         loading: (state) => {
                             calendarElement.classList.toggle('is-loading', state);
                         },
+                        datesSet: (info) => {
+                            syncCalendarViewState(info.view?.type);
+                            window.requestAnimationFrame(() => calendarInstance?.updateSize());
+                        },
                         select: (info) => {
                             const createUrl = calendarElement.dataset.createUrl;
 
@@ -441,9 +450,13 @@
                                     failureCallback(fallbackError);
                                 }
                             },
-                            loading: (state) => {
-                                calendarElement.classList.toggle('is-loading', state);
-                            },
+                        loading: (state) => {
+                            calendarElement.classList.toggle('is-loading', state);
+                        },
+                        datesSet: (info) => {
+                            syncCalendarViewState(info.view?.type);
+                            window.requestAnimationFrame(() => calendarInstance?.updateSize());
+                        },
                         });
 
                         calendarElement._fullCalendar = calendarInstance;

@@ -2661,6 +2661,17 @@ img.admin-avatar {
         overflow: visible !important;
     }
 
+    .admin-calendar.is-compact.is-timegrid .fc-view-harness,
+    .admin-calendar.is-compact.is-timegrid .fc-view-harness-active,
+    .admin-calendar.is-compact.is-listview .fc-view-harness,
+    .admin-calendar.is-compact.is-listview .fc-view-harness-active,
+    .admin-calendar.is-compact.is-timegrid .fc-scroller,
+    .admin-calendar.is-compact.is-listview .fc-scroller {
+        max-height: min(68vh, 720px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
     .admin-calendar .fc-col-header-cell-cushion,
     .admin-calendar .fc-list-day-cushion {
         font-size: 0.62rem;
@@ -3041,6 +3052,7 @@ img.admin-avatar {
     position: relative;
     min-width: 0;
     min-height: 0;
+    --calendar-panel-max-height: min(74vh, 980px);
 }
 
 .admin-calendar .fc-view-harness,
@@ -3051,6 +3063,30 @@ img.admin-avatar {
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
+}
+
+.admin-calendar.is-timegrid .fc-view-harness,
+.admin-calendar.is-timegrid .fc-view-harness-active,
+.admin-calendar.is-listview .fc-view-harness,
+.admin-calendar.is-listview .fc-view-harness-active {
+    max-height: var(--calendar-panel-max-height) !important;
+}
+
+.admin-calendar.is-timegrid .fc-scroller,
+.admin-calendar.is-listview .fc-scroller {
+    max-height: var(--calendar-panel-max-height) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.admin-calendar.is-timegrid .fc-timegrid-body,
+.admin-calendar.is-timegrid .fc-timegrid-body-frame,
+.admin-calendar.is-timegrid .fc-timegrid-slots table,
+.admin-calendar.is-timegrid .fc-timegrid-cols table,
+.admin-calendar.is-timegrid .fc-scrollgrid-section-body table {
+    min-height: 100%;
 }
 
 .admin-calendar .fc-daygrid-body,
