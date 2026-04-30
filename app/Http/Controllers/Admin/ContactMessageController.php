@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\ContactMessage;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ContactMessageController extends AdminCrudController
@@ -39,5 +40,46 @@ class ContactMessageController extends AdminCrudController
         $validated['status'] = $validated['status'] ?? 'new';
 
         return $validated;
+    }
+
+    public function notifications(Request $request): JsonResponse
+    {
+        $since = $request->integer('since_id');
+        $newQuery = ContactMessage::query()->where('status', 'new');
+
+        $items = ContactMessage::query()
+            ->latest('id')
+            ->limit(8)
+            ->get()
+            ->map(function (ContactMessage $message): array {
+                return [
+                    'id' => $message->id,
+                    'name' => $message->name,
+                    'email' => $message->email,
+                    'phone' => $message->phone,
+                    'area_interest' => $message->area_interest,
+                    'subject' => $message->subject,
+                    'status' => $message->status,
+                    'status_label' => match ($message->status) {
+                        'new' => 'Novo',
+                        'in_progress' => 'Em andamento',
+                        'answered' => 'Respondido',
+                        'archived' => 'Arquivado',
+                        default => ucfirst((string) $message->status),
+                    },
+                    'message_excerpt' => str($message->message)->stripTags()->squish()->limit(110)->toString(),
+                    'created_at' => optional($message->created_at)->format('d/m/Y H:i'),
+                    'manage_url' => route('admin.contact-messages.edit', $message->id),
+                    'index_url' => route('admin.contact-messages.index'),
+                ];
+            })
+            ->all();
+
+        return response()->json([
+            'unread_count' => (clone $newQuery)->count(),
+            'new_count' => $since > 0 ? (clone $newQuery)->where('id', '>', $since)->count() : 0,
+            'latest_id' => ContactMessage::query()->max('id') ?: 0,
+            'items' => $items,
+        ]);
     }
 }

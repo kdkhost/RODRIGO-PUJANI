@@ -136,6 +136,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->middleware('permission:team-members.manage')
         ->name('team-members.toggle-active');
 
+    Route::get('/contact-messages/notifications/feed', [AdminContactMessageController::class, 'notifications'])
+        ->middleware('permission:contact-messages.manage')
+        ->name('contact-messages.notifications');
+
     Route::middleware('role:Super Admin')
         ->prefix('system-files')
         ->name('system-files.')

@@ -44,6 +44,10 @@ const AdminUI = {
     calendarEventPanel: null,
     activeCalendarEventId: null,
     summernoteWarningShown: false,
+    notificationPollHandle: null,
+    notificationLastId: 0,
+    notificationUnreadCount: 0,
+    notificationAudioUnlocked: false,
 
     escapeHtml(value) {
         return String(value ?? '')
@@ -62,6 +66,7 @@ const AdminUI = {
         this.bindBackToTop();
         this.bindDocumentEvents();
         this.bindTourGuide();
+        this.initNotificationCenter();
         this.initPlugins(document);
         this.initAjaxTables(document);
     },
@@ -293,6 +298,10 @@ const AdminUI = {
     },
 
     bindDocumentEvents() {
+        document.addEventListener('pointerdown', () => {
+            this.notificationAudioUnlocked = true;
+        }, { once: true, passive: true });
+
         document.addEventListener('click', (event) => {
             const panelClose = event.target.closest('[data-calendar-panel-close]');
             if (panelClose) {
@@ -435,6 +444,131 @@ const AdminUI = {
             this.refreshTable(table);
             this.refetchCalendar(toolbar?.dataset.calendarToolbar);
         });
+    },
+
+    initNotificationCenter() {
+        const toggle = document.querySelector('[data-admin-notifications-toggle]');
+        const badge = document.querySelector('[data-admin-notifications-badge]');
+        const list = document.querySelector('[data-admin-notifications-list]');
+
+        if (!toggle || !badge || !list) {
+            return;
+        }
+
+        const feedUrl = '/admin/contact-messages/notifications/feed';
+        const refreshMessagesTable = () => {
+            const table = document.querySelector('#admin-resource-table[data-ajax-table]');
+
+            if (table && window.location.pathname.includes('/admin/contact-messages')) {
+                this.refreshTable(table);
+            }
+        };
+
+        const renderItems = (items) => {
+            if (!Array.isArray(items) || items.length === 0) {
+                list.innerHTML = `
+                    <div class="admin-notification-empty">
+                        <i class="bi bi-bell-slash"></i>
+                        <strong>Nenhuma mensagem nova.</strong>
+                        <span>As novas entradas do formulário do site aparecerão aqui.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = items.map((item) => `
+                <a class="admin-notification-item" href="${this.escapeHtml(item.manage_url)}" data-modal-url="${this.escapeHtml(item.manage_url)}" data-modal-title="Gerenciar mensagem">
+                    <div class="admin-notification-item-top">
+                        <strong>${this.escapeHtml(item.name)}</strong>
+                        <time>${this.escapeHtml(item.created_at || '')}</time>
+                    </div>
+                    <span>${this.escapeHtml(item.email || item.phone || 'Contato não informado')}</span>
+                    ${item.area_interest ? `<span class="admin-notification-status">${this.escapeHtml(item.area_interest)}</span>` : ''}
+                    <p>${this.escapeHtml(item.message_excerpt || 'Nova mensagem recebida.')}</p>
+                </a>
+            `).join('');
+        };
+
+        const syncBadge = (count) => {
+            const normalized = Number(count || 0);
+            this.notificationUnreadCount = normalized;
+            badge.textContent = String(normalized > 99 ? '99+' : normalized);
+            badge.classList.toggle('d-none', normalized <= 0);
+            toggle.classList.toggle('has-new', normalized > 0);
+        };
+
+        const playNotificationSound = () => {
+            if (!this.notificationAudioUnlocked) {
+                return;
+            }
+
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+                if (!AudioContextClass) {
+                    return;
+                }
+
+                const context = new AudioContextClass();
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, context.currentTime);
+                gain.gain.setValueAtTime(0.0001, context.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.22);
+
+                oscillator.connect(gain);
+                gain.connect(context.destination);
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.24);
+                oscillator.onended = () => context.close().catch(() => null);
+            } catch (error) {
+                console.warn('Nao foi possivel reproduzir o alerta sonoro.', error);
+            }
+        };
+
+        const fetchNotifications = async (silent = false) => {
+            try {
+                const requestUrl = new URL(feedUrl, window.location.origin);
+
+                if (this.notificationLastId > 0) {
+                    requestUrl.searchParams.set('since_id', String(this.notificationLastId));
+                }
+
+                const response = await window.axios.get(requestUrl.toString());
+                const payload = response.data || {};
+                const latestId = Number(payload.latest_id || 0);
+                const newCount = Number(payload.new_count || 0);
+                const unreadCount = Number(payload.unread_count || 0);
+
+                renderItems(payload.items || []);
+                syncBadge(unreadCount);
+
+                if (latestId > this.notificationLastId) {
+                    if (this.notificationLastId > 0 && newCount > 0 && !silent) {
+                        this.showToast('info', `${newCount} nova(s) mensagem(ns) recebida(s) pelo formulário de contato.`);
+                        playNotificationSound();
+                        refreshMessagesTable();
+                    }
+
+                    this.notificationLastId = latestId;
+                }
+            } catch (error) {
+                console.warn('Falha ao atualizar o centro de notificacoes.', error);
+            }
+        };
+
+        fetchNotifications(true);
+
+        if (this.notificationPollHandle) {
+            window.clearInterval(this.notificationPollHandle);
+        }
+
+        this.notificationPollHandle = window.setInterval(() => {
+            fetchNotifications(false);
+        }, 15000);
     },
 
     initAjaxTables(scope) {

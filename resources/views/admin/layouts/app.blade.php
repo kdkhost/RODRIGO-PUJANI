@@ -18,6 +18,7 @@
         'verification-link-sent' => 'Link de verificação enviado para o e-mail cadastrado.',
         default => session('status'),
     };
+    $contactNotificationEnabled = $currentUser?->can('contact-messages.manage') ?? false;
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR" data-bs-theme="light">
@@ -111,6 +112,36 @@
                             <i class="bi bi-box-arrow-up-right me-1"></i>Ver site
                         </a>
                     </li>
+                    @if($contactNotificationEnabled)
+                        <li class="nav-item dropdown me-2">
+                            <button
+                                class="btn btn-sm btn-outline-secondary admin-notification-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                data-admin-notifications-toggle
+                            >
+                                <i class="bi bi-bell"></i>
+                                <span class="admin-notification-badge d-none" data-admin-notifications-badge>0</span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end admin-dropdown admin-notification-dropdown">
+                                <div class="admin-notification-head">
+                                    <div>
+                                        <strong>Notificações</strong>
+                                        <small>Mensagens do formulário em tempo real</small>
+                                    </div>
+                                    <a href="{{ route('admin.contact-messages.index') }}" class="btn btn-sm btn-outline-secondary">Abrir</a>
+                                </div>
+                                <div class="admin-notification-list" data-admin-notifications-list>
+                                    <div class="admin-notification-empty">
+                                        <i class="bi bi-bell-slash"></i>
+                                        <strong>Nenhuma mensagem nova.</strong>
+                                        <span>As novas entradas do formulário do site aparecerão aqui.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    @endif
                     <li class="nav-item me-2">
                         <button class="btn btn-sm btn-outline-secondary admin-theme-toggle" type="button" id="theme-toggle" aria-label="Alternar tema">
                             <i class="bi bi-moon-stars"></i>
