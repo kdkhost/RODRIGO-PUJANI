@@ -48,6 +48,10 @@ const AdminUI = {
     notificationLastId: 0,
     notificationUnreadCount: 0,
     notificationAudioUnlocked: false,
+    notificationAudioContext: null,
+    notificationFeedUrl: null,
+    notificationMarkUrlTemplate: null,
+    notificationFetchHandler: null,
 
     escapeHtml(value) {
         return String(value ?? '')
@@ -455,7 +459,9 @@ const AdminUI = {
             return;
         }
 
-        const feedUrl = '/admin/contact-messages/notifications/feed';
+        const feedUrl = toggle.dataset.notificationsFeedUrl || '/admin/contact-messages/notifications/feed';
+        this.notificationFeedUrl = feedUrl;
+        this.notificationMarkUrlTemplate = toggle.dataset.notificationsMarkUrlTemplate || null;
         const refreshMessagesTable = () => {
             const table = document.querySelector('#admin-resource-table[data-ajax-table]');
 
@@ -477,7 +483,7 @@ const AdminUI = {
             }
 
             list.innerHTML = items.map((item) => `
-                <a class="admin-notification-item" href="${this.escapeHtml(item.manage_url)}" data-modal-url="${this.escapeHtml(item.manage_url)}" data-modal-title="Gerenciar mensagem">
+                <a class="admin-notification-item ${item.is_unread ? 'is-unread' : ''}" href="${this.escapeHtml(item.manage_url)}" data-modal-url="${this.escapeHtml(item.manage_url)}" data-modal-title="Gerenciar mensagem">
                     <div class="admin-notification-item-top">
                         <strong>${this.escapeHtml(item.name)}</strong>
                         <time>${this.escapeHtml(item.created_at || '')}</time>
@@ -509,23 +515,46 @@ const AdminUI = {
                     return;
                 }
 
-                const context = new AudioContextClass();
+                const context = this.notificationAudioContext || new AudioContextClass();
+                this.notificationAudioContext = context;
+                context.resume?.();
                 const oscillator = context.createOscillator();
                 const gain = context.createGain();
 
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, context.currentTime);
+                oscillator.frequency.setValueAtTime(932, context.currentTime);
                 gain.gain.setValueAtTime(0.0001, context.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.22);
+                gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.32);
 
                 oscillator.connect(gain);
                 gain.connect(context.destination);
                 oscillator.start();
-                oscillator.stop(context.currentTime + 0.24);
-                oscillator.onended = () => context.close().catch(() => null);
+                oscillator.stop(context.currentTime + 0.34);
             } catch (error) {
                 console.warn('Nao foi possivel reproduzir o alerta sonoro.', error);
+            }
+        };
+
+        const showDesktopNotification = (payload) => {
+            if (!('Notification' in window) || Notification.permission !== 'granted') {
+                return;
+            }
+
+            try {
+                const notification = new Notification('Nova mensagem recebida', {
+                    body: `${payload.name || 'Contato'}${payload.area_interest ? ` • ${payload.area_interest}` : ''}`,
+                    tag: `contact-message-${payload.id}`,
+                    renotify: true,
+                });
+
+                notification.onclick = () => {
+                    window.focus();
+                    this.loadModal(payload.manage_url, 'Gerenciar mensagem');
+                    notification.close();
+                };
+            } catch (error) {
+                console.warn('Falha ao exibir a notificacao desktop.', error);
             }
         };
 
@@ -550,6 +579,9 @@ const AdminUI = {
                     if (this.notificationLastId > 0 && newCount > 0 && !silent) {
                         this.showToast('info', `${newCount} nova(s) mensagem(ns) recebida(s) pelo formulário de contato.`);
                         playNotificationSound();
+                        if (Array.isArray(payload.items) && payload.items.length > 0) {
+                            showDesktopNotification(payload.items[0]);
+                        }
                         refreshMessagesTable();
                     }
 
@@ -560,6 +592,8 @@ const AdminUI = {
             }
         };
 
+        this.notificationFetchHandler = fetchNotifications;
+
         fetchNotifications(true);
 
         if (this.notificationPollHandle) {
@@ -569,6 +603,12 @@ const AdminUI = {
         this.notificationPollHandle = window.setInterval(() => {
             fetchNotifications(false);
         }, 15000);
+
+        if ('Notification' in window && Notification.permission === 'default') {
+            toggle.addEventListener('click', () => {
+                Notification.requestPermission().catch(() => null);
+            }, { once: true });
+        }
     },
 
     initAjaxTables(scope) {
@@ -581,6 +621,39 @@ const AdminUI = {
                 this.refreshTable(table);
             }
         });
+    },
+
+    extractContactMessageId(url) {
+        const match = String(url || '').match(/\/contact-messages\/(\d+)\/edit$/);
+        return match ? Number(match[1]) : 0;
+    },
+
+    async markContactMessageViewed(messageId) {
+        if (!messageId || !this.notificationMarkUrlTemplate) {
+            return;
+        }
+
+        try {
+            const endpoint = this.notificationMarkUrlTemplate.replace('__ID__', String(messageId));
+            const response = await window.axios.patch(endpoint);
+            const badge = document.querySelector('[data-admin-notifications-badge]');
+            const toggle = document.querySelector('[data-admin-notifications-toggle]');
+            const unreadCount = Number(response.data?.unread_count || 0);
+
+            if (badge) {
+                badge.textContent = String(unreadCount > 99 ? '99+' : unreadCount);
+                badge.classList.toggle('d-none', unreadCount <= 0);
+            }
+
+            if (toggle) {
+                toggle.classList.toggle('has-new', unreadCount > 0);
+            }
+
+            this.notificationUnreadCount = unreadCount;
+            this.notificationFetchHandler?.(true);
+        } catch (error) {
+            console.warn('Falha ao marcar a mensagem como lida.', error);
+        }
     },
 
     serializeToolbar(table) {
@@ -635,6 +708,11 @@ const AdminUI = {
             modal.querySelector('.modal-title').textContent = response.data.title || title;
             modal.querySelector('.modal-body').innerHTML = response.data.html;
             this.initPlugins(modal);
+
+            const contactMessageId = this.extractContactMessageId(url);
+            if (contactMessageId > 0) {
+                this.markContactMessageViewed(contactMessageId);
+            }
         } catch (error) {
             console.error('Admin modal load failed.', error);
             modal.querySelector('.modal-body').innerHTML = `<div class="alert alert-danger mb-0">${error.response?.data?.message || 'Falha ao carregar o formulário.'}</div>`;

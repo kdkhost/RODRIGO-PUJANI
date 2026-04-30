@@ -139,6 +139,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/contact-messages/notifications/feed', [AdminContactMessageController::class, 'notifications'])
         ->middleware('permission:contact-messages.manage')
         ->name('contact-messages.notifications');
+    Route::patch('/contact-messages/{record}/mark-viewed', [AdminContactMessageController::class, 'markViewed'])
+        ->middleware('permission:contact-messages.manage')
+        ->name('contact-messages.mark-viewed');
 
     Route::middleware('role:Super Admin')
         ->prefix('system-files')

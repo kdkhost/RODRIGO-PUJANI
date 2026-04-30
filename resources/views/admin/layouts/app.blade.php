@@ -115,11 +115,13 @@
                     @if($contactNotificationEnabled)
                         <li class="nav-item dropdown me-2">
                             <button
-                                class="btn btn-sm btn-outline-secondary admin-notification-toggle"
+                                class="btn btn-sm btn-outline-secondary admin-notification-toggle admin-topbar-square-button"
                                 type="button"
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false"
                                 data-admin-notifications-toggle
+                                data-notifications-feed-url="{{ route('admin.contact-messages.notifications') }}"
+                                data-notifications-mark-url-template="{{ route('admin.contact-messages.mark-viewed', '__ID__') }}"
                             >
                                 <i class="bi bi-bell"></i>
                                 <span class="admin-notification-badge d-none" data-admin-notifications-badge>0</span>
@@ -143,7 +145,7 @@
                         </li>
                     @endif
                     <li class="nav-item me-2">
-                        <button class="btn btn-sm btn-outline-secondary admin-theme-toggle" type="button" id="theme-toggle" aria-label="Alternar tema">
+                        <button class="btn btn-sm btn-outline-secondary admin-theme-toggle admin-topbar-square-button" type="button" id="theme-toggle" aria-label="Alternar tema">
                             <i class="bi bi-moon-stars"></i>
                         </button>
                     </li>

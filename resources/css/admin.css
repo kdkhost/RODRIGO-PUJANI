@@ -82,11 +82,22 @@ body {
     border-radius: 0.55rem;
 }
 
-.admin-notification-toggle {
-    position: relative;
+.admin-topbar-square-button {
+    display: inline-flex;
     width: 40px;
     height: 40px;
+    align-items: center;
+    justify-content: center;
     padding: 0;
+}
+
+.admin-ghost-button {
+    min-height: 40px;
+    padding: 0.45rem 0.85rem;
+}
+
+.admin-notification-toggle {
+    position: relative;
 }
 
 .admin-notification-badge {
@@ -164,6 +175,10 @@ body {
 
 .admin-notification-item:hover {
     background: rgba(196, 154, 60, 0.06);
+}
+
+.admin-notification-item.is-unread {
+    background: linear-gradient(90deg, rgba(196, 154, 60, 0.12), rgba(196, 154, 60, 0.04));
 }
 
 .admin-notification-item:last-child {

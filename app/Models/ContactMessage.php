@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
     'user_agent',
     'notes',
     'contacted_at',
+    'viewed_at',
 ])]
 class ContactMessage extends Model
 {
@@ -29,6 +30,7 @@ class ContactMessage extends Model
         return [
             'consent' => 'boolean',
             'contacted_at' => 'datetime',
+            'viewed_at' => 'datetime',
         ];
     }
 }

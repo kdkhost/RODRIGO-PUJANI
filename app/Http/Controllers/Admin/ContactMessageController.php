@@ -45,7 +45,7 @@ class ContactMessageController extends AdminCrudController
     public function notifications(Request $request): JsonResponse
     {
         $since = $request->integer('since_id');
-        $newQuery = ContactMessage::query()->where('status', 'new');
+        $unreadQuery = ContactMessage::query()->whereNull('viewed_at');
 
         $items = ContactMessage::query()
             ->latest('id')
@@ -69,6 +69,7 @@ class ContactMessageController extends AdminCrudController
                     },
                     'message_excerpt' => str($message->message)->stripTags()->squish()->limit(110)->toString(),
                     'created_at' => optional($message->created_at)->format('d/m/Y H:i'),
+                    'is_unread' => blank($message->viewed_at),
                     'manage_url' => route('admin.contact-messages.edit', $message->id),
                     'index_url' => route('admin.contact-messages.index'),
                 ];
@@ -76,10 +77,27 @@ class ContactMessageController extends AdminCrudController
             ->all();
 
         return response()->json([
-            'unread_count' => (clone $newQuery)->count(),
-            'new_count' => $since > 0 ? (clone $newQuery)->where('id', '>', $since)->count() : 0,
+            'unread_count' => (clone $unreadQuery)->count(),
+            'new_count' => $since > 0 ? (clone $unreadQuery)->where('id', '>', $since)->count() : 0,
             'latest_id' => ContactMessage::query()->max('id') ?: 0,
             'items' => $items,
+        ]);
+    }
+
+    public function markViewed(string $record): JsonResponse
+    {
+        /** @var ContactMessage $entity */
+        $entity = $this->resolveRecord($record);
+
+        if (blank($entity->viewed_at)) {
+            $entity->forceFill([
+                'viewed_at' => now(),
+            ])->save();
+        }
+
+        return response()->json([
+            'message' => 'Mensagem marcada como lida.',
+            'unread_count' => ContactMessage::query()->whereNull('viewed_at')->count(),
         ]);
     }
 }
