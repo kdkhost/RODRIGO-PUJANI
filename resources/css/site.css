@@ -6,6 +6,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --site-asset-version: 20260430;
+}
+
 body {
     font-family: 'Jost', sans-serif;
 }

@@ -7,6 +7,7 @@
 @import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
 
 :root {
+    --admin-asset-version: 20260430;
     --admin-primary: #c49a3c;
     --admin-primary-dark: #8d6a1f;
     --admin-primary-soft: rgba(196, 154, 60, 0.14);
