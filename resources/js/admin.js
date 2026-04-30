@@ -2033,6 +2033,7 @@ const AdminUI = {
         const createDriver = async () => {
             const driverFactory = await waitForDriver();
             const driverObj = driverFactory({
+                steps,
                 showProgress: true,
                 allowClose: true,
                 overlayClickBehavior: 'close',
@@ -2049,8 +2050,6 @@ const AdminUI = {
                     this.markOnboardingAsCompleted(onboardingUrl);
                 }
             });
-
-            driverObj.setSteps(steps);
 
             return driverObj;
         };
