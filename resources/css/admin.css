@@ -3163,6 +3163,42 @@ img.admin-avatar {
 }
 
 /* Eventos Customizados */
+.admin-calendar {
+    --calendar-event-scheduled-bg: rgba(196, 154, 60, 0.18);
+    --calendar-event-scheduled-border: #c49a3c;
+    --calendar-event-scheduled-text: #6f5115;
+    --calendar-event-confirmed-bg: rgba(25, 135, 84, 0.16);
+    --calendar-event-confirmed-border: #198754;
+    --calendar-event-confirmed-text: #14532d;
+    --calendar-event-done-bg: rgba(59, 130, 246, 0.16);
+    --calendar-event-done-border: #3b82f6;
+    --calendar-event-done-text: #173f9e;
+    --calendar-event-canceled-bg: rgba(220, 53, 69, 0.14);
+    --calendar-event-canceled-border: #dc3545;
+    --calendar-event-canceled-text: #7f1d27;
+    --calendar-event-chip-bg: rgba(255, 255, 255, 0.72);
+    --calendar-event-chip-text: rgba(23, 32, 43, 0.86);
+    --calendar-event-shadow: 0 6px 18px rgba(15, 19, 24, 0.08);
+}
+
+[data-bs-theme="dark"] .admin-calendar {
+    --calendar-event-scheduled-bg: rgba(196, 154, 60, 0.28);
+    --calendar-event-scheduled-border: #e0bb6a;
+    --calendar-event-scheduled-text: #f5dfaa;
+    --calendar-event-confirmed-bg: rgba(25, 135, 84, 0.3);
+    --calendar-event-confirmed-border: #49b97f;
+    --calendar-event-confirmed-text: #d2f7e3;
+    --calendar-event-done-bg: rgba(59, 130, 246, 0.3);
+    --calendar-event-done-border: #72a7ff;
+    --calendar-event-done-text: #dce9ff;
+    --calendar-event-canceled-bg: rgba(220, 53, 69, 0.26);
+    --calendar-event-canceled-border: #ef6b79;
+    --calendar-event-canceled-text: #ffd9de;
+    --calendar-event-chip-bg: rgba(255, 255, 255, 0.16);
+    --calendar-event-chip-text: rgba(255, 255, 255, 0.9);
+    --calendar-event-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
 .admin-calendar-event-shell {
     padding: 4px 8px;
     border-radius: 6px;
@@ -3172,8 +3208,10 @@ img.admin-avatar {
     flex-direction: column;
     gap: 2px;
     border-left: 3px solid transparent;
-    background: rgba(196, 154, 60, 0.1);
-    color: var(--admin-primary-dark);
+    background: var(--calendar-event-scheduled-bg);
+    color: var(--calendar-event-scheduled-text);
+    box-shadow: var(--calendar-event-shadow);
+    backdrop-filter: blur(8px);
 }
 
 .fc-event:not(.fc-bg-event) {
@@ -3219,29 +3257,35 @@ img.admin-avatar {
 .admin-calendar-event-time {
     font-weight: 700;
     font-size: 0.7rem;
-    opacity: 0.8;
+    opacity: 0.96;
 }
 
 .admin-calendar-event-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    opacity: 0.9;
+    opacity: 1;
 }
 
 .admin-calendar-event-chip {
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--calendar-event-chip-bg);
+    color: var(--calendar-event-chip-text);
     padding: 1px 4px;
     border-radius: 4px;
     font-size: 0.65rem;
-    font-weight: 500;
+    font-weight: 700;
 }
 
 /* Status Colors */
-.fc-event[data-status="scheduled"] .admin-calendar-event-shell { border-color: #c49a3c; background: rgba(196, 154, 60, 0.1); color: #8d6a1f; }
-.fc-event[data-status="confirmed"] .admin-calendar-event-shell { border-color: #198754; background: rgba(25, 135, 84, 0.1); color: #0f5132; }
-.fc-event[data-status="done"] .admin-calendar-event-shell { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); color: #1e40af; }
-.fc-event[data-status="canceled"] .admin-calendar-event-shell { border-color: #dc3545; background: rgba(220, 53, 69, 0.1); color: #842029; }
+.fc-event[data-status="scheduled"] .admin-calendar-event-shell { border-color: var(--calendar-event-scheduled-border); background: var(--calendar-event-scheduled-bg); color: var(--calendar-event-scheduled-text); }
+.fc-event[data-status="confirmed"] .admin-calendar-event-shell { border-color: var(--calendar-event-confirmed-border); background: var(--calendar-event-confirmed-bg); color: var(--calendar-event-confirmed-text); }
+.fc-event[data-status="done"] .admin-calendar-event-shell { border-color: var(--calendar-event-done-border); background: var(--calendar-event-done-bg); color: var(--calendar-event-done-text); }
+.fc-event[data-status="canceled"] .admin-calendar-event-shell { border-color: var(--calendar-event-canceled-border); background: var(--calendar-event-canceled-bg); color: var(--calendar-event-canceled-text); }
+
+.admin-calendar .fc-event:hover .admin-calendar-event-shell,
+.admin-calendar .fc-event:focus-visible .admin-calendar-event-shell {
+    filter: saturate(1.06) brightness(1.04);
+}
 
 @media (max-width: 767px) {
     .admin-calendar {
