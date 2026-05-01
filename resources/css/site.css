@@ -327,15 +327,16 @@ body:not(.portal-body) .site-scroll-top {
 
 .portal-client-brand small {
     margin-top: 0.2rem;
-    color: rgba(247, 236, 216, 0.58);
-    font-size: 0.72rem;
-    font-weight: 800;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    line-height: 1.15;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .portal-client-nav {

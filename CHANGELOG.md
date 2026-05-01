@@ -8,6 +8,7 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 - Regras de edição no portal do cliente ajustadas para respeitar os campos marcados individualmente em "Campos permitidos para edição no portal", sem bloqueio indevido.
 - Revisão de texto/acentuação na tela `portal-cliente/perfil` para exibição correta em português brasileiro.
 - Manifest do build frontend atualizado após auditoria para manter sincronismo dos assets CSS/JS em produção.
+- Marca lateral do portal do cliente ajustada para exibir "Portal do cliente" em linha única e com tipografia alinhada ao padrão do painel administrativo.
 
 ### Auditoria técnica executada
 - `php artisan test`: aprovado (64 testes / 278 assertions).
