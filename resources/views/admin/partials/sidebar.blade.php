@@ -35,6 +35,7 @@
             ['label' => 'Usuários', 'route' => 'admin.users.index', 'active' => 'admin.users.*', 'icon' => 'bi-person-gear', 'permission' => 'users.manage'],
             ['label' => 'Funções', 'route' => 'admin.roles.index', 'active' => 'admin.roles.*', 'icon' => 'bi-shield-check', 'permission' => 'roles.manage'],
             ['label' => 'Permissões', 'route' => 'admin.permissions.index', 'active' => 'admin.permissions.*', 'icon' => 'bi-key', 'permission' => 'permissions.manage'],
+            ['label' => 'Auditoria de formulários', 'route' => 'admin.form-security-logs.index', 'active' => 'admin.form-security-logs.*', 'icon' => 'bi-shield-exclamation', 'permission' => 'admin.access', 'root_only' => true],
             ['label' => 'Arquivos do sistema', 'route' => 'admin.system-files.index', 'active' => 'admin.system-files.*', 'icon' => 'bi-file-earmark-code', 'permission' => 'system-files.manage', 'super_admin_only' => true],
         ],
         'Ajuda' => [
@@ -58,6 +59,10 @@
                     $user = auth()->user();
 
                     if (($item['super_admin_only'] ?? false) && ! $user?->isSuperAdmin()) {
+                        return false;
+                    }
+
+                    if (($item['root_only'] ?? false) && (int) ($user?->id ?? 0) !== \App\Models\User::PROTECTED_ROOT_USER_ID) {
                         return false;
                     }
 
@@ -115,3 +120,4 @@
         @endforeach
     </ul>
 </nav>
+

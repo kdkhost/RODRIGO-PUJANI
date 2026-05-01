@@ -4,6 +4,11 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 
 ## [1.0.12] - 2026-05-01
 
+### Adicionado
+- Camada global de segurança para formulários (`ProtectAndAuditFormSubmissions`) com sanitização de entrada e bloqueio de padrões maliciosos (script/php tag, javascript:, event handlers e assinaturas de execução de código).
+- Auditoria forense de envios em `form_security_logs` com IP, host, user-agent, origem, rota, fingerprint técnico, reverse DNS e geolocalização aproximada por IP (cidade/região/país/ISP/ASN).
+- Nova tela administrativa `admin/form-security-logs` para investigação de tentativas, acessível somente ao Super Admin raiz (ID 1).
+
 ### Corrigido
 - Regras de edição no portal do cliente ajustadas para respeitar os campos marcados individualmente em "Campos permitidos para edição no portal", sem bloqueio indevido.
 - Revisão de texto/acentuação na tela `portal-cliente/perfil` para exibição correta em português brasileiro.

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageCo
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\DocumentationController;
+use App\Http\Controllers\Admin\FormSecurityLogController;
 use App\Http\Controllers\Admin\LegalCaseController;
 use App\Http\Controllers\Admin\LegalCaseUpdateController;
 use App\Http\Controllers\Admin\LegalDocumentController;
@@ -173,6 +174,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::put('/{fileKey}', [SystemFileController::class, 'update'])->name('update');
             Route::post('/{fileKey}/restore', [SystemFileController::class, 'restore'])->name('restore');
         });
+
+    Route::middleware('root.security.auditor')
+        ->get('/form-security-logs', [FormSecurityLogController::class, 'index'])
+        ->name('form-security-logs.index');
 
     $crud('pages', 'pages', PageController::class, 'pages.manage');
     $crud('page-sections', 'page-sections', PageSectionController::class, 'page-sections.manage');

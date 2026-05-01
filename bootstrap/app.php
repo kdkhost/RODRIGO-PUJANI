@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(prepend: [
             \App\Http\Middleware\EnsureInstalled::class,
+            \App\Http\Middleware\ProtectAndAuditFormSubmissions::class,
         ]);
 
         $middleware->alias([
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'portal.client' => \App\Http\Middleware\EnsurePortalClientAuthenticated::class,
             'track.visit' => \App\Http\Middleware\TrackPageVisit::class,
             'system-files.confirmed' => \App\Http\Middleware\EnsureSystemFilesPageConfirmed::class,
+            'root.security.auditor' => \App\Http\Middleware\EnsureRootSecurityAuditor::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
