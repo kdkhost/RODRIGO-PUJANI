@@ -2,6 +2,14 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.8] - 2026-05-01
+
+### Alterado
+- Configuracoes do sistema deixaram de ser concentradas em uma unica tela e passaram a operar por paginas individuais em `/admin/system-settings`.
+- Nova central de configuracoes adicionada como hub de entrada, com atalhos separados para Marca, PWA, SMTP, Seguranca, SEO e Atendimento.
+- Pagina de SMTP passou a ter formulario dedicado, preview proprio do template, teste SMTP isolado e tokens clicaveis sem disputar espaco com outras configuracoes.
+- Pagina de Atendimento passou a concentrar tambem a acao de popular dados de demonstracao, mantendo o fluxo operacional separado do restante do sistema.
+
 ## [1.0.7] - 2026-04-30
 
 ### Corrigido

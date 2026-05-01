@@ -25,6 +25,45 @@ use Illuminate\View\View;
 
 class SystemSettingsController extends Controller
 {
+    private const SECTIONS = [
+        'branding' => [
+            'label' => 'Marca',
+            'title' => 'Marca e identidade',
+            'icon' => 'bi-palette',
+            'description' => 'Logo, favicon, nome do escritorio e textos institucionais do painel.',
+        ],
+        'pwa' => [
+            'label' => 'PWA',
+            'title' => 'Aplicativo e instalacao',
+            'icon' => 'bi-phone',
+            'description' => 'Manifesto, icones, popup de instalacao, tela offline e comportamento mobile.',
+        ],
+        'mail' => [
+            'label' => 'SMTP',
+            'title' => 'SMTP e templates de e-mail',
+            'icon' => 'bi-envelope',
+            'description' => 'Conexao SMTP, remetente, testes e tema visual dos e-mails do sistema.',
+        ],
+        'security' => [
+            'label' => 'Seguranca',
+            'title' => 'Seguranca e protecao',
+            'icon' => 'bi-shield-lock',
+            'description' => 'reCAPTCHA invisivel e protecao dos fluxos sensiveis do sistema.',
+        ],
+        'seo' => [
+            'label' => 'SEO',
+            'title' => 'SEO e indexacao',
+            'icon' => 'bi-graph-up-arrow',
+            'description' => 'Metadados, OG image, analytics e verificacoes de motores de busca.',
+        ],
+        'support' => [
+            'label' => 'Atendimento',
+            'title' => 'Suporte e WhatsApp',
+            'icon' => 'bi-whatsapp',
+            'description' => 'Configuracoes do box de suporte e selecao de especialistas no frontend.',
+        ],
+    ];
+
     private const SETTINGS = [
         'branding.brand_name' => ['label' => 'Nome da marca', 'type' => 'text', 'public' => true, 'sort' => 520],
         'branding.brand_short_name' => ['label' => 'Sigla da marca', 'type' => 'text', 'public' => true, 'sort' => 521],
@@ -109,6 +148,7 @@ class SystemSettingsController extends Controller
     {
         return view('admin.system-settings.index', [
             'pageTitle' => 'Configuracoes do sistema',
+            'sections' => $this->sectionNavigation(),
             'branding' => branding_config(),
             'pwa' => pwa_config(),
             'seo' => seo_config(),
@@ -151,12 +191,111 @@ class SystemSettingsController extends Controller
         ]);
     }
 
-    public function update(Request $request): JsonResponse
+    public function show(string $section): View
+    {
+        $current = $this->resolveSection($section);
+
+        return view('admin.system-settings.show', [
+            'pageTitle' => $current['title'],
+            'sectionKey' => $section,
+            'sectionMeta' => $current,
+            'sections' => $this->sectionNavigation(),
+            'branding' => branding_config(),
+            'pwa' => pwa_config(),
+            'seo' => seo_config(),
+            'recaptcha' => recaptcha_config(),
+            'mailConfig' => smtp_config(),
+            'mailTheme' => mail_theme_config(),
+            'pwaDisplayOptions' => [
+                'browser' => 'Navegador',
+                'minimal-ui' => 'Minimal UI',
+                'standalone' => 'Standalone',
+                'fullscreen' => 'Tela cheia',
+            ],
+            'mailLayoutOptions' => [
+                'premium' => 'Premium',
+                'classic' => 'Classico',
+                'minimal' => 'Minimalista',
+            ],
+            'mailFontOptions' => [
+                'Segoe UI, Arial, sans-serif' => 'Segoe UI',
+                'Arial, Helvetica, sans-serif' => 'Arial',
+                'Roboto, Arial, sans-serif' => 'Roboto',
+                'Georgia, Times New Roman, serif' => 'Georgia',
+                'Tahoma, Geneva, sans-serif' => 'Tahoma',
+            ],
+            'pwaOrientationOptions' => [
+                'any' => 'Qualquer orientacao',
+                'portrait' => 'Retrato',
+                'landscape' => 'Paisagem',
+                'natural' => 'Natural do dispositivo',
+            ],
+            'stats' => [
+                'users' => User::query()->count(),
+                'clients' => Client::query()->count(),
+                'cases' => LegalCase::query()->count(),
+                'tasks' => LegalTask::query()->count(),
+                'updates' => LegalCaseUpdate::query()->count(),
+                'calendar_events' => CalendarEvent::query()->count(),
+                'messages' => ContactMessage::query()->count(),
+            ],
+        ]);
+    }
+
+    public function updateSection(Request $request, string $section): JsonResponse
     {
         $mailConfig = smtp_config();
         $mailTheme = mail_theme_config();
 
-        $validated = $request->validate([
+        $validated = $request->validate($this->rulesForSection($section));
+
+        $payload = $this->payloadForSection($section, $request, $validated, $mailConfig, $mailTheme);
+
+        foreach ($payload as $key => $value) {
+            $meta = self::SETTINGS[$key] ?? null;
+            if (! $meta) {
+                continue;
+            }
+
+            $group = match (true) {
+                str_starts_with($key, 'branding.') => 'branding',
+                str_starts_with($key, 'pwa.') => 'pwa',
+                str_starts_with($key, 'security.') => 'security',
+                str_starts_with($key, 'mail.') => 'mail',
+                str_starts_with($key, 'site.') => 'site',
+                str_starts_with($key, 'seo.') => 'seo',
+                default => 'system',
+            };
+
+            Setting::query()->updateOrCreate(
+                ['key' => $key],
+                [
+                    'group' => $group,
+                    'label' => $meta['label'],
+                    'type' => $meta['type'],
+                    'value' => $value,
+                    'json_value' => null,
+                    'is_public' => $meta['public'],
+                    'sort_order' => $meta['sort'],
+                ],
+            );
+        }
+
+        $this->clearCaches();
+
+        activity_log('system-settings', 'updated', null, $payload, 'Configuracoes do sistema atualizadas.');
+
+        return response()->json([
+            'message' => 'Configuracoes atualizadas com sucesso.',
+            'redirect' => route('admin.system-settings.show', $section),
+            'closeModal' => false,
+        ]);
+    }
+
+    private function rulesForSection(string $section): array
+    {
+        return match ($section) {
+            'branding' => [
             'brand_name' => ['required', 'string', 'max:120'],
             'brand_short_name' => ['nullable', 'string', 'max:8'],
             'admin_subtitle' => ['nullable', 'string', 'max:80'],
@@ -166,6 +305,8 @@ class SystemSettingsController extends Controller
             'remove_logo' => ['nullable', 'boolean'],
             'favicon' => ['nullable', 'file', 'mimes:ico,png,svg,webp,jpg,jpeg', 'max:2048'],
             'remove_favicon' => ['nullable', 'boolean'],
+            ],
+            'pwa' => [
             'pwa_enabled' => ['nullable', 'boolean'],
             'pwa_installation_enabled' => ['nullable', 'boolean'],
             'pwa_install_prompt_enabled' => ['nullable', 'boolean'],
@@ -194,10 +335,14 @@ class SystemSettingsController extends Controller
             'pwa_offline_title' => ['nullable', 'string', 'max:120'],
             'pwa_offline_message' => ['nullable', 'string', 'max:255'],
             'pwa_offline_button_label' => ['nullable', 'string', 'max:60'],
+            ],
+            'security' => [
             'recaptcha_enabled' => ['nullable', 'boolean'],
             'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
             'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
             'recaptcha_min_score' => ['nullable', 'numeric', 'min:0.1', 'max:1'],
+            ],
+            'mail' => [
             'mail_enabled' => ['nullable', 'boolean'],
             'mail_mailer' => ['nullable', 'in:smtp,sendmail,log'],
             'mail_host' => ['nullable', 'string', 'max:255'],
@@ -226,9 +371,13 @@ class SystemSettingsController extends Controller
             'mail_template_button_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
             'mail_template_button_text_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
             'mail_template_custom_css' => ['nullable', 'string', 'max:12000'],
+            ],
+            'support' => [
             'whatsapp_multiple_support' => ['nullable', 'boolean'],
             'whatsapp_selection_title' => ['nullable', 'string', 'max:120'],
             'whatsapp_selection_subtitle' => ['nullable', 'string', 'max:255'],
+            ],
+            'seo' => [
             'seo_title_suffix' => ['nullable', 'string', 'max:120'],
             'seo_meta_description' => ['nullable', 'string', 'max:255'],
             'seo_meta_keywords' => ['nullable', 'string', 'max:500'],
@@ -238,12 +387,76 @@ class SystemSettingsController extends Controller
             'seo_google_analytics_id' => ['nullable', 'string', 'max:32'],
             'seo_google_site_verification' => ['nullable', 'string', 'max:255'],
             'seo_bing_site_verification' => ['nullable', 'string', 'max:255'],
-        ]);
+            ],
+            default => abort(404),
+        };
+    }
 
+    private function payloadForSection(string $section, Request $request, array $validated, array $mailConfig, array $mailTheme): array
+    {
+        return match ($section) {
+            'branding' => $this->brandingPayload($request, $validated),
+            'pwa' => $this->pwaPayload($request, $validated),
+            'security' => [
+                'security.recaptcha_enabled' => $request->boolean('recaptcha_enabled') ? '1' : '0',
+                'security.recaptcha_site_key' => trim((string) ($validated['recaptcha_site_key'] ?? '')),
+                'security.recaptcha_secret_key' => trim((string) ($validated['recaptcha_secret_key'] ?? '')),
+                'security.recaptcha_min_score' => number_format((float) ($validated['recaptcha_min_score'] ?? 0.5), 1, '.', ''),
+            ],
+            'mail' => [
+                'mail.enabled' => $request->boolean('mail_enabled') ? '1' : '0',
+                'mail.mailer' => trim((string) ($validated['mail_mailer'] ?? $mailConfig['mailer'] ?? 'smtp')),
+                'mail.host' => trim((string) ($validated['mail_host'] ?? $mailConfig['host'] ?? '')),
+                'mail.port' => (string) ($validated['mail_port'] ?? $mailConfig['port'] ?? 587),
+                'mail.encryption' => trim((string) ($validated['mail_encryption'] ?? $mailConfig['encryption'] ?? 'tls')),
+                'mail.username' => trim((string) ($validated['mail_username'] ?? $mailConfig['username'] ?? '')),
+                'mail.password' => trim((string) ($validated['mail_password'] ?? $mailConfig['password'] ?? '')),
+                'mail.from_address' => trim((string) ($validated['mail_from_address'] ?? $mailConfig['from_address'] ?? '')),
+                'mail.from_name' => trim((string) ($validated['mail_from_name'] ?? $mailConfig['from_name'] ?? '')),
+                'mail.template_header' => trim((string) ($validated['mail_template_header'] ?? $mailConfig['template_header'] ?? '')),
+                'mail.template_footer' => trim((string) ($validated['mail_template_footer'] ?? $mailConfig['template_footer'] ?? '')),
+                'mail.template_reset_subject' => trim((string) ($validated['mail_template_reset_subject'] ?? $mailConfig['template_reset_subject'] ?? 'Redefinicao de senha')),
+                'mail.template_reset_body' => trim((string) ($validated['mail_template_reset_body'] ?? $mailConfig['template_reset_body'] ?? 'Ola, {{name}}. Use o botao abaixo para redefinir sua senha.')),
+                'mail.template_generic_subject' => trim((string) ($validated['mail_template_generic_subject'] ?? $mailConfig['template_generic_subject'] ?? 'Notificacao do sistema')),
+                'mail.template_generic_body' => trim((string) ($validated['mail_template_generic_body'] ?? $mailConfig['template_generic_body'] ?? 'Ola, {{name}}. Esta e uma mensagem automatica do sistema.')),
+                'mail.template_show_logo' => $request->boolean('mail_template_show_logo') ? '1' : '0',
+                'mail.template_font_family' => trim((string) ($validated['mail_template_font_family'] ?? $mailTheme['font_family'] ?? 'Segoe UI, Arial, sans-serif')),
+                'mail.template_layout' => trim((string) ($validated['mail_template_layout'] ?? $mailTheme['layout'] ?? 'premium')),
+                'mail.template_background_color' => strtoupper((string) ($validated['mail_template_background_color'] ?? $mailTheme['background_color'] ?? '#0f172a')),
+                'mail.template_body_background_color' => strtoupper((string) ($validated['mail_template_body_background_color'] ?? $mailTheme['body_background_color'] ?? '#f4f6fb')),
+                'mail.template_card_background_color' => strtoupper((string) ($validated['mail_template_card_background_color'] ?? $mailTheme['card_background_color'] ?? '#ffffff')),
+                'mail.template_heading_color' => strtoupper((string) ($validated['mail_template_heading_color'] ?? $mailTheme['heading_color'] ?? '#0f172a')),
+                'mail.template_text_color' => strtoupper((string) ($validated['mail_template_text_color'] ?? $mailTheme['text_color'] ?? '#334155')),
+                'mail.template_muted_color' => strtoupper((string) ($validated['mail_template_muted_color'] ?? $mailTheme['muted_color'] ?? '#64748b')),
+                'mail.template_border_color' => strtoupper((string) ($validated['mail_template_border_color'] ?? $mailTheme['border_color'] ?? '#e5e7ef')),
+                'mail.template_button_background_color' => strtoupper((string) ($validated['mail_template_button_background_color'] ?? $mailTheme['button_background_color'] ?? '#c49a3c')),
+                'mail.template_button_text_color' => strtoupper((string) ($validated['mail_template_button_text_color'] ?? $mailTheme['button_text_color'] ?? '#10131a')),
+                'mail.template_custom_css' => trim((string) ($validated['mail_template_custom_css'] ?? $mailTheme['custom_css'] ?? '')),
+            ],
+            'support' => [
+                'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',
+                'site.whatsapp_selection_title' => trim((string) ($validated['whatsapp_selection_title'] ?? 'Escolha um especialista')),
+                'site.whatsapp_selection_subtitle' => trim((string) ($validated['whatsapp_selection_subtitle'] ?? 'Selecione com quem deseja falar pelo WhatsApp:')),
+            ],
+            'seo' => [
+                'seo.title_suffix' => trim((string) ($validated['seo_title_suffix'] ?? '')),
+                'seo.meta_description' => trim((string) ($validated['seo_meta_description'] ?? '')),
+                'seo.meta_keywords' => trim((string) ($validated['seo_meta_keywords'] ?? '')),
+                'seo.hashtags' => trim((string) ($validated['seo_hashtags'] ?? '')),
+                'seo.author' => trim((string) ($validated['seo_author'] ?? '')),
+                'seo.og_image_path' => trim((string) ($validated['seo_og_image_path'] ?? '')),
+                'seo.google_analytics_id' => trim((string) ($validated['seo_google_analytics_id'] ?? '')),
+                'seo.google_site_verification' => trim((string) ($validated['seo_google_site_verification'] ?? '')),
+                'seo.bing_site_verification' => trim((string) ($validated['seo_bing_site_verification'] ?? '')),
+            ],
+            default => abort(404),
+        };
+    }
+
+    private function brandingPayload(Request $request, array $validated): array
+    {
         $currentLogo = (string) setting('branding.logo_path', '');
         $currentFavicon = (string) setting('branding.favicon_path', '');
-        $currentPwaIcon192 = (string) setting('pwa.icon_192', '');
-        $currentPwaIcon512 = (string) setting('pwa.icon_512', '');
 
         $payload = [
             'branding.brand_name' => $validated['brand_name'],
@@ -253,6 +466,33 @@ class SystemSettingsController extends Controller
             'branding.favicon_path' => $request->boolean('remove_favicon') ? '' : $currentFavicon,
             'branding.admin_footer_text' => $validated['admin_footer_text'] ?? '',
             'branding.admin_footer_meta' => $validated['admin_footer_meta'] ?? '',
+        ];
+
+        if ($request->boolean('remove_logo') && ! $request->hasFile('logo')) {
+            $this->deleteManagedUpload($currentLogo);
+        }
+
+        if ($request->boolean('remove_favicon') && ! $request->hasFile('favicon')) {
+            $this->deleteManagedUpload($currentFavicon);
+        }
+
+        if ($request->hasFile('logo')) {
+            $payload['branding.logo_path'] = $this->storeUpload($request->file('logo'), 'branding/logo', $currentLogo);
+        }
+
+        if ($request->hasFile('favicon')) {
+            $payload['branding.favicon_path'] = $this->storeUpload($request->file('favicon'), 'branding/favicon', $currentFavicon);
+        }
+
+        return $payload;
+    }
+
+    private function pwaPayload(Request $request, array $validated): array
+    {
+        $currentPwaIcon192 = (string) setting('pwa.icon_192', '');
+        $currentPwaIcon512 = (string) setting('pwa.icon_512', '');
+
+        $payload = [
             'pwa.enabled' => $request->boolean('pwa_enabled') ? '1' : '0',
             'pwa.installation_enabled' => $request->boolean('pwa_installation_enabled') ? '1' : '0',
             'pwa.install_prompt_enabled' => $request->boolean('pwa_install_prompt_enabled') ? '1' : '0',
@@ -279,59 +519,7 @@ class SystemSettingsController extends Controller
             'pwa.offline_title' => trim((string) ($validated['pwa_offline_title'] ?? '')),
             'pwa.offline_message' => trim((string) ($validated['pwa_offline_message'] ?? '')),
             'pwa.offline_button_label' => trim((string) ($validated['pwa_offline_button_label'] ?? '')),
-            'security.recaptcha_enabled' => $request->boolean('recaptcha_enabled') ? '1' : '0',
-            'security.recaptcha_site_key' => trim((string) ($validated['recaptcha_site_key'] ?? '')),
-            'security.recaptcha_secret_key' => trim((string) ($validated['recaptcha_secret_key'] ?? '')),
-            'security.recaptcha_min_score' => number_format((float) ($validated['recaptcha_min_score'] ?? 0.5), 1, '.', ''),
-            'mail.enabled' => $request->boolean('mail_enabled') ? '1' : '0',
-            'mail.mailer' => trim((string) ($validated['mail_mailer'] ?? $mailConfig['mailer'] ?? 'smtp')),
-            'mail.host' => trim((string) ($validated['mail_host'] ?? $mailConfig['host'] ?? '')),
-            'mail.port' => (string) ($validated['mail_port'] ?? $mailConfig['port'] ?? 587),
-            'mail.encryption' => trim((string) ($validated['mail_encryption'] ?? $mailConfig['encryption'] ?? 'tls')),
-            'mail.username' => trim((string) ($validated['mail_username'] ?? $mailConfig['username'] ?? '')),
-            'mail.password' => trim((string) ($validated['mail_password'] ?? $mailConfig['password'] ?? '')),
-            'mail.from_address' => trim((string) ($validated['mail_from_address'] ?? $mailConfig['from_address'] ?? '')),
-            'mail.from_name' => trim((string) ($validated['mail_from_name'] ?? $mailConfig['from_name'] ?? '')),
-            'mail.template_header' => trim((string) ($validated['mail_template_header'] ?? $mailConfig['template_header'] ?? '')),
-            'mail.template_footer' => trim((string) ($validated['mail_template_footer'] ?? $mailConfig['template_footer'] ?? '')),
-            'mail.template_reset_subject' => trim((string) ($validated['mail_template_reset_subject'] ?? $mailConfig['template_reset_subject'] ?? 'Redefinicao de senha')),
-            'mail.template_reset_body' => trim((string) ($validated['mail_template_reset_body'] ?? $mailConfig['template_reset_body'] ?? 'Ola, {{name}}. Use o botao abaixo para redefinir sua senha.')),
-            'mail.template_generic_subject' => trim((string) ($validated['mail_template_generic_subject'] ?? $mailConfig['template_generic_subject'] ?? 'Notificacao do sistema')),
-            'mail.template_generic_body' => trim((string) ($validated['mail_template_generic_body'] ?? $mailConfig['template_generic_body'] ?? 'Ola, {{name}}. Esta e uma mensagem automatica do sistema.')),
-            'mail.template_show_logo' => $request->boolean('mail_template_show_logo') ? '1' : '0',
-            'mail.template_font_family' => trim((string) ($validated['mail_template_font_family'] ?? $mailTheme['font_family'] ?? 'Segoe UI, Arial, sans-serif')),
-            'mail.template_layout' => trim((string) ($validated['mail_template_layout'] ?? $mailTheme['layout'] ?? 'premium')),
-            'mail.template_background_color' => strtoupper((string) ($validated['mail_template_background_color'] ?? $mailTheme['background_color'] ?? '#0f172a')),
-            'mail.template_body_background_color' => strtoupper((string) ($validated['mail_template_body_background_color'] ?? $mailTheme['body_background_color'] ?? '#f4f6fb')),
-            'mail.template_card_background_color' => strtoupper((string) ($validated['mail_template_card_background_color'] ?? $mailTheme['card_background_color'] ?? '#ffffff')),
-            'mail.template_heading_color' => strtoupper((string) ($validated['mail_template_heading_color'] ?? $mailTheme['heading_color'] ?? '#0f172a')),
-            'mail.template_text_color' => strtoupper((string) ($validated['mail_template_text_color'] ?? $mailTheme['text_color'] ?? '#334155')),
-            'mail.template_muted_color' => strtoupper((string) ($validated['mail_template_muted_color'] ?? $mailTheme['muted_color'] ?? '#64748b')),
-            'mail.template_border_color' => strtoupper((string) ($validated['mail_template_border_color'] ?? $mailTheme['border_color'] ?? '#e5e7ef')),
-            'mail.template_button_background_color' => strtoupper((string) ($validated['mail_template_button_background_color'] ?? $mailTheme['button_background_color'] ?? '#c49a3c')),
-            'mail.template_button_text_color' => strtoupper((string) ($validated['mail_template_button_text_color'] ?? $mailTheme['button_text_color'] ?? '#10131a')),
-            'mail.template_custom_css' => trim((string) ($validated['mail_template_custom_css'] ?? $mailTheme['custom_css'] ?? '')),
-            'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',
-            'site.whatsapp_selection_title' => trim((string) ($validated['whatsapp_selection_title'] ?? 'Escolha um especialista')),
-            'site.whatsapp_selection_subtitle' => trim((string) ($validated['whatsapp_selection_subtitle'] ?? 'Selecione com quem deseja falar pelo WhatsApp:')),
-            'seo.title_suffix' => trim((string) ($validated['seo_title_suffix'] ?? '')),
-            'seo.meta_description' => trim((string) ($validated['seo_meta_description'] ?? '')),
-            'seo.meta_keywords' => trim((string) ($validated['seo_meta_keywords'] ?? '')),
-            'seo.hashtags' => trim((string) ($validated['seo_hashtags'] ?? '')),
-            'seo.author' => trim((string) ($validated['seo_author'] ?? '')),
-            'seo.og_image_path' => trim((string) ($validated['seo_og_image_path'] ?? '')),
-            'seo.google_analytics_id' => trim((string) ($validated['seo_google_analytics_id'] ?? '')),
-            'seo.google_site_verification' => trim((string) ($validated['seo_google_site_verification'] ?? '')),
-            'seo.bing_site_verification' => trim((string) ($validated['seo_bing_site_verification'] ?? '')),
         ];
-
-        if ($request->boolean('remove_logo') && ! $request->hasFile('logo')) {
-            $this->deleteManagedUpload($currentLogo);
-        }
-
-        if ($request->boolean('remove_favicon') && ! $request->hasFile('favicon')) {
-            $this->deleteManagedUpload($currentFavicon);
-        }
 
         if ($request->boolean('remove_pwa_icon_192') && ! $request->hasFile('pwa_icon_192')) {
             $this->deleteManagedUpload($currentPwaIcon192);
@@ -339,14 +527,6 @@ class SystemSettingsController extends Controller
 
         if ($request->boolean('remove_pwa_icon_512') && ! $request->hasFile('pwa_icon_512')) {
             $this->deleteManagedUpload($currentPwaIcon512);
-        }
-
-        if ($request->hasFile('logo')) {
-            $payload['branding.logo_path'] = $this->storeUpload($request->file('logo'), 'branding/logo', $currentLogo);
-        }
-
-        if ($request->hasFile('favicon')) {
-            $payload['branding.favicon_path'] = $this->storeUpload($request->file('favicon'), 'branding/favicon', $currentFavicon);
         }
 
         if ($request->hasFile('pwa_icon_192')) {
@@ -357,40 +537,23 @@ class SystemSettingsController extends Controller
             $payload['pwa.icon_512'] = $this->storeUpload($request->file('pwa_icon_512'), 'branding/pwa', $currentPwaIcon512);
         }
 
-        foreach (self::SETTINGS as $key => $meta) {
-            $group = match (true) {
-                str_starts_with($key, 'branding.') => 'branding',
-                str_starts_with($key, 'pwa.') => 'pwa',
-                str_starts_with($key, 'security.') => 'security',
-                str_starts_with($key, 'mail.') => 'mail',
-                str_starts_with($key, 'site.') => 'site',
-                str_starts_with($key, 'seo.') => 'seo',
-                default => 'system',
-            };
+        return $payload;
+    }
 
-            Setting::query()->updateOrCreate(
-                ['key' => $key],
-                [
-                    'group' => $group,
-                    'label' => $meta['label'],
-                    'type' => $meta['type'],
-                    'value' => $payload[$key] ?? '',
-                    'json_value' => null,
-                    'is_public' => $meta['public'],
-                    'sort_order' => $meta['sort'],
-                ],
-            );
-        }
+    private function sectionNavigation(): array
+    {
+        return collect(self::SECTIONS)
+            ->map(fn (array $meta, string $key) => $meta + [
+                'key' => $key,
+                'url' => route('admin.system-settings.show', $key),
+            ])
+            ->values()
+            ->all();
+    }
 
-        $this->clearCaches();
-
-        activity_log('system-settings', 'updated', null, $payload, 'Configuracoes do sistema atualizadas.');
-
-        return response()->json([
-            'message' => 'Configuracoes do sistema atualizadas com sucesso.',
-            'redirect' => route('admin.system-settings.index'),
-            'closeModal' => false,
-        ]);
+    private function resolveSection(string $section): array
+    {
+        return self::SECTIONS[$section] ?? abort(404);
     }
 
     public function testSmtp(Request $request): JsonResponse

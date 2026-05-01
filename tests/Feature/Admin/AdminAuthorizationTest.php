@@ -112,15 +112,24 @@ class AdminAuthorizationTest extends TestCase
         $pwaIcon192 = $this->fakePngUpload('pwa-192.png');
         $pwaIcon512 = $this->fakePngUpload('pwa-512.png');
 
-        $response = $this->actingAs($admin)->post(route('admin.system-settings.update'), [
-            '_method' => 'PUT',
+        $brandingResponse = $this->actingAs($admin)->put(route('admin.system-settings.update', 'branding'), [
             'brand_name' => 'Pujani Premium',
             'brand_short_name' => 'PP',
-            'admin_subtitle' => 'Operação jurídica',
-            'admin_footer_text' => 'Rodapé premium',
+            'admin_subtitle' => 'Operacao juridica',
+            'admin_footer_text' => 'Rodape premium',
             'admin_footer_meta' => 'Laravel 13 | Painel premium',
             'logo' => $logo,
             'favicon' => $favicon,
+        ], [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'application/json',
+        ]);
+
+        $brandingResponse
+            ->assertOk()
+            ->assertJsonPath('message', 'Configuracoes atualizadas com sucesso.');
+
+        $pwaResponse = $this->actingAs($admin)->put(route('admin.system-settings.update', 'pwa'), [
             'pwa_enabled' => '1',
             'pwa_installation_enabled' => '1',
             'pwa_install_prompt_enabled' => '1',
@@ -128,7 +137,7 @@ class AdminAuthorizationTest extends TestCase
             'pwa_mobile_install_enabled' => '1',
             'pwa_app_name' => 'Pujani App',
             'pwa_short_name' => 'Pujani',
-            'pwa_description' => 'Aplicativo premium do escritório.',
+            'pwa_description' => 'Aplicativo premium do escritorio.',
             'pwa_start_path' => '/portal-cliente',
             'pwa_scope' => '/',
             'pwa_display' => 'standalone',
@@ -137,28 +146,35 @@ class AdminAuthorizationTest extends TestCase
             'pwa_background_color' => '#111111',
             'pwa_icon_192' => $pwaIcon192,
             'pwa_icon_512' => $pwaIcon512,
-            'pwa_popup_badge' => 'Aplicativo disponível',
+            'pwa_popup_badge' => 'Aplicativo disponivel',
             'pwa_popup_title' => 'Instale o app',
-            'pwa_popup_description' => 'Abra o escritório com aparência de aplicativo.',
+            'pwa_popup_description' => 'Abra o escritorio com aparencia de aplicativo.',
             'pwa_popup_primary_label' => 'Instalar',
             'pwa_popup_secondary_label' => 'Depois',
             'pwa_footer_label' => 'Instalar app',
             'pwa_mobile_menu_label' => 'App no menu',
             'pwa_offline_title' => 'Modo offline',
-            'pwa_offline_message' => 'Sem conexão no momento.',
+            'pwa_offline_message' => 'Sem conexao no momento.',
             'pwa_offline_button_label' => 'Tentar novamente',
-            'recaptcha_enabled' => '1',
-            'recaptcha_site_key' => 'site-key-demo',
-            'recaptcha_secret_key' => 'secret-key-demo',
-            'recaptcha_min_score' => '0.7',
         ], [
             'X-Requested-With' => 'XMLHttpRequest',
             'Accept' => 'application/json',
         ]);
 
-        $response
+        $pwaResponse
             ->assertOk()
-            ->assertJsonPath('message', 'Configuracoes do sistema atualizadas com sucesso.');
+            ->assertJsonPath('message', 'Configuracoes atualizadas com sucesso.');
+
+        $securityResponse = $this->actingAs($admin)->putJson(route('admin.system-settings.update', 'security'), [
+            'recaptcha_enabled' => '1',
+            'recaptcha_site_key' => 'site-key-demo',
+            'recaptcha_secret_key' => 'secret-key-demo',
+            'recaptcha_min_score' => '0.7',
+        ]);
+
+        $securityResponse
+            ->assertOk()
+            ->assertJsonPath('message', 'Configuracoes atualizadas com sucesso.');
 
         $this->assertDatabaseHas('settings', [
             'key' => 'branding.brand_name',
@@ -200,7 +216,7 @@ class AdminAuthorizationTest extends TestCase
         $this->get(route('site.offline'))
             ->assertOk()
             ->assertSee('Modo offline')
-            ->assertSee('Sem conexão no momento.');
+            ->assertSee('Sem conexao no momento.');
 
         $this->actingAs($admin)
             ->postJson(route('admin.system-settings.seed-demo-data'))

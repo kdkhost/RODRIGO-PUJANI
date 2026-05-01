@@ -111,7 +111,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('system-settings.')
         ->group(function (): void {
             Route::get('/', [SystemSettingsController::class, 'index'])->name('index');
-            Route::put('/', [SystemSettingsController::class, 'update'])->name('update');
+            Route::get('/{section}', [SystemSettingsController::class, 'show'])->name('show');
+            Route::put('/{section}', [SystemSettingsController::class, 'updateSection'])->name('update');
             Route::post('/smtp-test', [SystemSettingsController::class, 'testSmtp'])->name('smtp-test');
             Route::post('/seed-demo-data', [SystemSettingsController::class, 'seedDemoData'])->name('seed-demo-data');
         });
