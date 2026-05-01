@@ -18,6 +18,8 @@
     ];
     $portalWhatsappContacts = collect($portalSupport['whatsapp_contacts'] ?? []);
     $portalNotifications = $portalNotifications ?? ['unread_count' => 0, 'items' => []];
+    $portalLoginBackgroundPath = (string) setting('portal.login_background_path', '');
+    $portalLoginBackgroundUrl = $portalLoginBackgroundPath !== '' ? site_asset_url($portalLoginBackgroundPath) : '';
 @endphp
 <!DOCTYPE html>
 <html
@@ -80,7 +82,7 @@
 
     <main class="portal-shell {{ $portalFullWidth ? 'portal-shell-full' : '' }}">
         <section class="portal-panel">
-            <div class="portal-panel-bg"></div>
+            <div class="portal-panel-bg" @if($portalLoginBackgroundUrl !== '') style="background-image:url('{{ $portalLoginBackgroundUrl }}')" @endif></div>
             <div class="portal-panel-overlay"></div>
             <div class="portal-panel-content">
                 <a href="{{ route('site.home') }}" class="portal-brand">

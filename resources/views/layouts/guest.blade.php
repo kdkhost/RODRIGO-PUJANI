@@ -4,9 +4,11 @@
     $statusMessage = session('status');
     $authPanel = [
         'eyebrow' => (string) setting('auth.panel_eyebrow', 'Painel administrativo'),
-        'title' => (string) setting('auth.panel_title', 'Gestão jurídica com acesso seguro.'),
-        'description' => (string) setting('auth.panel_description', 'Painel administrativo para conteúdo, agenda, mídias, usuários e permissões do escritório.'),
+        'title' => (string) setting('auth.panel_title', 'Gestao juridica com acesso seguro.'),
+        'description' => (string) setting('auth.panel_description', 'Painel administrativo para conteudo, agenda, midias, usuarios e permissoes do escritorio.'),
     ];
+    $authBackgroundPath = (string) setting('auth.panel_background_path', '');
+    $authBackgroundUrl = $authBackgroundPath !== '' ? site_asset_url($authBackgroundPath) : '';
 
     $authMetrics = collect([1, 2, 3])
         ->map(fn (int $index): array => [
@@ -17,8 +19,8 @@
             }),
             'subtitle' => (string) setting("auth.metric_{$index}_subtitle", match ($index) {
                 1 => 'Base atual',
-                2 => 'Permissões',
-                default => 'Experiência em app',
+                2 => 'Permissoes',
+                default => 'Experiencia em app',
             }),
         ])
         ->filter(fn (array $metric): bool => filled($metric['title']) || filled($metric['subtitle']))
@@ -60,7 +62,7 @@
 
         <main class="auth-premium-shell">
             <section class="auth-premium-panel" aria-label="{{ $branding['brand_name'] }}">
-                <div class="auth-premium-panel-bg"></div>
+                <div class="auth-premium-panel-bg" @if($authBackgroundUrl !== '') style="background-image:url('{{ $authBackgroundUrl }}')" @endif></div>
                 <div class="auth-premium-panel-overlay"></div>
                 <div class="auth-premium-panel-content">
                     <a href="{{ route('site.home') }}" class="auth-brand">

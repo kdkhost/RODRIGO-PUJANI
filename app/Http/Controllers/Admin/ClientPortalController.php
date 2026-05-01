@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\PublicUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
@@ -13,15 +15,16 @@ class ClientPortalController extends Controller
 {
     private const SETTINGS = [
         'portal.login_eyebrow' => ['label' => 'Portal do cliente - chamada curta', 'default' => 'Acompanhamento digital', 'type' => 'text', 'sort' => 500, 'public' => true],
-        'portal.login_title' => ['label' => 'Portal do cliente - título', 'default' => 'Acompanhe seus processos com clareza e segurança.', 'type' => 'text', 'sort' => 501, 'public' => true],
-        'portal.login_description' => ['label' => 'Portal do cliente - descrição', 'default' => 'Consulte movimentações, prazos relevantes e documentos compartilhados pelo escritório em um ambiente reservado.', 'type' => 'text', 'sort' => 502, 'public' => true],
-        'portal.metric_1_title' => ['label' => 'Portal do cliente - bloco 1 título', 'default' => 'Processos', 'type' => 'text', 'sort' => 510, 'public' => true],
-        'portal.metric_1_subtitle' => ['label' => 'Portal do cliente - bloco 1 subtítulo', 'default' => 'Histórico organizado', 'type' => 'text', 'sort' => 511, 'public' => true],
-        'portal.metric_2_title' => ['label' => 'Portal do cliente - bloco 2 título', 'default' => 'Documentos', 'type' => 'text', 'sort' => 512, 'public' => true],
-        'portal.metric_2_subtitle' => ['label' => 'Portal do cliente - bloco 2 subtítulo', 'default' => 'Arquivos compartilhados', 'type' => 'text', 'sort' => 513, 'public' => true],
-        'portal.metric_3_title' => ['label' => 'Portal do cliente - bloco 3 título', 'default' => 'Prazos', 'type' => 'text', 'sort' => 514, 'public' => true],
-        'portal.metric_3_subtitle' => ['label' => 'Portal do cliente - bloco 3 subtítulo', 'default' => 'Visão objetiva do caso', 'type' => 'text', 'sort' => 515, 'public' => true],
-        'portal.support_text' => ['label' => 'Portal do cliente - suporte', 'default' => 'Para suporte de acesso, fale com a equipe do escritório pelo telefone ou WhatsApp cadastrado.', 'type' => 'textarea', 'sort' => 516, 'public' => true],
+        'portal.login_title' => ['label' => 'Portal do cliente - titulo', 'default' => 'Acompanhe seus processos com clareza e seguranca.', 'type' => 'text', 'sort' => 501, 'public' => true],
+        'portal.login_description' => ['label' => 'Portal do cliente - descricao', 'default' => 'Consulte movimentacoes, prazos relevantes e documentos compartilhados pelo escritorio em um ambiente reservado.', 'type' => 'text', 'sort' => 502, 'public' => true],
+        'portal.login_background_path' => ['label' => 'Portal do cliente - imagem de fundo', 'default' => '', 'type' => 'text', 'sort' => 503, 'public' => true],
+        'portal.metric_1_title' => ['label' => 'Portal do cliente - bloco 1 titulo', 'default' => 'Processos', 'type' => 'text', 'sort' => 510, 'public' => true],
+        'portal.metric_1_subtitle' => ['label' => 'Portal do cliente - bloco 1 subtitulo', 'default' => 'Historico organizado', 'type' => 'text', 'sort' => 511, 'public' => true],
+        'portal.metric_2_title' => ['label' => 'Portal do cliente - bloco 2 titulo', 'default' => 'Documentos', 'type' => 'text', 'sort' => 512, 'public' => true],
+        'portal.metric_2_subtitle' => ['label' => 'Portal do cliente - bloco 2 subtitulo', 'default' => 'Arquivos compartilhados', 'type' => 'text', 'sort' => 513, 'public' => true],
+        'portal.metric_3_title' => ['label' => 'Portal do cliente - bloco 3 titulo', 'default' => 'Prazos', 'type' => 'text', 'sort' => 514, 'public' => true],
+        'portal.metric_3_subtitle' => ['label' => 'Portal do cliente - bloco 3 subtitulo', 'default' => 'Visao objetiva do caso', 'type' => 'text', 'sort' => 515, 'public' => true],
+        'portal.support_text' => ['label' => 'Portal do cliente - suporte', 'default' => 'Para suporte de acesso, fale com a equipe do escritorio pelo telefone ou WhatsApp cadastrado.', 'type' => 'textarea', 'sort' => 516, 'public' => true],
         'portal.datajud_api_key' => ['label' => 'Portal do cliente - chave DataJud', 'default' => '', 'type' => 'text', 'sort' => 517, 'public' => false],
     ];
 
@@ -47,6 +50,8 @@ class ClientPortalController extends Controller
             'metric_3_subtitle' => ['nullable', 'string', 'max:70'],
             'support_text' => ['nullable', 'string', 'max:280'],
             'datajud_api_key' => ['nullable', 'string', 'max:255'],
+            'login_background' => ['nullable', 'image', 'max:6144'],
+            'remove_login_background' => ['nullable', 'boolean'],
         ]);
 
         $payload = [
@@ -62,6 +67,17 @@ class ClientPortalController extends Controller
             'portal.support_text' => $validated['support_text'] ?? '',
             'portal.datajud_api_key' => $validated['datajud_api_key'] ?? '',
         ];
+
+        $currentBackground = (string) setting('portal.login_background_path', '');
+        $payload['portal.login_background_path'] = $request->boolean('remove_login_background') ? '' : $currentBackground;
+
+        if ($request->boolean('remove_login_background') && ! $request->hasFile('login_background')) {
+            PublicUpload::delete($currentBackground);
+        }
+
+        if ($request->hasFile('login_background')) {
+            $payload['portal.login_background_path'] = $this->storeBackground($request->file('login_background'), $currentBackground);
+        }
 
         foreach (self::SETTINGS as $key => $meta) {
             Setting::query()->updateOrCreate(
@@ -80,7 +96,7 @@ class ClientPortalController extends Controller
 
         $this->clearSettingsCaches();
 
-        activity_log('client_portal', 'updated', null, $payload, 'Configurações do portal do cliente atualizadas.');
+        activity_log('client_portal', 'updated', null, $payload, 'Configuracoes do portal do cliente atualizadas.');
 
         return response()->json([
             'message' => 'Portal do cliente atualizado com sucesso.',
@@ -107,5 +123,10 @@ class ClientPortalController extends Controller
         ] as $key) {
             Cache::forget($key);
         }
+    }
+
+    private function storeBackground(UploadedFile $file, ?string $currentPath): string
+    {
+        return PublicUpload::store($file, 'portal-backgrounds', $currentPath, auth()->id());
     }
 }

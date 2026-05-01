@@ -2,6 +2,16 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.13] - 2026-05-01
+
+### Adicionado
+- Configuracao de imagem de fundo da tela de autenticacao administrativa em `/admin/auth-appearance`, com upload, remocao e pre-visualizacao.
+- Configuracao de imagem de fundo da tela de login do portal do cliente em `/admin/client-portal`, com upload, remocao e pre-visualizacao.
+
+### Alterado
+- Layout `guest` passou a usar dinamicamente a imagem definida em `auth.panel_background_path` quando existir.
+- Layout do portal do cliente passou a usar dinamicamente a imagem definida em `portal.login_background_path` quando existir.
+
 ## [1.0.12] - 2026-05-01
 
 ### Adicionado
