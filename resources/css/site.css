@@ -327,10 +327,13 @@ body:not(.portal-body) .site-scroll-top {
 .portal-client-brand small {
     margin-top: 0.2rem;
     color: rgba(247, 236, 216, 0.58);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .portal-client-nav {

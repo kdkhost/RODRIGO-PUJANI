@@ -2,6 +2,15 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.7] - 2026-04-30
+
+### Corrigido
+- Portal do cliente passou a respeitar corretamente os campos individuais marcados para edicao no cadastro do cliente (sem bloqueio global indevido).
+- Retorno visual de salvamento no portal do cliente reforcado com notificacoes Toastr de sessao (sucesso e erro).
+
+### Alterado
+- Box flutuante de suporte no portal do cliente padronizado com acabamento visual premium coerente com o painel administrativo.
+
 ## [1.0.6] - 2026-04-30
 
 ### Corrigido
