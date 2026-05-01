@@ -343,7 +343,7 @@ class ClientPortalController extends Controller
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
-        $canUpdateRegistration = (bool) $client->portal_profile_update_allowed;
+        $canUpdateRegistration = count($editableFields) > 0;
 
         if ($canUpdateRegistration) {
             $validated = $request->validate([

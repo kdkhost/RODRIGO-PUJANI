@@ -8,8 +8,8 @@
         ->take(2)
         ->map(fn ($part) => mb_substr($part, 0, 1))
         ->implode('');
-    $canEditRegistration = (bool) $client->portal_profile_update_allowed;
     $editableFields = collect($editableFields ?? []);
+    $canEditRegistration = $editableFields->isNotEmpty();
     $isEditable = fn (string $field): bool => $canEditRegistration && $editableFields->contains($field);
     $personType = old('person_type', $resolvedPersonType ?? $client->person_type ?: 'individual');
     $isCompany = $personType === 'company';
