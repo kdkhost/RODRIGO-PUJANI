@@ -2,6 +2,15 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.11] - 2026-05-01
+
+### Adicionado
+- Novos templates operacionais de e-mail para fluxo real do escritorio: boas-vindas do portal, alerta de novo contato do site, alerta de mensagem interna, atualizacao de processo, documento compartilhado e lembrete de prazo.
+- Migration dedicada para semear e manter esses templates sincronizados com o tema de e-mail configurado no administrativo.
+
+### Corrigido
+- Publicacao do build frontend no servidor com manifest e assets atualizados para restaurar o carregamento completo de CSS no site publico e nas telas de autenticacao.
+
 ## [1.0.10] - 2026-05-01
 
 ### Corrigido
