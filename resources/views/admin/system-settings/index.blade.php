@@ -27,6 +27,58 @@
                     @csrf
                     @method('PUT')
 
+                    <div class="card admin-table-card admin-settings-shell">
+                        <div class="card-body p-3 p-lg-4">
+                            <div class="admin-settings-toolbar">
+                                <div class="admin-settings-toolbar-copy">
+                                    <div class="admin-card-kicker mb-2">Organizacao por contexto</div>
+                                    <h3 class="card-title mb-1">Guias de configuracao</h3>
+                                    <p class="text-muted mb-0">A tela foi separada por assunto para evitar mistura entre marca, PWA, SMTP, protecao e SEO.</p>
+                                </div>
+                                <ul class="nav nav-pills admin-settings-tabs" id="system-settings-tabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="settings-branding-tab" data-bs-toggle="pill" data-bs-target="#settings-branding-pane" type="button" role="tab" aria-controls="settings-branding-pane" aria-selected="true">
+                                            <i class="bi bi-palette"></i>
+                                            <span>Marca</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="settings-pwa-tab" data-bs-toggle="pill" data-bs-target="#settings-pwa-pane" type="button" role="tab" aria-controls="settings-pwa-pane" aria-selected="false">
+                                            <i class="bi bi-phone"></i>
+                                            <span>PWA</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="settings-mail-tab" data-bs-toggle="pill" data-bs-target="#settings-mail-pane" type="button" role="tab" aria-controls="settings-mail-pane" aria-selected="false">
+                                            <i class="bi bi-envelope"></i>
+                                            <span>SMTP</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="settings-security-tab" data-bs-toggle="pill" data-bs-target="#settings-security-pane" type="button" role="tab" aria-controls="settings-security-pane" aria-selected="false">
+                                            <i class="bi bi-shield-lock"></i>
+                                            <span>Seguranca</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="settings-seo-tab" data-bs-toggle="pill" data-bs-target="#settings-seo-pane" type="button" role="tab" aria-controls="settings-seo-pane" aria-selected="false">
+                                            <i class="bi bi-graph-up-arrow"></i>
+                                            <span>SEO</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="settings-support-tab" data-bs-toggle="pill" data-bs-target="#settings-support-pane" type="button" role="tab" aria-controls="settings-support-pane" aria-selected="false">
+                                            <i class="bi bi-whatsapp"></i>
+                                            <span>Atendimento</span>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content admin-settings-tab-content" id="system-settings-tab-content">
+                    <div class="tab-pane fade" id="settings-mail-pane" role="tabpanel" aria-labelledby="settings-mail-tab" tabindex="0">
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
@@ -123,7 +175,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="tab-pane fade show active" id="settings-branding-pane" role="tabpanel" aria-labelledby="settings-branding-tab" tabindex="0">
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
@@ -176,7 +230,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="tab-pane fade" id="settings-pwa-pane" role="tabpanel" aria-labelledby="settings-pwa-tab" tabindex="0">
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
@@ -341,7 +397,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="tab-pane fade" id="settings-security-pane" role="tabpanel" aria-labelledby="settings-security-tab" tabindex="0">
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
@@ -374,7 +432,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="tab-pane fade" id="settings-seo-pane" role="tabpanel" aria-labelledby="settings-seo-tab" tabindex="0">
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
@@ -436,7 +496,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div class="tab-pane fade" id="settings-support-pane" role="tabpanel" aria-labelledby="settings-support-tab" tabindex="0">
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
@@ -466,11 +528,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-1"></i>Salvar configurações
+                    </div>
+                    </div>
+
+                    <div class="card admin-table-card admin-settings-submit-card">
+                        <div class="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 p-4">
+                            <div>
+                                <div class="admin-card-kicker mb-1">Aplicacao das alteracoes</div>
+                                <strong>Salvamento unificado</strong>
+                                <p class="text-muted mb-0">As guias organizam a experiencia visual, mas o envio continua centralizado para preservar a consistencia do cadastro.</p>
+                            </div>
+                            <button type="submit" class="btn btn-primary admin-settings-save-button">
+                                <i class="bi bi-save me-1"></i>Salvar configuracoes
                             </button>
                         </div>
+                    </div>
                     </div>
                 </form>
 
@@ -627,13 +699,107 @@
     </div>
 @endsection
 
+@push('styles')
+<style>
+    .admin-settings-toolbar {
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .admin-settings-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .admin-settings-tabs .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        border-radius: 12px;
+        padding: .85rem 1rem;
+        color: #b7c0d4;
+        background: rgba(12, 18, 31, .55);
+        border: 1px solid rgba(255, 255, 255, .08);
+        font-weight: 700;
+    }
+
+    .admin-settings-tabs .nav-link.active {
+        background: linear-gradient(135deg, rgba(196, 154, 60, .22), rgba(196, 154, 60, .08));
+        color: #f7e6b3;
+        border-color: rgba(196, 154, 60, .45);
+        box-shadow: 0 12px 24px rgba(10, 14, 24, .18);
+    }
+
+    .admin-settings-tab-content > .tab-pane {
+        display: none;
+    }
+
+    .admin-settings-tab-content > .active {
+        display: block;
+    }
+
+    .admin-settings-submit-card {
+        position: sticky;
+        bottom: 1rem;
+        z-index: 20;
+    }
+
+    .admin-settings-save-button {
+        min-width: 220px;
+    }
+
+    @media (min-width: 992px) {
+        .admin-settings-toolbar {
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr);
+            align-items: start;
+        }
+
+        .admin-settings-tabs {
+            justify-content: flex-end;
+        }
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const tabStorageKey = 'admin-system-settings-active-tab';
+    const tabButtons = Array.from(document.querySelectorAll('#system-settings-tabs [data-bs-toggle="pill"]'));
     const preview = document.getElementById('mail-template-preview');
     const testButton = document.getElementById('smtp-test-button');
     const testEmail = document.getElementById('smtp_test_email');
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    const activateTab = (selector) => {
+        const button = tabButtons.find((item) => item.dataset.bsTarget === selector);
+        if (!button || !window.bootstrap?.Tab) {
+            return;
+        }
+
+        window.localStorage.setItem(tabStorageKey, selector);
+        window.history.replaceState({}, '', selector);
+        bootstrap.Tab.getOrCreateInstance(button).show();
+    };
+
+    tabButtons.forEach((button) => {
+        button.addEventListener('shown.bs.tab', () => {
+            const target = button.dataset.bsTarget || '';
+            if (target) {
+                window.localStorage.setItem(tabStorageKey, target);
+                window.history.replaceState({}, '', target);
+            }
+        });
+    });
+
+    const invalidField = document.querySelector('.is-invalid, .invalid-feedback');
+    const invalidPane = invalidField?.closest('.tab-pane');
+    const preferredTab = invalidPane?.id ? `#${invalidPane.id}` : (window.location.hash || window.localStorage.getItem(tabStorageKey) || '#settings-branding-pane');
+
+    if (preferredTab) {
+        activateTab(preferredTab);
+    }
 
     const values = () => ({
         name: 'Cliente de Exemplo',
