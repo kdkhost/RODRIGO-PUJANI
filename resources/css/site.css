@@ -2,6 +2,7 @@
 @import 'toastr/build/toastr.min.css';
 @import 'filepond/dist/filepond.min.css';
 @import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
+@import 'summernote/dist/summernote-lite.min.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

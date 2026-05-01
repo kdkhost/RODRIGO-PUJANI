@@ -7,6 +7,7 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 ### Corrigido
 - Portal do cliente passou a respeitar corretamente os campos individuais marcados para edicao no cadastro do cliente (sem bloqueio global indevido).
 - Retorno visual de salvamento no portal do cliente reforcado com notificacoes Toastr de sessao (sucesso e erro).
+- Editor Summernote do portal do cliente passou a carregar com o CSS correto na tela de mensagens, evitando renderizacao quebrada do campo rico.
 
 ### Alterado
 - Box flutuante de suporte no portal do cliente padronizado com acabamento visual premium coerente com o painel administrativo.
