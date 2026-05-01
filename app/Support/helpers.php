@@ -248,6 +248,47 @@ if (! function_exists('smtp_config')) {
     }
 }
 
+if (! function_exists('mail_theme_config')) {
+    function mail_theme_config(): array
+    {
+        try {
+            return Cache::rememberForever('mail.theme.v1', function (): array {
+                return [
+                    'show_logo' => filter_var(setting('mail.template_show_logo', '1'), FILTER_VALIDATE_BOOLEAN),
+                    'font_family' => (string) setting('mail.template_font_family', 'Segoe UI, Arial, sans-serif'),
+                    'layout' => (string) setting('mail.template_layout', 'premium'),
+                    'background_color' => (string) setting('mail.template_background_color', '#0f172a'),
+                    'body_background_color' => (string) setting('mail.template_body_background_color', '#f4f6fb'),
+                    'card_background_color' => (string) setting('mail.template_card_background_color', '#ffffff'),
+                    'heading_color' => (string) setting('mail.template_heading_color', '#0f172a'),
+                    'text_color' => (string) setting('mail.template_text_color', '#334155'),
+                    'muted_color' => (string) setting('mail.template_muted_color', '#64748b'),
+                    'border_color' => (string) setting('mail.template_border_color', '#e5e7ef'),
+                    'button_background_color' => (string) setting('mail.template_button_background_color', '#c49a3c'),
+                    'button_text_color' => (string) setting('mail.template_button_text_color', '#10131a'),
+                    'custom_css' => (string) setting('mail.template_custom_css', ''),
+                ];
+            });
+        } catch (Throwable) {
+            return [
+                'show_logo' => true,
+                'font_family' => 'Segoe UI, Arial, sans-serif',
+                'layout' => 'premium',
+                'background_color' => '#0f172a',
+                'body_background_color' => '#f4f6fb',
+                'card_background_color' => '#ffffff',
+                'heading_color' => '#0f172a',
+                'text_color' => '#334155',
+                'muted_color' => '#64748b',
+                'border_color' => '#e5e7ef',
+                'button_background_color' => '#c49a3c',
+                'button_text_color' => '#10131a',
+                'custom_css' => '',
+            ];
+        }
+    }
+}
+
 if (! function_exists('pwa_config')) {
     function pwa_config(): array
     {

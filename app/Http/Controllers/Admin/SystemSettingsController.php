@@ -78,6 +78,19 @@ class SystemSettingsController extends Controller
         'mail.template_reset_body' => ['label' => 'Corpo redefinicao de senha', 'type' => 'textarea', 'public' => false, 'sort' => 582],
         'mail.template_generic_subject' => ['label' => 'Assunto padrao e-mails', 'type' => 'text', 'public' => false, 'sort' => 583],
         'mail.template_generic_body' => ['label' => 'Corpo padrao e-mails', 'type' => 'textarea', 'public' => false, 'sort' => 584],
+        'mail.template_show_logo' => ['label' => 'Exibir logo no template de e-mail', 'type' => 'boolean', 'public' => false, 'sort' => 585],
+        'mail.template_font_family' => ['label' => 'Fonte do template de e-mail', 'type' => 'text', 'public' => false, 'sort' => 586],
+        'mail.template_layout' => ['label' => 'Modelo do template de e-mail', 'type' => 'text', 'public' => false, 'sort' => 587],
+        'mail.template_background_color' => ['label' => 'Cor do topo do template', 'type' => 'text', 'public' => false, 'sort' => 588],
+        'mail.template_body_background_color' => ['label' => 'Cor externa do template', 'type' => 'text', 'public' => false, 'sort' => 589],
+        'mail.template_card_background_color' => ['label' => 'Cor do card do template', 'type' => 'text', 'public' => false, 'sort' => 590],
+        'mail.template_heading_color' => ['label' => 'Cor do titulo do template', 'type' => 'text', 'public' => false, 'sort' => 591],
+        'mail.template_text_color' => ['label' => 'Cor do texto do template', 'type' => 'text', 'public' => false, 'sort' => 592],
+        'mail.template_muted_color' => ['label' => 'Cor do texto auxiliar do template', 'type' => 'text', 'public' => false, 'sort' => 593],
+        'mail.template_border_color' => ['label' => 'Cor da borda do template', 'type' => 'text', 'public' => false, 'sort' => 594],
+        'mail.template_button_background_color' => ['label' => 'Cor do botao do template', 'type' => 'text', 'public' => false, 'sort' => 595],
+        'mail.template_button_text_color' => ['label' => 'Cor do texto do botao do template', 'type' => 'text', 'public' => false, 'sort' => 596],
+        'mail.template_custom_css' => ['label' => 'CSS adicional do template de e-mail', 'type' => 'textarea', 'public' => false, 'sort' => 597],
         'site.whatsapp_multiple_support' => ['label' => 'Suporte WhatsApp Multinivel', 'type' => 'boolean', 'public' => true, 'sort' => 600],
         'site.whatsapp_selection_title' => ['label' => 'Titulo da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 601],
         'site.whatsapp_selection_subtitle' => ['label' => 'Subtitulo da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 602],
@@ -101,11 +114,24 @@ class SystemSettingsController extends Controller
             'seo' => seo_config(),
             'recaptcha' => recaptcha_config(),
             'mailConfig' => smtp_config(),
+            'mailTheme' => mail_theme_config(),
             'pwaDisplayOptions' => [
                 'browser' => 'Navegador',
                 'minimal-ui' => 'Minimal UI',
                 'standalone' => 'Standalone',
                 'fullscreen' => 'Tela cheia',
+            ],
+            'mailLayoutOptions' => [
+                'premium' => 'Premium',
+                'classic' => 'Classico',
+                'minimal' => 'Minimalista',
+            ],
+            'mailFontOptions' => [
+                'Segoe UI, Arial, sans-serif' => 'Segoe UI',
+                'Arial, Helvetica, sans-serif' => 'Arial',
+                'Roboto, Arial, sans-serif' => 'Roboto',
+                'Georgia, Times New Roman, serif' => 'Georgia',
+                'Tahoma, Geneva, sans-serif' => 'Tahoma',
             ],
             'pwaOrientationOptions' => [
                 'any' => 'Qualquer orientacao',
@@ -128,6 +154,7 @@ class SystemSettingsController extends Controller
     public function update(Request $request): JsonResponse
     {
         $mailConfig = smtp_config();
+        $mailTheme = mail_theme_config();
 
         $validated = $request->validate([
             'brand_name' => ['required', 'string', 'max:120'],
@@ -180,12 +207,25 @@ class SystemSettingsController extends Controller
             'mail_password' => ['nullable', 'string', 'max:255'],
             'mail_from_address' => ['nullable', 'email', 'max:255'],
             'mail_from_name' => ['nullable', 'string', 'max:255'],
-            'mail_template_header' => ['nullable', 'string', 'max:2000'],
-            'mail_template_footer' => ['nullable', 'string', 'max:2000'],
+            'mail_template_header' => ['nullable', 'string', 'max:8000'],
+            'mail_template_footer' => ['nullable', 'string', 'max:8000'],
             'mail_template_reset_subject' => ['nullable', 'string', 'max:255'],
             'mail_template_reset_body' => ['nullable', 'string', 'max:8000'],
             'mail_template_generic_subject' => ['nullable', 'string', 'max:255'],
             'mail_template_generic_body' => ['nullable', 'string', 'max:8000'],
+            'mail_template_show_logo' => ['nullable', 'boolean'],
+            'mail_template_font_family' => ['nullable', 'string', 'max:120'],
+            'mail_template_layout' => ['nullable', 'in:premium,classic,minimal'],
+            'mail_template_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_body_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_card_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_heading_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_text_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_muted_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_border_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_button_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_button_text_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'mail_template_custom_css' => ['nullable', 'string', 'max:12000'],
             'whatsapp_multiple_support' => ['nullable', 'boolean'],
             'whatsapp_selection_title' => ['nullable', 'string', 'max:120'],
             'whatsapp_selection_subtitle' => ['nullable', 'string', 'max:255'],
@@ -258,6 +298,19 @@ class SystemSettingsController extends Controller
             'mail.template_reset_body' => trim((string) ($validated['mail_template_reset_body'] ?? $mailConfig['template_reset_body'] ?? 'Ola, {{name}}. Use o botao abaixo para redefinir sua senha.')),
             'mail.template_generic_subject' => trim((string) ($validated['mail_template_generic_subject'] ?? $mailConfig['template_generic_subject'] ?? 'Notificacao do sistema')),
             'mail.template_generic_body' => trim((string) ($validated['mail_template_generic_body'] ?? $mailConfig['template_generic_body'] ?? 'Ola, {{name}}. Esta e uma mensagem automatica do sistema.')),
+            'mail.template_show_logo' => $request->boolean('mail_template_show_logo') ? '1' : '0',
+            'mail.template_font_family' => trim((string) ($validated['mail_template_font_family'] ?? $mailTheme['font_family'] ?? 'Segoe UI, Arial, sans-serif')),
+            'mail.template_layout' => trim((string) ($validated['mail_template_layout'] ?? $mailTheme['layout'] ?? 'premium')),
+            'mail.template_background_color' => strtoupper((string) ($validated['mail_template_background_color'] ?? $mailTheme['background_color'] ?? '#0f172a')),
+            'mail.template_body_background_color' => strtoupper((string) ($validated['mail_template_body_background_color'] ?? $mailTheme['body_background_color'] ?? '#f4f6fb')),
+            'mail.template_card_background_color' => strtoupper((string) ($validated['mail_template_card_background_color'] ?? $mailTheme['card_background_color'] ?? '#ffffff')),
+            'mail.template_heading_color' => strtoupper((string) ($validated['mail_template_heading_color'] ?? $mailTheme['heading_color'] ?? '#0f172a')),
+            'mail.template_text_color' => strtoupper((string) ($validated['mail_template_text_color'] ?? $mailTheme['text_color'] ?? '#334155')),
+            'mail.template_muted_color' => strtoupper((string) ($validated['mail_template_muted_color'] ?? $mailTheme['muted_color'] ?? '#64748b')),
+            'mail.template_border_color' => strtoupper((string) ($validated['mail_template_border_color'] ?? $mailTheme['border_color'] ?? '#e5e7ef')),
+            'mail.template_button_background_color' => strtoupper((string) ($validated['mail_template_button_background_color'] ?? $mailTheme['button_background_color'] ?? '#c49a3c')),
+            'mail.template_button_text_color' => strtoupper((string) ($validated['mail_template_button_text_color'] ?? $mailTheme['button_text_color'] ?? '#10131a')),
+            'mail.template_custom_css' => trim((string) ($validated['mail_template_custom_css'] ?? $mailTheme['custom_css'] ?? '')),
             'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',
             'site.whatsapp_selection_title' => trim((string) ($validated['whatsapp_selection_title'] ?? 'Escolha um especialista')),
             'site.whatsapp_selection_subtitle' => trim((string) ($validated['whatsapp_selection_subtitle'] ?? 'Selecione com quem deseja falar pelo WhatsApp:')),
@@ -352,6 +405,23 @@ class SystemSettingsController extends Controller
             'password' => ['nullable', 'string', 'max:255'],
             'from_address' => ['required', 'email', 'max:255'],
             'from_name' => ['required', 'string', 'max:255'],
+            'template_header' => ['nullable', 'string', 'max:8000'],
+            'template_footer' => ['nullable', 'string', 'max:8000'],
+            'template_generic_subject' => ['nullable', 'string', 'max:255'],
+            'template_generic_body' => ['nullable', 'string', 'max:12000'],
+            'template_show_logo' => ['nullable', 'boolean'],
+            'template_font_family' => ['nullable', 'string', 'max:120'],
+            'template_layout' => ['nullable', 'in:premium,classic,minimal'],
+            'template_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_body_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_card_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_heading_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_text_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_muted_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_border_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_button_background_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_button_text_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'template_custom_css' => ['nullable', 'string', 'max:12000'],
         ]);
 
         $config = [
@@ -366,11 +436,50 @@ class SystemSettingsController extends Controller
         ];
         $this->applyRuntimeMailConfig($config);
 
+        $variables = [
+            'name' => 'Cliente de Exemplo',
+            'email' => (string) $validated['test_email'],
+            'app_name' => (string) config('app.name'),
+            'from_name' => (string) $config['from_name'],
+            'reset_url' => (string) url('/login'),
+            'year' => (string) now()->year,
+        ];
+
+        $subject = \App\Support\SystemMailTemplate::compile((string) ($validated['template_generic_subject'] ?? 'Teste SMTP do sistema'), $variables);
+        $header = \App\Support\SystemMailTemplate::renderMarkup((string) ($validated['template_header'] ?? '<p>Teste de conectividade SMTP.</p>'), $variables);
+        $body = \App\Support\SystemMailTemplate::renderMarkup((string) ($validated['template_generic_body'] ?? '<p>Este e-mail confirma que a configuracao personalizada do sistema esta operante.</p>'), $variables);
+        $footer = \App\Support\SystemMailTemplate::renderMarkup((string) ($validated['template_footer'] ?? '<p>Equipe {{app_name}}</p>'), $variables);
+        $theme = [
+            'show_logo' => (bool) ($validated['template_show_logo'] ?? true),
+            'font_family' => (string) ($validated['template_font_family'] ?? 'Segoe UI, Arial, sans-serif'),
+            'layout' => (string) ($validated['template_layout'] ?? 'premium'),
+            'background_color' => (string) ($validated['template_background_color'] ?? '#0f172a'),
+            'body_background_color' => (string) ($validated['template_body_background_color'] ?? '#f4f6fb'),
+            'card_background_color' => (string) ($validated['template_card_background_color'] ?? '#ffffff'),
+            'heading_color' => (string) ($validated['template_heading_color'] ?? '#0f172a'),
+            'text_color' => (string) ($validated['template_text_color'] ?? '#334155'),
+            'muted_color' => (string) ($validated['template_muted_color'] ?? '#64748b'),
+            'border_color' => (string) ($validated['template_border_color'] ?? '#e5e7ef'),
+            'button_background_color' => (string) ($validated['template_button_background_color'] ?? '#c49a3c'),
+            'button_text_color' => (string) ($validated['template_button_text_color'] ?? '#10131a'),
+            'custom_css' => (string) ($validated['template_custom_css'] ?? ''),
+        ];
+
         try {
-            Mail::raw('Teste SMTP enviado com sucesso em '.now()->format('d/m/Y H:i:s').'.', function ($message) use ($validated, $config): void {
+            Mail::send('emails.custom-system', [
+                'subject' => $subject,
+                'header' => $header,
+                'body' => $body,
+                'footer' => $footer,
+                'actionUrl' => url('/login'),
+                'actionLabel' => 'Abrir sistema',
+                'theme' => $theme,
+                'logoUrl' => branding_config()['logo_url'] ?? null,
+                'brandName' => branding_config()['brand_name'] ?? config('app.name'),
+            ], function ($message) use ($validated, $config, $subject): void {
                 $message
                     ->to($validated['test_email'])
-                    ->subject('Teste SMTP - '.($config['from_name'] ?: config('app.name')))
+                    ->subject($subject)
                     ->from($config['from_address'], $config['from_name']);
             });
         } catch (\Throwable $exception) {
@@ -419,6 +528,7 @@ class SystemSettingsController extends Controller
             'recaptcha.config.v1',
             'mail.config.v1',
             'preloader.settings.v1',
+            'mail.theme.v1',
             'site_pages.menu.v2',
             'site_pages.public.v2',
             'site_whatsapp.team.v1',

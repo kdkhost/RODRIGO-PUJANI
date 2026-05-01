@@ -51,9 +51,9 @@ class CustomResetPasswordNotification extends Notification
         ];
 
         $subject = SystemMailTemplate::compile((string) $config['template_reset_subject'], $variables);
-        $header = SystemMailTemplate::compile((string) $config['template_header'], $variables);
-        $body = SystemMailTemplate::compile((string) $config['template_reset_body'], $variables);
-        $footer = SystemMailTemplate::compile((string) $config['template_footer'], $variables);
+        $header = SystemMailTemplate::renderMarkup((string) $config['template_header'], $variables);
+        $body = SystemMailTemplate::renderMarkup((string) $config['template_reset_body'], $variables);
+        $footer = SystemMailTemplate::renderMarkup((string) $config['template_footer'], $variables);
 
         return (new MailMessage)
             ->subject($subject)
@@ -64,7 +64,9 @@ class CustomResetPasswordNotification extends Notification
                 'footer' => $footer,
                 'actionUrl' => $url,
                 'actionLabel' => 'Redefinir senha',
+                'theme' => mail_theme_config(),
+                'logoUrl' => branding_config()['logo_url'] ?? null,
+                'brandName' => branding_config()['brand_name'] ?? config('app.name'),
             ]);
     }
 }
-

@@ -16,6 +16,7 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 - Gestao de usuarios passou a restringir cadastro aos IDs 1 e 4, bloqueando atribuicao da funcao Super Admin para qualquer usuario diferente do ID 1.
 - Exclusao de usuarios ficou restrita aos IDs 1 e 4, enquanto a autoexclusao pelo perfil foi bloqueada no painel.
 - Pagina administrativa de configuracoes do sistema foi reorganizada em guias tematicas para separar marca, PWA, SMTP, seguranca, SEO e atendimento, com salvamento unificado e memoria da ultima guia aberta.
+- Sistema de e-mails passou a usar template visual proprio com layout responsivo, tema configuravel, editor rico, tokens clicaveis e teste SMTP disparando o mesmo modelo personalizado do ambiente real.
 
 ## [1.0.6] - 2026-04-30
 
