@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\LegalCaseUpdateController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\LegalTaskController;
 use App\Http\Controllers\Admin\MediaAssetController;
+use App\Http\Controllers\Admin\MailTemplateController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -188,6 +189,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     $crud('testimonials', 'testimonials', TestimonialController::class, 'testimonials.manage');
     $crud('contact-messages', 'contact-messages', AdminContactMessageController::class, 'contact-messages.manage');
     $crud('media-assets', 'media-assets', MediaAssetController::class, 'media-assets.manage');
+    $crud('mail-templates', 'mail-templates', MailTemplateController::class, 'mail-templates.manage');
     $crud('seo-metas', 'seo-metas', SeoMetaController::class, 'seo-metas.manage');
     $crud('users', 'users', UserController::class, 'users.manage');
     $crud('roles', 'roles', RoleController::class, 'roles.manage');

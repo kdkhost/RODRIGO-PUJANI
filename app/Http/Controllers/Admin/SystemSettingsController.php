@@ -9,6 +9,7 @@ use App\Models\ContactMessage;
 use App\Models\LegalCase;
 use App\Models\LegalCaseUpdate;
 use App\Models\LegalTask;
+use App\Models\MailTemplate;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\PublicUpload;
@@ -279,6 +280,10 @@ class SystemSettingsController extends Controller
                     'sort_order' => $meta['sort'],
                 ],
             );
+        }
+
+        if ($section === 'mail') {
+            $this->syncSystemMailTemplatesFromSettings($payload);
         }
 
         $this->clearCaches();
@@ -729,5 +734,52 @@ class SystemSettingsController extends Controller
         Config::set('mail.mailers.smtp.password', $config['password']);
         Config::set('mail.from.address', $config['from_address']);
         Config::set('mail.from.name', $config['from_name']);
+    }
+
+    private function syncSystemMailTemplatesFromSettings(array $payload): void
+    {
+        $sharedTheme = [
+            'header_html' => $payload['mail.template_header'] ?? '',
+            'footer_html' => $payload['mail.template_footer'] ?? '',
+            'layout' => $payload['mail.template_layout'] ?? 'premium',
+            'font_family' => $payload['mail.template_font_family'] ?? 'Segoe UI, Arial, sans-serif',
+            'show_logo' => ($payload['mail.template_show_logo'] ?? '1') === '1',
+            'background_color' => $payload['mail.template_background_color'] ?? '#0F172A',
+            'body_background_color' => $payload['mail.template_body_background_color'] ?? '#F4F6FB',
+            'card_background_color' => $payload['mail.template_card_background_color'] ?? '#FFFFFF',
+            'border_color' => $payload['mail.template_border_color'] ?? '#E5E7EF',
+            'heading_color' => $payload['mail.template_heading_color'] ?? '#0F172A',
+            'text_color' => $payload['mail.template_text_color'] ?? '#334155',
+            'muted_color' => $payload['mail.template_muted_color'] ?? '#64748B',
+            'button_background_color' => $payload['mail.template_button_background_color'] ?? '#C49A3C',
+            'button_text_color' => $payload['mail.template_button_text_color'] ?? '#10131A',
+            'custom_css' => $payload['mail.template_custom_css'] ?? '',
+            'is_active' => true,
+            'is_default' => true,
+            'updated_at' => now(),
+            'created_at' => now(),
+        ];
+
+        MailTemplate::query()->updateOrCreate(
+            ['system_key' => MailTemplate::SYSTEM_PASSWORD_RESET],
+            array_merge($sharedTheme, [
+                'name' => 'Redefinição de senha',
+                'slug' => 'redefinicao-de-senha',
+                'description' => 'Template padrão do fluxo de recuperação de acesso.',
+                'subject' => $payload['mail.template_reset_subject'] ?? 'Redefinição de senha',
+                'body_html' => $payload['mail.template_reset_body'] ?? 'Olá, {{name}}. Use o botão abaixo para redefinir sua senha.',
+            ]),
+        );
+
+        MailTemplate::query()->updateOrCreate(
+            ['system_key' => MailTemplate::SYSTEM_GENERIC_NOTIFICATION],
+            array_merge($sharedTheme, [
+                'name' => 'Notificação genérica',
+                'slug' => 'notificacao-generica',
+                'description' => 'Template padrão para notificações gerais enviadas pelo sistema.',
+                'subject' => $payload['mail.template_generic_subject'] ?? 'Notificação do sistema',
+                'body_html' => $payload['mail.template_generic_body'] ?? 'Olá, {{name}}. Esta é uma mensagem automática do sistema.',
+            ]),
+        );
     }
 }

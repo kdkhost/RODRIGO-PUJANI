@@ -130,6 +130,7 @@ class PermissionController extends AdminCrudController
             'client-portal' => 'Portal do cliente',
             'clients' => 'Clientes',
             'contact-messages' => 'Mensagens',
+            'mail-templates' => 'Templates de e-mail',
             'legal-cases' => 'Processos',
             'legal-case-updates' => 'Andamentos processuais',
             'legal-documents' => 'Documentos jurídicos',

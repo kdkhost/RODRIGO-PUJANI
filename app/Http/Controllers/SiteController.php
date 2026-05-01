@@ -52,6 +52,8 @@ class SiteController extends Controller
         $data['referrer'] = $request->headers->get('referer');
         $data['ip_address'] = $request->ip();
         $data['user_agent'] = $request->userAgent();
+        $data['area_interest'] = $this->normalizeAreaInterest($data['area_interest'] ?? null);
+        $data['subject'] = $this->resolveContactSubject($data['area_interest'] ?? null, $data['subject'] ?? null);
 
         ContactMessage::query()->create($data);
 
@@ -638,5 +640,39 @@ HTML;
         }
 
         return asset('storage/'.$normalized);
+    }
+    private function normalizeAreaInterest(?string $value): ?string
+    {
+        $value = Str::of((string) $value)->trim()->lower()->toString();
+
+        if ($value === '') {
+            return null;
+        }
+
+        return [
+            'civil' => 'Direito Civil',
+            'empresarial' => 'Direito Empresarial',
+            'tributario' => 'Direito Tributário',
+            'trabalhista' => 'Direito Trabalhista',
+            'digital' => 'Direito Digital',
+            'imobiliario' => 'Direito Imobiliário',
+            'imobiliário' => 'Direito Imobiliário',
+            'outro' => 'Outro assunto',
+        ][$value] ?? Str::of($value)->replace(['-', '_'], ' ')->headline()->toString();
+    }
+
+    private function resolveContactSubject(?string $areaInterest, ?string $subject): string
+    {
+        $subject = trim((string) $subject);
+
+        if (filled($areaInterest)) {
+            return $areaInterest;
+        }
+
+        if (filled($subject)) {
+            return $subject;
+        }
+
+        return 'Solicitação de contato pelo site';
     }
 }

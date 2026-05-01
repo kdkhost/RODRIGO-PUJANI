@@ -59,6 +59,8 @@ class RecaptchaProtectionTest extends TestCase
         $this->assertDatabaseHas('contact_messages', [
             'email' => 'lead@demo.test',
             'name' => 'Lead Demo',
+            'area_interest' => 'Direito Civil',
+            'subject' => 'Direito Civil',
         ]);
     }
 

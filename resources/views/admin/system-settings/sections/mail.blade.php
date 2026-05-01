@@ -4,6 +4,9 @@
             <div class="admin-card-kicker">Comunicacao por e-mail</div>
             <h3 class="card-title">SMTP, testes e templates personalizados</h3>
         </div>
+        <a href="{{ route('admin.mail-templates.index') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-layout-text-window-reverse me-1"></i>Abrir pagina de templates
+        </a>
     </div>
     <div class="card-body p-4">
         <div class="row g-3 admin-premium-form">

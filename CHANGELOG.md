@@ -2,6 +2,27 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.10] - 2026-05-01
+
+### Corrigido
+- Manifest do frontend recompilado com os hashes atuais dos estilos publico e de autenticacao, eliminando quebra de carregamento CSS em paginas do site e areas de login.
+- Suite de reset de senha alinhada ao fluxo real do sistema, passando a validar a notificacao personalizada usada pelo Laravel no projeto.
+
+## [1.0.9] - 2026-05-01
+
+### Corrigido
+- Formulario de contato do site passou a registrar o assunto conforme a area selecionada pelo visitante, sem sobrescrita por assunto oculto fixo.
+- Normalizacao do backend para gravar `area_interest` e `subject` de forma coerente no CRM administrativo.
+
+### Adicionado
+- Nova pagina administrativa de templates de e-mail em `/admin/mail-templates`, com CRUD dedicado, edicao rica (Summernote), variaveis clicaveis e controles visuais de tema.
+- Integracao de permissao granular `mail-templates.manage` para controle de acesso ao modulo.
+- Cadastro automatico de feriados nacionais no calendario administrativo como eventos editaveis individualmente.
+
+### Alterado
+- Pagina de SMTP (`/admin/system-settings/mail`) ganhou atalho direto para a nova gestao de templates.
+- Sincronizacao bidirecional entre configuracao SMTP do sistema e os templates padrao de e-mail (redefinicao de senha e notificacao generica).
+
 ## [1.0.8] - 2026-05-01
 
 ### Alterado

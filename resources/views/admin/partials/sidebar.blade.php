@@ -24,6 +24,7 @@
         ],
         'Operação' => [
             ['label' => 'Mensagens', 'route' => 'admin.contact-messages.index', 'active' => 'admin.contact-messages.*', 'icon' => 'bi-envelope', 'permission' => 'contact-messages.manage'],
+            ['label' => 'Templates de e-mail', 'route' => 'admin.mail-templates.index', 'active' => 'admin.mail-templates.*', 'icon' => 'bi-envelope-paper', 'permission' => 'mail-templates.manage'],
             ['label' => 'Portal do cliente', 'route' => 'admin.client-portal.index', 'active' => 'admin.client-portal.*', 'icon' => 'bi-phone', 'permission' => 'client-portal.manage'],
             ['label' => 'Tela de login', 'route' => 'admin.auth-appearance.index', 'active' => 'admin.auth-appearance.*', 'icon' => 'bi-window-sidebar', 'permission' => 'settings.manage'],
             ['label' => 'Sistema', 'route' => 'admin.system-settings.index', 'active' => 'admin.system-settings.*', 'icon' => 'bi-gear-wide-connected', 'permission' => 'settings.manage'],

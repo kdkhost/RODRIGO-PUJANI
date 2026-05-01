@@ -50,7 +50,7 @@
                 <form id="contact-form" class="space-y-5" data-site-contact-form data-recaptcha-action="contact_message" action="{{ route('site.contact.submit') }}" method="POST">
                     @csrf
                     <input type="hidden" name="source_page" value="{{ $page->slug }}">
-                    <input type="hidden" name="subject" value="Solicitação de consulta gratuita">
+                    <input type="hidden" name="subject" value="">
                     <input type="hidden" name="recaptcha_token" value="">
                     <div class="grid md:grid-cols-2 gap-4">
                         <div class="input-wrap">
