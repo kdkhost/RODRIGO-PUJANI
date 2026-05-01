@@ -1918,19 +1918,25 @@ const AdminUI = {
         info.el.setAttribute('data-status', hasCustomColor ? 'custom' : status);
         info.el.setAttribute('data-display', display);
 
-        if (hasCustomColor && display !== 'background' && display !== 'inverse-background') {
+        if (hasCustomColor) {
             const backgroundColor = event.backgroundColor || event.color || '#c49a3c';
             const textColor = event.textColor || '#111318';
 
-            info.el.style.backgroundColor = backgroundColor;
-            info.el.style.borderColor = backgroundColor;
-            info.el.style.color = textColor;
+            if (display === 'background' || display === 'inverse-background') {
+                info.el.style.backgroundColor = backgroundColor;
+                info.el.style.borderColor = backgroundColor;
+                info.el.style.opacity = '0.34';
+            } else {
+                info.el.style.backgroundColor = backgroundColor;
+                info.el.style.borderColor = backgroundColor;
+                info.el.style.color = textColor;
 
-            const shell = info.el.querySelector('.admin-calendar-event-shell');
-            if (shell) {
-                shell.style.background = backgroundColor;
-                shell.style.borderColor = backgroundColor;
-                shell.style.color = textColor;
+                const shell = info.el.querySelector('.admin-calendar-event-shell');
+                if (shell) {
+                    shell.style.background = backgroundColor;
+                    shell.style.borderColor = backgroundColor;
+                    shell.style.color = textColor;
+                }
             }
         }
 

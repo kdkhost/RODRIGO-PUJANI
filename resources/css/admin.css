@@ -1270,15 +1270,9 @@ img.admin-avatar {
 }
 
 .admin-calendar .fc-bg-event {
-    opacity: 0.15;
+    opacity: 0.24;
     border-radius: 0.75rem;
 }
-
-/* Event Status Colors */
-.admin-calendar-status-scheduled { background: #c49a3c !important; color: #111318 !important; }
-.admin-calendar-status-confirmed { background: #198754 !important; color: #fff !important; }
-.admin-calendar-status-done { background: #0d6efd !important; color: #fff !important; }
-.admin-calendar-status-canceled { background: #dc3545 !important; color: #fff !important; }
 
 .admin-calendar .fc-list-event {
     border-radius: 0.75rem;
