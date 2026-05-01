@@ -293,4 +293,35 @@
         </svg>
     </button>
 </body>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const flashMessages = [
+            @if (session('portal_status'))
+                { type: 'success', message: @json(session('portal_status')) },
+            @endif
+            @if (session('portal_error'))
+                { type: 'error', message: @json(session('portal_error')) },
+            @endif
+            @if (session('status'))
+                { type: 'success', message: @json(session('status')) },
+            @endif
+            @if (session('error'))
+                { type: 'error', message: @json(session('error')) },
+            @endif
+        ];
+
+        if (!flashMessages.length || !window.toastr) {
+            return;
+        }
+
+        flashMessages.forEach(function (item) {
+            if (!item || !item.message) {
+                return;
+            }
+
+            const method = typeof window.toastr[item.type] === 'function' ? item.type : 'info';
+            window.toastr[method](item.message);
+        });
+    });
+</script>
 </html>
