@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\TeamMember;
 use App\Services\InstallerService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -31,6 +32,18 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::defaultView('pagination::premium');
         Paginator::defaultSimpleView('pagination::simple-bootstrap-5');
+
+        $smtp = smtp_config();
+        if (($smtp['enabled'] ?? false) === true) {
+            Config::set('mail.default', $smtp['mailer'] ?: 'smtp');
+            Config::set('mail.mailers.smtp.host', $smtp['host']);
+            Config::set('mail.mailers.smtp.port', (int) $smtp['port']);
+            Config::set('mail.mailers.smtp.encryption', $smtp['encryption'] === 'none' ? null : $smtp['encryption']);
+            Config::set('mail.mailers.smtp.username', $smtp['username']);
+            Config::set('mail.mailers.smtp.password', $smtp['password']);
+            Config::set('mail.from.address', $smtp['from_address']);
+            Config::set('mail.from.name', $smtp['from_name']);
+        }
 
 
         View::composer('*', function ($view): void {

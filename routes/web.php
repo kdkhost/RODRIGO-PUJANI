@@ -66,6 +66,10 @@ Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
             Route::get('/perfil', [PortalClientPortalController::class, 'profile'])->name('profile');
             Route::put('/perfil', [PortalClientPortalController::class, 'updateProfile'])->name('profile.update');
             Route::get('/documentos', [PortalClientPortalController::class, 'documents'])->name('documents.index');
+            Route::get('/mensagens', [PortalClientPortalController::class, 'messages'])->name('messages.index');
+            Route::post('/mensagens', [PortalClientPortalController::class, 'storeMessage'])->name('messages.store');
+            Route::get('/notificacoes', [PortalClientPortalController::class, 'notifications'])->name('notifications.feed');
+            Route::patch('/notificacoes/marcar-lidas', [PortalClientPortalController::class, 'markNotificationsRead'])->name('notifications.read-all');
             Route::get('/processos/{case}', [PortalClientPortalController::class, 'showCase'])->name('cases.show');
             Route::get('/documentos/{document}', [PortalClientPortalController::class, 'downloadDocument'])->name('documents.download');
         });
@@ -108,6 +112,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->group(function (): void {
             Route::get('/', [SystemSettingsController::class, 'index'])->name('index');
             Route::put('/', [SystemSettingsController::class, 'update'])->name('update');
+            Route::post('/smtp-test', [SystemSettingsController::class, 'testSmtp'])->name('smtp-test');
             Route::post('/seed-demo-data', [SystemSettingsController::class, 'seedDemoData'])->name('seed-demo-data');
         });
 

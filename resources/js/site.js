@@ -47,6 +47,7 @@ const SiteUI = {
             this.bindParallax,
             this.bindContactForm,
             this.bindPwa,
+            this.bindPortalNotifications,
             this.bindWhatsApp,
         ].forEach((task) => {
             try {
@@ -1082,6 +1083,15 @@ const SiteUI = {
         return firstMessage || error.response?.data?.message || fallbackMessage;
     },
 
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    },
+
     bindWhatsApp() {
         const toggle = document.getElementById('whatsapp-toggle');
         const box = document.getElementById('whatsapp-support-box');
@@ -1102,6 +1112,96 @@ const SiteUI = {
                 toggle.classList.remove('active');
             }
         });
+
+        const tabButtons = Array.from(document.querySelectorAll('[data-portal-support-tab]'));
+        const panels = Array.from(document.querySelectorAll('[data-portal-support-panel]'));
+        if (tabButtons.length > 0) {
+            tabButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    const target = button.dataset.portalSupportTab || '';
+                    tabButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+                    panels.forEach((panel) => panel.classList.toggle('is-active', panel.dataset.portalSupportPanel === target));
+                });
+            });
+        }
+    },
+
+    bindPortalNotifications() {
+        const body = document.body;
+        const toggle = document.querySelector('[data-portal-notifications-toggle]');
+        const dropdown = document.querySelector('[data-portal-notifications-dropdown]');
+        const list = document.querySelector('[data-portal-notifications-list]');
+        const badge = document.querySelector('[data-portal-notifications-badge]');
+        const readAllButton = document.querySelector('[data-portal-notifications-read-all]');
+        const feedUrl = body.dataset.portalNotificationsUrl;
+        const readUrl = body.dataset.portalNotificationsReadUrl;
+
+        if (!toggle || !dropdown || !list || !badge || !feedUrl) {
+            return;
+        }
+
+        const updateBadge = (count) => {
+            const unread = Number(count || 0);
+            badge.textContent = String(unread);
+            badge.classList.toggle('is-hidden', unread <= 0);
+        };
+
+        const renderList = (items) => {
+            if (!Array.isArray(items) || items.length === 0) {
+                list.innerHTML = '<div class="portal-notification-empty">Nenhuma notificacao pendente.</div>';
+                return;
+            }
+
+            list.innerHTML = items.map((item) => `
+                <a href="${item.url}" class="portal-notification-item ${item.is_unread ? 'is-unread' : ''}">
+                    <strong>${this.escapeHtml(item.title || 'Notificacao')}</strong>
+                    <span>${this.escapeHtml(item.subtitle || '')}</span>
+                    <small>${this.escapeHtml(item.at_human || '')}</small>
+                </a>
+            `).join('');
+        };
+
+        const fetchFeed = async () => {
+            try {
+                const response = await window.axios.get(feedUrl, { params: { _: Date.now() } });
+                updateBadge(response.data?.unread_count || 0);
+                renderList(response.data?.items || []);
+            } catch (error) {
+                console.error('Falha ao buscar notificacoes do portal.', error);
+            }
+        };
+
+        toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            dropdown.classList.toggle('is-open');
+            toggle.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!dropdown.contains(event.target) && !toggle.contains(event.target)) {
+                dropdown.classList.remove('is-open');
+                toggle.classList.remove('active');
+            }
+        });
+
+        readAllButton?.addEventListener('click', async (event) => {
+            event.preventDefault();
+            if (!readUrl) {
+                return;
+            }
+
+            try {
+                await window.axios.patch(readUrl);
+                updateBadge(0);
+                renderList([]);
+                showToast('success', 'Notificacoes marcadas como lidas.');
+            } catch (error) {
+                showToast('error', this.resolveErrorMessage(error, 'Nao foi possivel marcar notificacoes como lidas.'));
+            }
+        });
+
+        fetchFeed();
+        window.setInterval(fetchFeed, 30000);
     },
 };
 

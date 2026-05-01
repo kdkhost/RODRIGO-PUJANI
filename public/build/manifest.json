@@ -88,7 +88,7 @@
     ]
   },
   "resources/css/site.css": {
-    "file": "assets/site-CyHCtNJE.css",
+    "file": "assets/site-Du0-Q6HV.css",
     "src": "resources/css/site.css",
     "isEntry": true,
     "name": "site",
@@ -97,7 +97,7 @@
     ]
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-BEWugaou.js",
+    "file": "assets/admin-BFKAc6eE.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true,
@@ -126,7 +126,7 @@
     ]
   },
   "resources/js/site.js": {
-    "file": "assets/site-C2Q-9w7U.js",
+    "file": "assets/site-Dg4-r9M1.js",
     "name": "site",
     "src": "resources/js/site.js",
     "isEntry": true,

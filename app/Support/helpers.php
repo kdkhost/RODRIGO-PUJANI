@@ -203,6 +203,51 @@ if (! function_exists('seo_config')) {
     }
 }
 
+if (! function_exists('smtp_config')) {
+    function smtp_config(): array
+    {
+        try {
+            return Cache::rememberForever('mail.config.v1', function (): array {
+                return [
+                    'enabled' => filter_var(setting('mail.enabled', '0'), FILTER_VALIDATE_BOOLEAN),
+                    'mailer' => (string) setting('mail.mailer', env('MAIL_MAILER', 'smtp')),
+                    'host' => (string) setting('mail.host', env('MAIL_HOST', '127.0.0.1')),
+                    'port' => (int) setting('mail.port', env('MAIL_PORT', 587)),
+                    'encryption' => (string) setting('mail.encryption', env('MAIL_ENCRYPTION', 'tls')),
+                    'username' => (string) setting('mail.username', env('MAIL_USERNAME', '')),
+                    'password' => (string) setting('mail.password', env('MAIL_PASSWORD', '')),
+                    'from_address' => (string) setting('mail.from_address', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+                    'from_name' => (string) setting('mail.from_name', env('MAIL_FROM_NAME', config('app.name'))),
+                    'template_header' => (string) setting('mail.template_header', 'Olá, {{name}}.'),
+                    'template_footer' => (string) setting('mail.template_footer', 'Equipe {{app_name}}'),
+                    'template_reset_subject' => (string) setting('mail.template_reset_subject', 'Redefinição de senha'),
+                    'template_reset_body' => (string) setting('mail.template_reset_body', "Recebemos uma solicitação para redefinir sua senha.\n\nClique no botão abaixo para continuar."),
+                    'template_generic_subject' => (string) setting('mail.template_generic_subject', 'Notificação do sistema'),
+                    'template_generic_body' => (string) setting('mail.template_generic_body', "Olá, {{name}}.\n\nVocê recebeu uma nova notificação do sistema."),
+                ];
+            });
+        } catch (Throwable) {
+            return [
+                'enabled' => false,
+                'mailer' => env('MAIL_MAILER', 'smtp'),
+                'host' => env('MAIL_HOST', '127.0.0.1'),
+                'port' => (int) env('MAIL_PORT', 587),
+                'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+                'username' => env('MAIL_USERNAME', ''),
+                'password' => env('MAIL_PASSWORD', ''),
+                'from_address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+                'from_name' => env('MAIL_FROM_NAME', config('app.name')),
+                'template_header' => 'Olá, {{name}}.',
+                'template_footer' => 'Equipe {{app_name}}',
+                'template_reset_subject' => 'Redefinição de senha',
+                'template_reset_body' => "Recebemos uma solicitação para redefinir sua senha.\n\nClique no botão abaixo para continuar.",
+                'template_generic_subject' => 'Notificação do sistema',
+                'template_generic_body' => "Olá, {{name}}.\n\nVocê recebeu uma nova notificação do sistema.",
+            ];
+        }
+    }
+}
+
 if (! function_exists('pwa_config')) {
     function pwa_config(): array
     {

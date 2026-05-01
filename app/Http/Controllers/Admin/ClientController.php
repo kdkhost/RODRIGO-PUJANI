@@ -44,7 +44,7 @@ class ClientController extends AdminCrudController
         return [
             'lawyers' => $lawyers,
             'canChooseLawyer' => auth()->user()?->canViewAllLegalOperations() ?? false,
-            'portalEditableFieldOptions' => $this->portalEditableFieldOptions(),
+            'portalEditableFieldOptions' => Client::portalEditableFieldOptions(),
         ];
     }
 
@@ -77,9 +77,9 @@ class ClientController extends AdminCrudController
                 'min:6',
                 'max:32',
             ],
-            'portal_notification_preference' => ['nullable', Rule::in(['both', 'internal', 'whatsapp', 'none'])],
+            'portal_notification_preference' => ['nullable', Rule::in(Client::PORTAL_NOTIFICATION_PREFERENCES)],
             'portal_editable_fields' => ['nullable', 'array'],
-            'portal_editable_fields.*' => ['string', Rule::in(array_keys($this->portalEditableFieldOptions()))],
+            'portal_editable_fields.*' => ['string', Rule::in(array_keys(Client::portalEditableFieldOptions()))],
         ];
     }
 
@@ -110,42 +110,21 @@ class ClientController extends AdminCrudController
             $validated['portal_last_login_ip'] = null;
         }
 
+        $editableFieldOptions = array_keys(Client::portalEditableFieldOptions());
         $metadata = is_array($record?->metadata) ? $record->metadata : [];
         $metadata['portal_notification_preference'] = (string) ($validated['portal_notification_preference'] ?? ($metadata['portal_notification_preference'] ?? 'both'));
+        $selectedEditableFields = $request->has('portal_editable_fields')
+            ? array_map('strval', (array) ($validated['portal_editable_fields'] ?? []))
+            : [];
         $metadata['portal_editable_fields'] = array_values(array_intersect(
-            array_keys($this->portalEditableFieldOptions()),
-            array_map('strval', (array) ($validated['portal_editable_fields'] ?? array_keys($this->portalEditableFieldOptions())))
+            $editableFieldOptions,
+            $selectedEditableFields
         ));
+
         $validated['metadata'] = $metadata;
         unset($validated['portal_notification_preference'], $validated['portal_editable_fields']);
 
         return $validated;
-    }
-
-    private function portalEditableFieldOptions(): array
-    {
-        return [
-            'name' => 'Nome / razão social',
-            'trade_name' => 'Nome fantasia',
-            'document_number' => 'CPF/CNPJ',
-            'birth_date' => 'Data de nascimento',
-            'profession' => 'Profissão / segmento',
-            'email' => 'E-mail',
-            'phone' => 'Telefone',
-            'whatsapp' => 'WhatsApp',
-            'alternate_phone' => 'Telefone alternativo',
-            'address_zip' => 'CEP',
-            'address_street' => 'Logradouro',
-            'address_number' => 'Número',
-            'address_complement' => 'Complemento',
-            'address_district' => 'Bairro',
-            'address_city' => 'Cidade',
-            'address_state' => 'UF',
-            'legal_representative_name' => 'Responsável legal (nome)',
-            'legal_representative_document' => 'Responsável legal (CPF)',
-            'legal_representative_email' => 'Responsável legal (e-mail)',
-            'legal_representative_phone' => 'Responsável legal (telefone)',
-        ];
     }
 
     protected function resolveRecord(string $record): Model

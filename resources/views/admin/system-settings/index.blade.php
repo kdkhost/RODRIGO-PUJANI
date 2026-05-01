@@ -30,6 +30,103 @@
                     <div class="card admin-table-card">
                         <div class="card-header">
                             <div>
+                                <div class="admin-card-kicker">Comunicacao por e-mail</div>
+                                <h3 class="card-title">SMTP, teste e templates padrao</h3>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3 admin-premium-form">
+                                <div class="col-md-3 form-check ps-5 pt-4">
+                                    <input type="checkbox" class="form-check-input" id="mail_enabled" name="mail_enabled" value="1" @checked(old('mail_enabled', $mailConfig['enabled']))>
+                                    <label class="form-check-label" for="mail_enabled">Ativar SMTP personalizado</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="mail_mailer">Mailer</label>
+                                    <select id="mail_mailer" name="mail_mailer" class="form-select">
+                                        <option value="smtp" @selected(old('mail_mailer', $mailConfig['mailer']) === 'smtp')>SMTP</option>
+                                        <option value="sendmail" @selected(old('mail_mailer', $mailConfig['mailer']) === 'sendmail')>Sendmail</option>
+                                        <option value="log" @selected(old('mail_mailer', $mailConfig['mailer']) === 'log')>Log</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="mail_host">Servidor SMTP</label>
+                                    <input id="mail_host" type="text" name="mail_host" class="form-control" value="{{ old('mail_host', $mailConfig['host']) }}" placeholder="smtp.seudominio.com">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="mail_port">Porta</label>
+                                    <input id="mail_port" type="number" name="mail_port" class="form-control" value="{{ old('mail_port', $mailConfig['port']) }}" placeholder="587">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="mail_encryption">Criptografia</label>
+                                    <select id="mail_encryption" name="mail_encryption" class="form-select">
+                                        <option value="none" @selected(old('mail_encryption', $mailConfig['encryption']) === 'none')>Nenhuma</option>
+                                        <option value="tls" @selected(old('mail_encryption', $mailConfig['encryption']) === 'tls')>TLS</option>
+                                        <option value="ssl" @selected(old('mail_encryption', $mailConfig['encryption']) === 'ssl')>SSL</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="mail_username">Usuario SMTP</label>
+                                    <input id="mail_username" type="text" name="mail_username" class="form-control" value="{{ old('mail_username', $mailConfig['username']) }}" placeholder="usuario@dominio.com">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="mail_password">Senha SMTP</label>
+                                    <input id="mail_password" type="password" name="mail_password" class="form-control" value="{{ old('mail_password', $mailConfig['password']) }}" placeholder="********">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" for="mail_from_address">E-mail remetente</label>
+                                    <input id="mail_from_address" type="email" name="mail_from_address" class="form-control" value="{{ old('mail_from_address', $mailConfig['from_address']) }}" placeholder="nao-responda@dominio.com">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="mail_from_name">Nome remetente</label>
+                                    <input id="mail_from_name" type="text" name="mail_from_name" class="form-control" value="{{ old('mail_from_name', $mailConfig['from_name']) }}" placeholder="Nome do escritorio">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" for="smtp_test_email">E-mail para teste</label>
+                                    <input id="smtp_test_email" type="email" class="form-control" placeholder="destino@dominio.com">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-primary w-100" id="smtp-test-button" data-test-url="{{ route('admin.system-settings.smtp-test') }}">
+                                        <i class="bi bi-send me-1"></i>Testar configuracao SMTP
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="mail_template_reset_subject">Assunto redefinicao de senha</label>
+                                    <input id="mail_template_reset_subject" type="text" name="mail_template_reset_subject" class="form-control mail-template-input" value="{{ old('mail_template_reset_subject', $mailConfig['template_reset_subject']) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="mail_template_generic_subject">Assunto padrao</label>
+                                    <input id="mail_template_generic_subject" type="text" name="mail_template_generic_subject" class="form-control mail-template-input" value="{{ old('mail_template_generic_subject', $mailConfig['template_generic_subject']) }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="mail_template_header">Cabecalho do e-mail</label>
+                                    <textarea id="mail_template_header" name="mail_template_header" class="form-control mail-template-input" rows="3">{{ old('mail_template_header', $mailConfig['template_header']) }}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="mail_template_footer">Rodape do e-mail</label>
+                                    <textarea id="mail_template_footer" name="mail_template_footer" class="form-control mail-template-input" rows="3">{{ old('mail_template_footer', $mailConfig['template_footer']) }}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="mail_template_reset_body">Corpo redefinicao de senha</label>
+                                    <textarea id="mail_template_reset_body" name="mail_template_reset_body" class="form-control mail-template-input" rows="6">{{ old('mail_template_reset_body', $mailConfig['template_reset_body']) }}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="mail_template_generic_body">Corpo padrao de e-mails</label>
+                                    <textarea id="mail_template_generic_body" name="mail_template_generic_body" class="form-control mail-template-input" rows="6">{{ old('mail_template_generic_body', $mailConfig['template_generic_body']) }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="admin-premium-surface p-3">
+                                        <div class="admin-card-kicker mb-2">Preview em tempo real</div>
+                                        <div id="mail-template-preview" style="border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:16px; background:rgba(15,22,38,.45); color:#d4d8e1;"></div>
+                                        <small class="text-muted d-block mt-2">Variaveis: <code>{'{'}{name}{'}'}</code>, <code>{'{'}{email}{'}'}</code>, <code>{'{'}{app_name}{'}'}</code>, <code>{'{'}{from_name}{'}'}</code>, <code>{'{'}{reset_url}{'}'}</code>, <code>{'{'}{year}{'}'}</code>.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card admin-table-card">
+                        <div class="card-header">
+                            <div>
                                 <div class="admin-card-kicker">Identidade visual</div>
                                 <h3 class="card-title">Marca principal do sistema</h3>
                             </div>
@@ -529,3 +626,101 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const preview = document.getElementById('mail-template-preview');
+    const testButton = document.getElementById('smtp-test-button');
+    const testEmail = document.getElementById('smtp_test_email');
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    const values = () => ({
+        name: 'Cliente de Exemplo',
+        email: 'cliente@exemplo.com',
+        app_name: '{{ addslashes(config('app.name')) }}',
+        from_name: document.getElementById('mail_from_name')?.value || 'Equipe',
+        reset_url: '{{ addslashes(url('/reset-password/token-exemplo?email=cliente@exemplo.com')) }}',
+        year: String(new Date().getFullYear()),
+    });
+
+    const compile = (text, vars) => {
+        let output = String(text || '');
+        Object.entries(vars).forEach(([key, val]) => {
+            output = output.split(`{{${key}}}`).join(String(val ?? ''));
+        });
+        return output.replace(/{{\s*[^}]+\s*}}/g, '');
+    };
+
+    const renderPreview = () => {
+        if (!preview) return;
+        const vars = values();
+        const subject = compile(document.getElementById('mail_template_reset_subject')?.value || '', vars);
+        const header = compile(document.getElementById('mail_template_header')?.value || '', vars);
+        const body = compile(document.getElementById('mail_template_reset_body')?.value || '', vars);
+        const footer = compile(document.getElementById('mail_template_footer')?.value || '', vars);
+
+        preview.innerHTML = `
+            <div style="font-size:13px; color:#9ca3b5;">Assunto</div>
+            <div style="font-size:18px; font-weight:700; margin-bottom:10px;">${subject || '(sem assunto)'}</div>
+            <div style="margin-bottom:10px; white-space:pre-line;">${header}</div>
+            <div style="margin-bottom:10px; white-space:pre-line;">${body}</div>
+            <div style="margin-bottom:8px;">
+                <a href="#" style="display:inline-block; background:#c49a3c; color:#10131a; padding:8px 12px; border-radius:8px; font-weight:700; text-decoration:none;">Redefinir senha</a>
+            </div>
+            <div style="border-top:1px solid rgba(255,255,255,.1); padding-top:10px; white-space:pre-line; color:#a9b0bf;">${footer}</div>
+        `;
+    };
+
+    document.querySelectorAll('.mail-template-input, #mail_from_name').forEach((input) => {
+        input.addEventListener('input', renderPreview);
+    });
+    renderPreview();
+
+    if (testButton && testEmail) {
+        testButton.addEventListener('click', async () => {
+            const email = (testEmail.value || '').trim();
+            if (!email) {
+                window.toastr?.warning('Informe um e-mail para teste SMTP.');
+                return;
+            }
+
+            testButton.disabled = true;
+            try {
+                const response = await fetch(testButton.dataset.testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                    },
+                    body: JSON.stringify({
+                        test_email: email,
+                        mailer: document.getElementById('mail_mailer')?.value || 'smtp',
+                        host: document.getElementById('mail_host')?.value || '',
+                        port: document.getElementById('mail_port')?.value || '',
+                        encryption: document.getElementById('mail_encryption')?.value || 'tls',
+                        username: document.getElementById('mail_username')?.value || '',
+                        password: document.getElementById('mail_password')?.value || '',
+                        from_address: document.getElementById('mail_from_address')?.value || '',
+                        from_name: document.getElementById('mail_from_name')?.value || '',
+                    }),
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    window.toastr?.error(payload.message || 'Falha no teste SMTP.');
+                    return;
+                }
+
+                window.toastr?.success(payload.message || 'Teste SMTP enviado.');
+            } catch (error) {
+                window.toastr?.error('Nao foi possivel testar o SMTP agora.');
+            } finally {
+                testButton.disabled = false;
+            }
+        });
+    }
+});
+</script>
+@endpush

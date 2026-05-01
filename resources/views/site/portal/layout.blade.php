@@ -9,7 +9,15 @@
         ->take(2)
         ->map(fn ($part) => mb_substr($part, 0, 1))
         ->implode('');
-    $portalWhatsappContacts = collect($portalWhatsappContacts ?? []);
+    $portalSupport = $portalSupport ?? [
+        'whatsapp_enabled' => false,
+        'internal_enabled' => false,
+        'whatsapp_contacts' => collect(),
+        'messages_url' => route('portal.messages.index'),
+        'compose_url' => route('portal.messages.store'),
+    ];
+    $portalWhatsappContacts = collect($portalSupport['whatsapp_contacts'] ?? []);
+    $portalNotifications = $portalNotifications ?? ['unread_count' => 0, 'items' => []];
 @endphp
 <!DOCTYPE html>
 <html
@@ -46,7 +54,14 @@
         <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
     @endif
 </head>
-<body class="portal-body {{ $portalFullWidth ? 'portal-client-body' : '' }}" @if($portalFullWidth) data-portal-client-id="{{ $portalClient?->id }}" data-portal-tour-enabled="true" @endif>
+<body class="portal-body {{ $portalFullWidth ? 'portal-client-body' : '' }}"
+    @if($portalFullWidth)
+        data-portal-client-id="{{ $portalClient?->id }}"
+        data-portal-tour-enabled="true"
+        data-portal-notifications-url="{{ route('portal.notifications.feed') }}"
+        data-portal-notifications-read-url="{{ route('portal.notifications.read-all') }}"
+    @endif
+>
     @if (session('portal_status'))
         <div data-page-toast data-type="success" data-message="{{ session('portal_status') }}"></div>
     @endif
@@ -70,11 +85,7 @@
             <div class="portal-panel-content">
                 <a href="{{ route('site.home') }}" class="portal-brand">
                     @if($portalPanel['brand']['logo_url'] ?? null)
-                        <img
-                            src="{{ $portalPanel['brand']['logo_url'] }}"
-                            alt="{{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}"
-                            class="portal-brand-logo"
-                        >
+                        <img src="{{ $portalPanel['brand']['logo_url'] }}" alt="{{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}" class="portal-brand-logo">
                     @else
                         <span class="portal-brand-mark">{{ $portalPanel['brand']['short'] ?? $branding['brand_short_name'] }}</span>
                     @endif
@@ -118,7 +129,7 @@
                         <small>Portal do cliente</small>
                     </a>
 
-                    <nav class="portal-client-nav" aria-label="Navegação do portal do cliente" data-portal-tour-nav>
+                    <nav class="portal-client-nav" aria-label="Navegacao do portal do cliente" data-portal-tour-nav>
                         <a href="{{ route('portal.dashboard') }}" class="{{ request()->routeIs('portal.dashboard') ? 'active' : '' }}">
                             <i class="bi bi-speedometer2"></i>
                             <span>Painel</span>
@@ -135,6 +146,10 @@
                             <i class="bi bi-folder2-open"></i>
                             <span>Documentos</span>
                         </a>
+                        <a href="{{ route('portal.messages.index') }}" class="{{ request()->routeIs('portal.messages.*') ? 'active' : '' }}">
+                            <i class="bi bi-chat-left-text"></i>
+                            <span>Mensagens</span>
+                        </a>
                     </nav>
                 </aside>
 
@@ -145,22 +160,31 @@
                             <strong>{{ $pageTitle ?? 'Painel' }}</strong>
                         </div>
                         <div class="portal-client-user">
-                            <button
-                                type="button"
-                                class="portal-client-icon-button"
-                                data-portal-restart-tour
-                                title="Reiniciar tour guiado"
-                                aria-label="Reiniciar tour guiado"
-                            >
+                            <button type="button" class="portal-client-icon-button" data-portal-restart-tour title="Reiniciar tour guiado" aria-label="Reiniciar tour guiado">
                                 <i class="bi bi-signpost-split"></i>
                             </button>
-                            <button
-                                type="button"
-                                class="portal-client-icon-button"
-                                data-portal-theme-toggle
-                                title="Alternar tema"
-                                aria-label="Alternar tema"
-                            >
+                            <button type="button" class="portal-client-icon-button" data-portal-notifications-toggle title="Notificacoes" aria-label="Notificacoes">
+                                <i class="bi bi-bell" data-portal-notifications-icon></i>
+                                <span class="portal-notification-badge {{ ($portalNotifications['unread_count'] ?? 0) > 0 ? '' : 'is-hidden' }}" data-portal-notifications-badge>{{ (int) ($portalNotifications['unread_count'] ?? 0) }}</span>
+                            </button>
+                            <div class="portal-notification-dropdown" data-portal-notifications-dropdown>
+                                <div class="portal-notification-dropdown-head">
+                                    <strong>Notificacoes</strong>
+                                    <button type="button" data-portal-notifications-read-all>Ler todas</button>
+                                </div>
+                                <div class="portal-notification-dropdown-list" data-portal-notifications-list>
+                                    @forelse(($portalNotifications['items'] ?? []) as $notification)
+                                        <a href="{{ $notification['url'] }}" class="portal-notification-item {{ !empty($notification['is_unread']) ? 'is-unread' : '' }}">
+                                            <strong>{{ $notification['title'] }}</strong>
+                                            <span>{{ $notification['subtitle'] }}</span>
+                                            <small>{{ $notification['at_human'] }}</small>
+                                        </a>
+                                    @empty
+                                        <div class="portal-notification-empty">Nenhuma notificacao pendente.</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                            <button type="button" class="portal-client-icon-button" data-portal-theme-toggle title="Alternar tema" aria-label="Alternar tema">
                                 <i class="bi bi-moon-stars" data-portal-theme-icon></i>
                             </button>
                             <a href="{{ route('portal.profile') }}" class="portal-client-avatar-link" aria-label="Abrir perfil">
@@ -195,48 +219,60 @@
                         <small>&copy; {{ now()->year }} {{ $portalPanel['brand']['name'] ?? $branding['brand_name'] }}</small>
                     </footer>
 
-                    @if($portalWhatsappContacts->isNotEmpty())
+                    @if(($portalSupport['whatsapp_enabled'] ?? false) || ($portalSupport['internal_enabled'] ?? false))
                         <div class="portal-whatsapp-container" data-portal-tour-whatsapp>
                             <div id="whatsapp-support-box" class="portal-whatsapp-box">
                                 <div class="portal-whatsapp-head">
                                     <span>Atendimento liberado</span>
-                                    <strong>Fale com o advogado do processo</strong>
-                                    <p>Disponível enquanto houver processo em andamento no seu portal.</p>
+                                    <strong>Suporte do processo</strong>
+                                    <p>Canal exibido conforme configuracao do escritorio para o seu cadastro.</p>
                                 </div>
-                                <div class="portal-whatsapp-list">
-                                    @foreach($portalWhatsappContacts as $contact)
-                                        @php
-                                            $digits = preg_replace('/\D+/', '', (string) $contact['whatsapp']);
-                                            $waNumber = str_starts_with($digits, '55') ? $digits : '55'.$digits;
-                                            $message = rawurlencode('Olá, sou cliente do portal e gostaria de falar sobre o processo '.$contact['case'].'.');
-                                        @endphp
-                                        <a
-                                            href="https://wa.me/{{ $waNumber }}?text={{ $message }}"
-                                            class="portal-whatsapp-item"
-                                            target="_blank"
-                                            rel="noopener"
-                                        >
-                                            <span class="portal-whatsapp-avatar">
-                                                @if($contact['avatar_url'])
-                                                    <img src="{{ $contact['avatar_url'] }}" alt="{{ $contact['name'] }}">
-                                                @else
-                                                    <i class="bi bi-person"></i>
-                                                @endif
-                                            </span>
-                                            <span class="portal-whatsapp-info">
-                                                <strong>{{ $contact['name'] }}</strong>
-                                                <small>{{ $contact['role'] }}</small>
-                                                <em>{{ str($contact['case'])->limit(46) }}</em>
-                                            </span>
-                                            <span class="portal-whatsapp-action">
-                                                <i class="bi bi-whatsapp"></i>
-                                            </span>
-                                        </a>
-                                    @endforeach
+                                <div class="portal-support-tabs">
+                                    @if($portalSupport['whatsapp_enabled'] ?? false)
+                                        <button type="button" class="portal-support-tab is-active" data-portal-support-tab="whatsapp">WhatsApp</button>
+                                    @endif
+                                    @if($portalSupport['internal_enabled'] ?? false)
+                                        <button type="button" class="portal-support-tab {{ !($portalSupport['whatsapp_enabled'] ?? false) ? 'is-active' : '' }}" data-portal-support-tab="internal">Mensagem interna</button>
+                                    @endif
                                 </div>
+
+                                @if($portalSupport['whatsapp_enabled'] ?? false)
+                                    <div class="portal-support-panel is-active" data-portal-support-panel="whatsapp">
+                                        <div class="portal-whatsapp-list">
+                                            @foreach($portalWhatsappContacts as $contact)
+                                                @php
+                                                    $digits = preg_replace('/\D+/', '', (string) $contact['whatsapp']);
+                                                    $waNumber = str_starts_with($digits, '55') ? $digits : '55'.$digits;
+                                                    $message = rawurlencode('Ola, sou cliente do portal e gostaria de falar sobre o processo '.$contact['case'].'.');
+                                                @endphp
+                                                <a href="https://wa.me/{{ $waNumber }}?text={{ $message }}" class="portal-whatsapp-item" target="_blank" rel="noopener">
+                                                    <span class="portal-whatsapp-avatar">
+                                                        @if($contact['avatar_url'])
+                                                            <img src="{{ $contact['avatar_url'] }}" alt="{{ $contact['name'] }}">
+                                                        @else
+                                                            <i class="bi bi-person"></i>
+                                                        @endif
+                                                    </span>
+                                                    <span class="portal-whatsapp-info">
+                                                        <strong>{{ $contact['name'] }}</strong>
+                                                        <small>{{ $contact['role'] }}</small>
+                                                        <em>{{ str($contact['case'])->limit(46) }}</em>
+                                                    </span>
+                                                    <span class="portal-whatsapp-action"><i class="bi bi-whatsapp"></i></span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if($portalSupport['internal_enabled'] ?? false)
+                                    <div class="portal-support-panel {{ !($portalSupport['whatsapp_enabled'] ?? false) ? 'is-active' : '' }}" data-portal-support-panel="internal">
+                                        <a href="{{ $portalSupport['messages_url'] }}" class="portal-link-button w-100 text-center">Abrir canal interno</a>
+                                    </div>
+                                @endif
                             </div>
-                            <button type="button" id="whatsapp-toggle" class="portal-whatsapp-toggle" aria-label="Abrir contatos por WhatsApp">
-                                <i class="bi bi-whatsapp"></i>
+                            <button type="button" id="whatsapp-toggle" class="portal-whatsapp-toggle" aria-label="Abrir suporte">
+                                <i class="bi bi-headset"></i>
                             </button>
                         </div>
                     @endif

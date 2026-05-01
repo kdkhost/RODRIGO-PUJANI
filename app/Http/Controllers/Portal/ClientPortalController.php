@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocument;
+use App\Models\PortalMessage;
 use App\Services\RecaptchaService;
 use App\Support\PublicUpload;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -50,7 +52,7 @@ class ClientPortalController extends Controller
             return back()
                 ->withInput($request->except('access_code'))
                 ->withErrors([
-                    'document_number' => 'Não foi possível validar o acesso com os dados informados.',
+                    'document_number' => 'Nao foi possivel validar o acesso com os dados informados.',
                 ]);
         }
 
@@ -108,7 +110,8 @@ class ClientPortalController extends Controller
         return view('site.portal.dashboard', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
-            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
+            'portalSupport' => $this->portalSupportConfig($client),
+            'portalNotifications' => $this->portalNotificationsPayload($client),
             'cases' => $cases,
             'recentUpdates' => $recentUpdates,
             'sharedDocuments' => $sharedDocuments,
@@ -149,7 +152,7 @@ class ClientPortalController extends Controller
 
                     if ($legalCase->next_hearing_at) {
                         $items->push([
-                            'type' => 'Audiência',
+                            'type' => 'Audiencia',
                             'title' => $legalCase->title,
                             'subtitle' => $legalCase->court_name ?: ($legalCase->process_number ?: 'Processo'),
                             'at' => $legalCase->next_hearing_at,
@@ -188,7 +191,8 @@ class ClientPortalController extends Controller
         return view('site.portal.case', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
-            'portalWhatsappContacts' => $this->portalWhatsappContacts($client, $legalCase),
+            'portalSupport' => $this->portalSupportConfig($client, $legalCase),
+            'portalNotifications' => $this->portalNotificationsPayload($client),
             'legalCase' => $legalCase,
             'updates' => $updates,
             'documents' => $documents,
@@ -198,14 +202,14 @@ class ClientPortalController extends Controller
     public function profile(Request $request): View
     {
         $client = $this->portalClient($request);
-        $editableFields = $this->portalEditableFields($client);
         $resolvedPersonType = $this->resolvePersonType($client);
 
         return view('site.portal.profile', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
-            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
-            'editableFields' => $editableFields,
+            'portalSupport' => $this->portalSupportConfig($client),
+            'portalNotifications' => $this->portalNotificationsPayload($client),
+            'editableFields' => $client->portalEditableFields(),
             'resolvedPersonType' => $resolvedPersonType,
         ]);
     }
@@ -221,7 +225,8 @@ class ClientPortalController extends Controller
         return view('site.portal.documents', [
             'portalPanel' => $this->portalPanel(),
             'client' => $client,
-            'portalWhatsappContacts' => $this->portalWhatsappContacts($client),
+            'portalSupport' => $this->portalSupportConfig($client),
+            'portalNotifications' => $this->portalNotificationsPayload($client),
             'documents' => $documents,
             'documentStats' => [
                 'total' => $documents->count(),
@@ -240,10 +245,98 @@ class ClientPortalController extends Controller
         ]);
     }
 
+    public function messages(Request $request): View
+    {
+        $client = $this->portalClient($request);
+        $messages = $client->portalMessages()
+            ->with(['legalCase:id,title,process_number', 'senderUser:id,name'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $client->portalMessages()
+            ->whereIn('sender_type', ['staff', 'lawyer', 'system'])
+            ->whereNull('read_by_client_at')
+            ->update(['read_by_client_at' => now()]);
+
+        return view('site.portal.messages', [
+            'portalPanel' => $this->portalPanel(),
+            'client' => $client->fresh(),
+            'portalSupport' => $this->portalSupportConfig($client),
+            'portalNotifications' => $this->portalNotificationsPayload($client->fresh()),
+            'messages' => $messages,
+            'cases' => $this->portalCasesQuery($client)->orderBy('title')->get(['id', 'title', 'process_number']),
+            'internalEnabled' => $client->allowsPortalInternalMessages(),
+        ]);
+    }
+
+    public function storeMessage(Request $request): RedirectResponse
+    {
+        $client = $this->portalClient($request);
+
+        if (! $client->allowsPortalInternalMessages()) {
+            return redirect()
+                ->route('portal.messages.index')
+                ->with('portal_error', 'Canal interno desativado para este cadastro.');
+        }
+
+        $validated = $request->validate([
+            'legal_case_id' => ['nullable', 'integer'],
+            'subject' => ['nullable', 'string', 'max:160'],
+            'message' => ['required', 'string', 'max:6000'],
+        ]);
+
+        $legalCaseId = null;
+        if (filled($validated['legal_case_id'] ?? null)) {
+            $legalCase = $this->portalCasesQuery($client)->find($validated['legal_case_id']);
+            $legalCaseId = $legalCase?->id;
+        }
+
+        PortalMessage::query()->create([
+            'client_id' => $client->id,
+            'legal_case_id' => $legalCaseId,
+            'sender_type' => 'client',
+            'subject' => $validated['subject'] ?? null,
+            'message' => $validated['message'],
+            'read_by_staff_at' => null,
+            'read_by_client_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('portal.messages.index')
+            ->with('portal_status', 'Mensagem interna enviada com sucesso.');
+    }
+
+    public function notifications(Request $request): JsonResponse
+    {
+        $client = $this->portalClient($request);
+
+        return response()->json($this->portalNotificationsPayload($client));
+    }
+
+    public function markNotificationsRead(Request $request): JsonResponse
+    {
+        $client = $this->portalClient($request);
+        $metadata = is_array($client->metadata) ? $client->metadata : [];
+        $metadata['portal_notifications_read_at'] = now()->toIso8601String();
+        $client->metadata = $metadata;
+        $client->save();
+
+        $client->portalMessages()
+            ->whereIn('sender_type', ['staff', 'lawyer', 'system'])
+            ->whereNull('read_by_client_at')
+            ->update(['read_by_client_at' => now()]);
+
+        return response()->json([
+            'message' => 'Notificacoes marcadas como lidas.',
+            'unread_count' => 0,
+            'items' => [],
+        ]);
+    }
+
     public function updateProfile(Request $request): RedirectResponse
     {
         $client = $this->portalClient($request);
-        $editableFields = $this->portalEditableFields($client);
+        $editableFields = $client->portalEditableFields();
         $resolvedPersonType = $this->resolvePersonType($client);
 
         $request->validate([
@@ -281,6 +374,7 @@ class ClientPortalController extends Controller
             $validated['address_state'] = filled($validated['address_state'] ?? null)
                 ? strtoupper((string) $validated['address_state'])
                 : null;
+
             if ($resolvedPersonType === 'individual') {
                 unset(
                     $validated['trade_name'],
@@ -300,9 +394,7 @@ class ClientPortalController extends Controller
                 ->values()
                 ->all();
 
-            $payload = collect($validated)
-                ->only($fillable)
-                ->all();
+            $payload = collect($validated)->only($fillable)->all();
 
             if (in_array('name', $editableFields, true) && blank($payload['name'] ?? null)) {
                 $payload['name'] = $client->name;
@@ -334,7 +426,7 @@ class ClientPortalController extends Controller
             ->route('portal.profile')
             ->with('portal_status', $canUpdateRegistration
                 ? 'Dados cadastrais atualizados com sucesso.'
-                : 'Foto de perfil atualizada com sucesso. A edição cadastral depende de liberação do escritório.');
+                : 'Foto de perfil atualizada com sucesso. A edicao cadastral depende de liberacao do escritorio.');
     }
 
     public function downloadDocument(Request $request, string $document): BinaryFileResponse
@@ -346,7 +438,6 @@ class ClientPortalController extends Controller
             ->firstOrFail();
 
         $path = public_path(ltrim((string) $legalDocument->path, '/'));
-
         abort_unless(is_file($path), 404);
 
         return response()->download($path, $legalDocument->original_name ?: basename($path));
@@ -360,7 +451,7 @@ class ClientPortalController extends Controller
 
         return redirect()
             ->route('portal.login')
-            ->with('portal_status', 'Você saiu do portal do cliente.');
+            ->with('portal_status', 'Voce saiu do portal do cliente.');
     }
 
     private function portalClient(Request $request): Client
@@ -395,10 +486,23 @@ class ClientPortalController extends Controller
             });
     }
 
+    private function portalSupportConfig(Client $client, ?LegalCase $legalCase = null): array
+    {
+        $whatsappContacts = $this->portalWhatsappContacts($client, $legalCase);
+        $internalEnabled = $this->portalInternalChannelEnabled($client, $legalCase);
+
+        return [
+            'whatsapp_enabled' => $whatsappContacts->isNotEmpty(),
+            'internal_enabled' => $internalEnabled,
+            'whatsapp_contacts' => $whatsappContacts,
+            'messages_url' => route('portal.messages.index'),
+            'compose_url' => route('portal.messages.store'),
+        ];
+    }
+
     private function portalWhatsappContacts(Client $client, ?LegalCase $legalCase = null): Collection
     {
-        $clientChannelPreference = $this->portalNotificationPreference($client);
-        if (in_array($clientChannelPreference, ['none', 'internal'], true)) {
+        if (! $client->allowsPortalWhatsappMessages()) {
             return collect();
         }
 
@@ -417,15 +521,11 @@ class ClientPortalController extends Controller
             ->filter(fn (LegalCase $case): bool => (int) $case->client_id === (int) $client->id)
             ->filter(fn (LegalCase $case): bool => (bool) $case->is_active && (bool) $case->portal_visible)
             ->filter(fn (LegalCase $case): bool => ! in_array($case->status, ['closed', 'archived'], true))
-            ->flatMap(function (LegalCase $legalCase): array {
-                return [
-                    [
-                        'lawyer' => $legalCase->primaryLawyer,
-                        'role' => 'Advogado responsável',
-                        'case' => $legalCase->title,
-                    ],
-                ];
-            })
+            ->flatMap(fn (LegalCase $legalCase): array => [[
+                'lawyer' => $legalCase->primaryLawyer,
+                'role' => 'Advogado responsavel',
+                'case' => $legalCase->title,
+            ]])
             ->filter(fn (array $item): bool => filled($item['lawyer']?->id))
             ->filter(fn (array $item): bool => (bool) ($item['lawyer']?->is_active ?? false))
             ->filter(fn (array $item): bool => (bool) ($item['lawyer']?->pref_receive_whatsapp_messages ?? true))
@@ -447,28 +547,85 @@ class ClientPortalController extends Controller
             ->values();
     }
 
-    private function portalNotificationPreference(Client $client): string
+    private function portalInternalChannelEnabled(Client $client, ?LegalCase $legalCase = null): bool
     {
-        $metadata = is_array($client->metadata) ? $client->metadata : [];
-        $preference = (string) ($metadata['portal_notification_preference'] ?? 'both');
+        if (! $client->allowsPortalInternalMessages()) {
+            return false;
+        }
 
-        return in_array($preference, ['both', 'internal', 'whatsapp', 'none'], true)
-            ? $preference
-            : 'both';
+        $cases = $legalCase
+            ? collect([$legalCase->loadMissing('primaryLawyer:id,is_active,pref_receive_internal_messages')])
+            : $this->portalCasesQuery($client)
+                ->whereNotIn('status', ['closed', 'archived'])
+                ->with('primaryLawyer:id,is_active,pref_receive_internal_messages')
+                ->get();
+
+        return $cases->contains(fn (LegalCase $case): bool => (bool) ($case->primaryLawyer?->is_active ?? false)
+            && (bool) ($case->primaryLawyer?->pref_receive_internal_messages ?? true));
     }
 
-    private function portalEditableFields(Client $client): array
+    private function portalNotificationsPayload(Client $client): array
     {
-        $defaults = [
-            'name', 'trade_name', 'document_number', 'email', 'phone', 'whatsapp', 'alternate_phone', 'birth_date', 'profession',
-            'address_zip', 'address_street', 'address_number', 'address_complement', 'address_district', 'address_city', 'address_state',
-            'legal_representative_name', 'legal_representative_document', 'legal_representative_email', 'legal_representative_phone',
-        ];
-
         $metadata = is_array($client->metadata) ? $client->metadata : [];
-        $editable = array_map('strval', (array) ($metadata['portal_editable_fields'] ?? $defaults));
+        $readAt = filled($metadata['portal_notifications_read_at'] ?? null)
+            ? now()->parse((string) $metadata['portal_notifications_read_at'])
+            : null;
 
-        return array_values(array_intersect($defaults, $editable));
+        $caseUpdates = $client->legalCaseUpdates()
+            ->with('legalCase:id,title,process_number')
+            ->where('is_visible_to_client', true)
+            ->orderByDesc('occurred_at')
+            ->limit(20)
+            ->get()
+            ->map(function ($update): array {
+                $at = $update->occurred_at ?: $update->created_at;
+
+                return [
+                    'type' => 'process_update',
+                    'title' => $update->title ?: 'Atualizacao processual',
+                    'subtitle' => $update->legalCase?->title ?: 'Processo',
+                    'at' => $at,
+                    'url' => $update->legal_case_id ? route('portal.cases.show', $update->legal_case_id) : route('portal.dashboard'),
+                ];
+            });
+
+        $portalMessages = $client->portalMessages()
+            ->with('senderUser:id,name')
+            ->whereIn('sender_type', ['staff', 'lawyer', 'system'])
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->map(function (PortalMessage $message): array {
+                return [
+                    'type' => 'internal_message',
+                    'title' => $message->subject ?: 'Mensagem do escritorio',
+                    'subtitle' => $message->senderUser?->name ?: 'Equipe juridica',
+                    'at' => $message->created_at,
+                    'url' => route('portal.messages.index'),
+                    'is_unread_message' => is_null($message->read_by_client_at),
+                ];
+            });
+
+        $items = $caseUpdates
+            ->concat($portalMessages)
+            ->sortByDesc('at')
+            ->take(20)
+            ->values()
+            ->map(function (array $item) use ($readAt): array {
+                $at = $item['at'];
+                $unreadByDate = ! $readAt || ($at && $at->gt($readAt));
+                $isUnreadMessage = (bool) ($item['is_unread_message'] ?? false);
+                $item['is_unread'] = $isUnreadMessage || $unreadByDate;
+                $item['at_human'] = $at?->format('d/m/Y H:i');
+                unset($item['at'], $item['is_unread_message']);
+
+                return $item;
+            });
+
+        return [
+            'unread_count' => $items->where('is_unread', true)->count(),
+            'items' => $items->values()->all(),
+        ];
     }
 
     private function resolvePersonType(Client $client): string
@@ -491,9 +648,9 @@ class ClientPortalController extends Controller
 
         return [
             'eyebrow' => (string) setting('portal.login_eyebrow', 'Acompanhamento digital'),
-            'title' => (string) setting('portal.login_title', 'Acompanhe seus processos com clareza e segurança.'),
-            'description' => (string) setting('portal.login_description', 'Consulte movimentações, prazos relevantes e documentos compartilhados pelo escritório em um ambiente reservado.'),
-            'support_text' => (string) setting('portal.support_text', 'Para suporte de acesso, fale com a equipe do escritório pelo telefone ou WhatsApp cadastrado.'),
+            'title' => (string) setting('portal.login_title', 'Acompanhe seus processos com clareza e seguranca.'),
+            'description' => (string) setting('portal.login_description', 'Consulte movimentacoes, prazos relevantes e documentos compartilhados pelo escritorio em um ambiente reservado.'),
+            'support_text' => (string) setting('portal.support_text', 'Para suporte de acesso, fale com a equipe do escritorio pelo telefone ou WhatsApp cadastrado.'),
             'metrics' => collect([1, 2, 3])->map(fn (int $index): array => [
                 'title' => (string) setting("portal.metric_{$index}_title", match ($index) {
                     1 => 'Processos',
@@ -501,9 +658,9 @@ class ClientPortalController extends Controller
                     default => 'Prazos',
                 }),
                 'subtitle' => (string) setting("portal.metric_{$index}_subtitle", match ($index) {
-                    1 => 'Histórico organizado',
+                    1 => 'Historico organizado',
                     2 => 'Arquivos compartilhados',
-                    default => 'Visão objetiva do caso',
+                    default => 'Visao objetiva do caso',
                 }),
             ])->filter(fn (array $metric): bool => filled($metric['title']) || filled($metric['subtitle']))->values(),
             'brand' => [

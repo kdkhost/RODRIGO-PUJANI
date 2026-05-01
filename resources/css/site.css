@@ -425,6 +425,101 @@ body:not(.portal-body) .site-scroll-top {
     transform: translateY(-1px);
 }
 
+.portal-notification-badge {
+    position: absolute;
+    margin-top: -28px;
+    margin-right: -20px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.35rem;
+}
+
+.portal-notification-badge.is-hidden {
+    display: none;
+}
+
+.portal-notification-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 170px;
+    width: min(92vw, 360px);
+    border: 1px solid rgba(16, 24, 40, 0.12);
+    border-radius: 0.65rem;
+    background: #fff;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 30;
+}
+
+.portal-notification-dropdown.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.portal-notification-dropdown-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 0.9rem;
+    border-bottom: 1px solid rgba(16, 24, 40, 0.08);
+}
+
+.portal-notification-dropdown-head button {
+    border: 0;
+    background: transparent;
+    color: #8d6a1f;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.portal-notification-dropdown-list {
+    max-height: 360px;
+    overflow: auto;
+    display: grid;
+}
+
+.portal-notification-item {
+    display: block;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid rgba(16, 24, 40, 0.08);
+    text-decoration: none;
+    color: #2d3748;
+}
+
+.portal-notification-item.is-unread {
+    background: rgba(196, 154, 60, 0.1);
+}
+
+.portal-notification-item strong,
+.portal-notification-item span,
+.portal-notification-item small {
+    display: block;
+    line-height: 1.3;
+}
+
+.portal-notification-item span,
+.portal-notification-item small,
+.portal-notification-empty {
+    color: #667085;
+    font-size: 0.8rem;
+}
+
+.portal-notification-empty {
+    padding: 0.9rem;
+}
+
 .portal-client-user strong,
 .portal-client-user small {
     display: block;
@@ -598,6 +693,36 @@ body:not(.portal-body) .site-scroll-top {
     max-height: min(420px, 58vh);
     overflow: auto;
     padding: 0.85rem;
+}
+
+.portal-support-tabs {
+    display: flex;
+    gap: 0.45rem;
+    padding: 0 0.85rem;
+}
+
+.portal-support-tab {
+    border: 1px solid rgba(247, 236, 216, 0.14);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(247, 236, 216, 0.88);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.42rem 0.6rem;
+}
+
+.portal-support-tab.is-active {
+    border-color: rgba(196, 154, 60, 0.45);
+    background: rgba(196, 154, 60, 0.2);
+    color: #fff7e6;
+}
+
+.portal-support-panel {
+    display: none;
+}
+
+.portal-support-panel.is-active {
+    display: block;
 }
 
 .portal-whatsapp-item {
@@ -1384,6 +1509,26 @@ body:not(.portal-body) .site-scroll-top {
     border-color: rgba(196, 154, 60, 0.46);
     background: rgba(196, 154, 60, 0.14);
     color: #f7ecd8;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-notification-dropdown {
+    border-color: rgba(196, 154, 60, 0.22);
+    background: rgba(18, 24, 32, 0.98);
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-notification-item {
+    border-bottom-color: rgba(247, 236, 216, 0.08);
+    color: #f7ecd8;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-notification-item.is-unread {
+    background: rgba(196, 154, 60, 0.16);
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-notification-item span,
+[data-portal-theme="dark"] .portal-client-body .portal-notification-item small,
+[data-portal-theme="dark"] .portal-client-body .portal-notification-empty {
+    color: rgba(247, 236, 216, 0.64);
 }
 
 [data-portal-theme="dark"] .portal-client-body .portal-input {
