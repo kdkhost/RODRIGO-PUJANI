@@ -9,9 +9,11 @@
                     <h1>{{ $pageTitle }}</h1>
                     <p>Organize, revise e publique registros com uma rotina administrativa objetiva.</p>
                 </div>
-                <button type="button" class="btn btn-primary admin-action-button" data-modal-url="{{ $createUrl }}" data-modal-title="Cadastrar {{ $singularLabel }}">
-                    <i class="bi bi-plus-circle me-1"></i>Cadastrar {{ $singularLabel }}
-                </button>
+                @if(($canCreate ?? true) && !empty($createUrl))
+                    <button type="button" class="btn btn-primary admin-action-button" data-modal-url="{{ $createUrl }}" data-modal-title="Cadastrar {{ $singularLabel }}">
+                        <i class="bi bi-plus-circle me-1"></i>Cadastrar {{ $singularLabel }}
+                    </button>
+                @endif
             </div>
         </div>
     </div>

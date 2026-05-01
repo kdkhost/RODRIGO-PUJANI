@@ -57,7 +57,7 @@ class AdminAuthorizationTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('admin.system-settings.index'));
 
-        $response->assertOk()->assertSee('Configurações do sistema');
+        $response->assertOk()->assertSee('Configuracoes do sistema');
     }
 
     public function test_settings_permission_can_update_auth_appearance_texts(): void
@@ -158,7 +158,7 @@ class AdminAuthorizationTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertJsonPath('message', 'Configurações do sistema atualizadas com sucesso.');
+            ->assertJsonPath('message', 'Configuracoes do sistema atualizadas com sucesso.');
 
         $this->assertDatabaseHas('settings', [
             'key' => 'branding.brand_name',

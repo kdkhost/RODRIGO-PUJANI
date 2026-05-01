@@ -311,16 +311,10 @@
                             <div class="admin-danger-zone">
                                 <div>
                                     <div class="admin-card-kicker">Zona crítica</div>
-                                    <h3>Excluir conta</h3>
-                                    <p>Esta ação encerra sua sessão e remove permanentemente seu usuário.</p>
+                                    <h3>Exclusao bloqueada</h3>
+                                    <p>A remocao da propria conta nao e permitida por este painel.</p>
                                 </div>
-                                @if($user->isSuperAdmin())
-                                    <span class="badge text-bg-dark">Conta Super Admin protegida</span>
-                                @else
-                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-profile-modal">
-                                        <i class="bi bi-trash3 me-1"></i>Excluir conta
-                                    </button>
-                                @endif
+                                <span class="badge text-bg-dark">Acao indisponivel</span>
                             </div>
                         </div>
                     </div>

@@ -13,6 +13,8 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 - Box flutuante de suporte no portal do cliente padronizado com acabamento visual premium coerente com o painel administrativo.
 - Tela de mensagens do portal do cliente passou a contar com editor online (Summernote) no campo de composicao.
 - Identificacao da sidebar do portal do cliente ajustada para exibir o texto completo abaixo da logo, sem truncamento.
+- Gestao de usuarios passou a restringir cadastro aos IDs 1 e 4, bloqueando atribuicao da funcao Super Admin para qualquer usuario diferente do ID 1.
+- Exclusao de usuarios ficou restrita aos IDs 1 e 4, enquanto a autoexclusao pelo perfil foi bloqueada no painel.
 
 ## [1.0.6] - 2026-04-30
 

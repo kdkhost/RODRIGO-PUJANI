@@ -647,9 +647,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const compile = (text, vars) => {
         let output = String(text || '');
         Object.entries(vars).forEach(([key, val]) => {
-            output = output.split(`{{${key}}}`).join(String(val ?? ''));
+            output = output.split('@{{' + key + '}}').join(String(val ?? ''));
         });
-        return output.replace(/{{\s*[^}]+\s*}}/g, '');
+        return output.replace(/\{\{\s*[^}]+\s*\}\}/g, '');
     };
 
     const renderPreview = () => {

@@ -45,6 +45,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRoles;
 
     public const PROTECTED_ROOT_USER_ID = 1;
+    public const PRIVILEGED_USER_MANAGER_ID = 4;
 
     /**
      * Get the attributes that should be cast.
@@ -104,6 +105,27 @@ class User extends Authenticatable
         return $this->isSuperAdmin() || $this->isAdministrator();
     }
 
+    public function canCreateUsers(): bool
+    {
+        return in_array((int) $this->getKey(), [
+            self::PROTECTED_ROOT_USER_ID,
+            self::PRIVILEGED_USER_MANAGER_ID,
+        ], true);
+    }
+
+    public function canAssignSuperAdminRole(): bool
+    {
+        return (int) $this->getKey() === self::PROTECTED_ROOT_USER_ID;
+    }
+
+    public function canDeleteUsers(): bool
+    {
+        return in_array((int) $this->getKey(), [
+            self::PROTECTED_ROOT_USER_ID,
+            self::PRIVILEGED_USER_MANAGER_ID,
+        ], true);
+    }
+
     public function canViewAllLegalOperations(): bool
     {
         return $this->isSuperAdmin() || $this->isAdministrator();
@@ -128,7 +150,7 @@ class User extends Authenticatable
             return false;
         }
 
-        return $actor->canManageOtherUsers();
+        return $actor->canDeleteUsers();
     }
 
     public function canHaveStatusChangedBy(?self $actor): bool

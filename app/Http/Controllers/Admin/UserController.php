@@ -31,10 +31,12 @@ class UserController extends AdminCrudController
 
     protected function formData(?Model $record = null): array
     {
+        $actor = auth()->user();
+
         return [
             'roles' => Role::query()
                 ->when(
-                    ! auth()->user()?->isSuperAdmin(),
+                    ! $actor?->canAssignSuperAdminRole(),
                     fn (Builder $query) => $query->where('name', '!=', 'Super Admin')
                 )
                 ->orderBy('name')
@@ -51,7 +53,7 @@ class UserController extends AdminCrudController
             'string',
             'exists:roles,name',
             Rule::when(
-                ! $request->user()?->isSuperAdmin(),
+                ! $request->user()?->canAssignSuperAdminRole(),
                 Rule::notIn(['Super Admin'])
             ),
         ];
@@ -172,6 +174,35 @@ class UserController extends AdminCrudController
         ]);
 
         return parent::destroy($record);
+    }
+
+    public function create(): JsonResponse
+    {
+        abort_unless(
+            in_array((int) auth()->id(), [User::PROTECTED_ROOT_USER_ID, User::PRIVILEGED_USER_MANAGER_ID], true),
+            403,
+            'Apenas os usuarios autorizados podem cadastrar novos usuarios.'
+        );
+
+        return parent::create();
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        abort_unless(
+            in_array((int) auth()->id(), [User::PROTECTED_ROOT_USER_ID, User::PRIVILEGED_USER_MANAGER_ID], true),
+            403,
+            'Apenas os usuarios autorizados podem cadastrar novos usuarios.'
+        );
+
+        return parent::store($request);
+    }
+
+    protected function indexData(Request $request): array
+    {
+        return [
+            'canCreate' => in_array((int) auth()->id(), [User::PROTECTED_ROOT_USER_ID, User::PRIVILEGED_USER_MANAGER_ID], true),
+        ];
     }
 
     protected function resolveRecord(string $record): Model

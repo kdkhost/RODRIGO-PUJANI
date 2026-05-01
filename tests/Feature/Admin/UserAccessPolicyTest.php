@@ -50,32 +50,36 @@ class UserAccessPolicyTest extends TestCase
 
         $this->actingAs($administrator)
             ->deleteJson(route('admin.users.destroy', $managedUser))
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['password']);
+            ->assertForbidden();
 
         $this->actingAs($administrator)
             ->deleteJson(route('admin.users.destroy', $managedUser), [
                 'password' => 'senha-incorreta',
             ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['password']);
+            ->assertForbidden();
 
         $this->actingAs($administrator)
             ->deleteJson(route('admin.users.destroy', $managedUser), [
                 'password' => 'password',
             ])
-            ->assertOk();
+            ->assertForbidden();
 
         $this->assertDatabaseHas('users', ['id' => $superAdmin->id]);
-        $this->assertDatabaseMissing('users', ['id' => $managedUser->id]);
+        $this->assertDatabaseHas('users', ['id' => $managedUser->id]);
     }
 
     public function test_administrator_can_impersonate_regular_users_but_not_super_admins(): void
     {
         $this->seed(PermissionsSeeder::class);
 
-        $administrator = User::factory()->create(['is_active' => true]);
-        $administrator->assignRole('Administrador');
+        $administrator = User::query()->find(User::PRIVILEGED_USER_MANAGER_ID)
+            ?? User::factory()->create([
+                'id' => User::PRIVILEGED_USER_MANAGER_ID,
+                'is_active' => true,
+            ]);
+        $administrator->forceFill(['is_active' => true])->save();
+        $administrator->syncRoles(['Administrador']);
+        $administrator->givePermissionTo(['admin.access', 'users.manage']);
 
         $regularUser = User::factory()->create(['is_active' => true]);
         $regularUser->assignRole('Advogado Associado');
@@ -110,7 +114,7 @@ class UserAccessPolicyTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_non_super_admin_cannot_assign_super_admin_role(): void
+    public function test_non_root_user_cannot_create_super_admin_account(): void
     {
         $this->seed(PermissionsSeeder::class);
 
@@ -126,16 +130,20 @@ class UserAccessPolicyTest extends TestCase
                 'is_active' => '1',
                 'role_name' => 'Super Admin',
             ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['role_name']);
+            ->assertForbidden();
     }
 
     public function test_user_form_uses_single_role_select(): void
     {
         $this->seed(PermissionsSeeder::class);
 
-        $superAdmin = User::factory()->create(['is_active' => true]);
-        $superAdmin->assignRole('Super Admin');
+        $superAdmin = User::query()->find(User::PROTECTED_ROOT_USER_ID)
+            ?? User::factory()->create([
+                'id' => User::PROTECTED_ROOT_USER_ID,
+                'is_active' => true,
+            ]);
+        $superAdmin->forceFill(['is_active' => true])->save();
+        $superAdmin->syncRoles(['Super Admin']);
 
         $response = $this->actingAs($superAdmin)
             ->getJson(route('admin.users.create'))
@@ -152,8 +160,13 @@ class UserAccessPolicyTest extends TestCase
     {
         $this->seed(PermissionsSeeder::class);
 
-        $superAdmin = User::factory()->create(['is_active' => true]);
-        $superAdmin->assignRole('Super Admin');
+        $superAdmin = User::query()->find(User::PROTECTED_ROOT_USER_ID)
+            ?? User::factory()->create([
+                'id' => User::PROTECTED_ROOT_USER_ID,
+                'is_active' => true,
+            ]);
+        $superAdmin->forceFill(['is_active' => true])->save();
+        $superAdmin->syncRoles(['Super Admin']);
 
         $this->actingAs($superAdmin)
             ->postJson(route('admin.users.store'), [
