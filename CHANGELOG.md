@@ -10,6 +10,7 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 
 ### Alterado
 - Box flutuante de suporte no portal do cliente padronizado com acabamento visual premium coerente com o painel administrativo.
+- Tela de mensagens do portal do cliente passou a contar com editor online (Summernote) no campo de composicao.
 
 ## [1.0.6] - 2026-04-30
 

@@ -1,6 +1,7 @@
 import './bootstrap';
 
 import Chart from 'chart.js/auto';
+import $ from 'jquery';
 import * as FilePond from 'filepond';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
@@ -19,6 +20,10 @@ FilePond.registerPlugin(
     FilePondPluginFileValidateType,
     FilePondPluginImagePreview,
 );
+
+window.$ = window.jQuery = $;
+globalThis.$ = $;
+globalThis.jQuery = $;
 
 const SiteUI = {
     deferredInstallPrompt: null,
@@ -43,6 +48,7 @@ const SiteUI = {
             this.bindPortalProfileType,
             this.bindPortalUploads,
             this.bindPortalAvatarPreview,
+            this.bindPortalEditor,
             this.bindPortalTour,
             this.bindParallax,
             this.bindContactForm,
@@ -531,6 +537,41 @@ const SiteUI = {
         select.addEventListener('change', sync);
         sync();
         select.dataset.portalPersonTypeReady = 'true';
+    },
+
+    bindPortalEditor() {
+        const editors = Array.from(document.querySelectorAll('textarea[data-editor="summernote"]'));
+        if (!editors.length) {
+            return;
+        }
+
+        import('summernote/dist/summernote-lite.min.js')
+            .then(() => import('summernote/dist/lang/summernote-pt-BR.min.js'))
+            .then(() => {
+                editors.forEach((element) => {
+                    if (element.dataset.summernoteReady === 'true') {
+                        return;
+                    }
+
+                    $(element).summernote({
+                        lang: 'pt-BR',
+                        height: Number(element.dataset.editorHeight || 220),
+                        toolbar: [
+                            ['style', ['bold', 'italic', 'underline']],
+                            ['para', ['ul', 'ol']],
+                            ['insert', ['link']],
+                            ['view', ['fullscreen', 'codeview']],
+                        ],
+                        placeholder: element.getAttribute('placeholder') || 'Escreva sua mensagem...',
+                    });
+
+                    element.dataset.summernoteReady = 'true';
+                });
+            })
+            .catch((error) => {
+                console.error('Falha ao carregar editor do portal.', error);
+                showToast('warning', 'Nao foi possivel iniciar o editor avancado. O campo texto segue disponivel.');
+            });
     },
 
     bindPortalUploads() {

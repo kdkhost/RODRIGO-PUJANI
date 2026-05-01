@@ -1067,6 +1067,43 @@ body:not(.portal-body) .site-scroll-top {
     opacity: 0.86;
 }
 
+.portal-section .note-editor.note-frame {
+    border: 1px solid rgba(23, 32, 43, 0.12);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.portal-section .note-editor .note-toolbar {
+    border-bottom: 1px solid rgba(23, 32, 43, 0.12);
+    background: #f8fafc;
+}
+
+.portal-section .note-editor .note-editing-area .note-editable {
+    min-height: 180px;
+    background: #fff;
+    color: #141b24;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-section .note-editor.note-frame {
+    border-color: rgba(198, 211, 225, 0.12);
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-section .note-editor .note-toolbar {
+    border-bottom-color: rgba(198, 211, 225, 0.12);
+    background: #0d141c;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-section .note-editor .note-btn {
+    border-color: rgba(198, 211, 225, 0.12);
+    background: #111922;
+    color: #c6d3e1;
+}
+
+[data-portal-theme="dark"] .portal-client-body .portal-section .note-editor .note-editing-area .note-editable {
+    background: #111922;
+    color: #f8fbff;
+}
+
 .portal-dashboard-header,
 .portal-case-detail-grid,
 .portal-dashboard-grid {

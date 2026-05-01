@@ -38,7 +38,16 @@
                     </div>
                     <div class="portal-field portal-field-wide">
                         <label for="message">Mensagem</label>
-                        <textarea id="message" name="message" class="portal-input" rows="5" required placeholder="Escreva sua mensagem para o escritorio"></textarea>
+                        <textarea
+                            id="message"
+                            name="message"
+                            class="portal-input"
+                            rows="5"
+                            required
+                            placeholder="Escreva sua mensagem para o escritorio"
+                            data-editor="summernote"
+                            data-editor-height="220"
+                        ></textarea>
                     </div>
                 </div>
                 <div class="portal-profile-actions">
@@ -74,7 +83,7 @@
                             @endif
                         </span>
                         <div class="portal-rich-text portal-rich-text-sm">
-                            <p>{{ $message->message }}</p>
+                            {!! $message->message !!}
                         </div>
                     </div>
                 </article>

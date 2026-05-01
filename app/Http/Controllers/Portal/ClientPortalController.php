@@ -285,6 +285,14 @@ class ClientPortalController extends Controller
             'message' => ['required', 'string', 'max:6000'],
         ]);
 
+        $safeMessage = trim((string) ($validated['message'] ?? ''));
+        $safeMessage = strip_tags($safeMessage, '<p><br><strong><b><em><i><u><ul><ol><li><blockquote><a>');
+        if ($safeMessage === '' || $safeMessage === '<p><br></p>') {
+            return redirect()
+                ->route('portal.messages.index')
+                ->with('portal_error', 'Escreva uma mensagem valida antes de enviar.');
+        }
+
         $legalCaseId = null;
         if (filled($validated['legal_case_id'] ?? null)) {
             $legalCase = $this->portalCasesQuery($client)->find($validated['legal_case_id']);
@@ -296,7 +304,7 @@ class ClientPortalController extends Controller
             'legal_case_id' => $legalCaseId,
             'sender_type' => 'client',
             'subject' => $validated['subject'] ?? null,
-            'message' => $validated['message'],
+            'message' => $safeMessage,
             'read_by_staff_at' => null,
             'read_by_client_at' => now(),
         ]);
