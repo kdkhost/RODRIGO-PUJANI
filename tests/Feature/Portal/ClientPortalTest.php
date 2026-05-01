@@ -85,4 +85,36 @@ class ClientPortalTest extends TestCase
             ->get(route('portal.cases.show', $legalCase->id))
             ->assertNotFound();
     }
+
+    public function test_profile_fields_marked_in_admin_can_be_edited_even_with_legacy_global_toggle_disabled(): void
+    {
+        $client = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Editável',
+            'document_number' => '123.456.789-09',
+            'email' => 'cliente@exemplo.com',
+            'phone' => '(11) 3333-4444',
+            'portal_enabled' => true,
+            'portal_profile_update_allowed' => false,
+            'portal_access_code' => Hash::make('PORTAL123'),
+            'is_active' => true,
+            'metadata' => [
+                'portal_editable_fields' => ['name', 'email', 'phone'],
+            ],
+        ]);
+
+        $this->withSession(['portal_client_id' => $client->id])
+            ->put(route('portal.profile.update'), [
+                'name' => 'Cliente Atualizado',
+                'email' => 'novo@exemplo.com',
+                'phone' => '(11) 99999-0000',
+            ])
+            ->assertRedirect(route('portal.profile'));
+
+        $client->refresh();
+
+        $this->assertSame('Cliente Atualizado', $client->name);
+        $this->assertSame('novo@exemplo.com', $client->email);
+        $this->assertSame('(11) 99999-0000', $client->phone);
+    }
 }

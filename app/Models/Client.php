@@ -148,8 +148,7 @@ class Client extends Model
 
     public function canEditPortalField(string $field): bool
     {
-        return (bool) $this->portal_profile_update_allowed
-            && in_array($field, $this->portalEditableFields(), true);
+        return in_array($field, $this->portalEditableFields(), true);
     }
 
     public function scopeVisibleTo(Builder $query, ?User $user): Builder

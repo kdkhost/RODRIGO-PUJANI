@@ -2,6 +2,19 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.12] - 2026-05-01
+
+### Corrigido
+- Regras de edição no portal do cliente ajustadas para respeitar os campos marcados individualmente em "Campos permitidos para edição no portal", sem bloqueio indevido.
+- Revisão de texto/acentuação na tela `portal-cliente/perfil` para exibição correta em português brasileiro.
+- Manifest do build frontend atualizado após auditoria para manter sincronismo dos assets CSS/JS em produção.
+
+### Auditoria técnica executada
+- `php artisan test`: aprovado (64 testes / 278 assertions).
+- `php artisan view:cache`: aprovado.
+- `npm run build`: aprovado.
+- `tools/check-no-bom.ps1`: sem arquivos UTF-8 com BOM.
+
 ## [1.0.11] - 2026-05-01
 
 ### Adicionado
