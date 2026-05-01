@@ -5,7 +5,7 @@
         <p>Use suas credenciais para continuar para a área administrativa.</p>
     </div>
 
-    <form method="POST" action="{{ route('login') }}" class="auth-form" data-recaptcha-form data-recaptcha-action="login">
+    <form method="POST" action="{{ route('login') }}" class="auth-form" data-recaptcha-form data-recaptcha-action="login" autocomplete="off">
         @csrf
 
         <input type="hidden" name="recaptcha_token" value="">
@@ -20,7 +20,7 @@
                 value="{{ old('email') }}"
                 required
                 autofocus
-                autocomplete="username"
+                autocomplete="off"
                 placeholder="E-mail"
             >
         </div>
@@ -33,14 +33,14 @@
                 name="password"
                 class="auth-input @error('password') auth-input-error @enderror"
                 required
-                autocomplete="current-password"
+                autocomplete="off"
                 placeholder="Senha"
             >
         </div>
 
         <div class="auth-row">
             <label class="auth-check" for="remember_me">
-                <input id="remember_me" type="checkbox" name="remember">
+                <input id="remember_me" type="checkbox" name="remember" value="1" @checked(old('remember'))>
                 <span>Lembrar acesso</span>
             </label>
 

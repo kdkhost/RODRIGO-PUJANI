@@ -368,7 +368,6 @@ class CalendarController extends Controller
             'display' => $display,
             'classNames' => [
                 'admin-calendar-event-pill',
-                'admin-calendar-status-'.$status,
                 'admin-calendar-display-'.$display,
             ],
             'extendedProps' => $extendedProps + [
@@ -378,6 +377,7 @@ class CalendarController extends Controller
                 'visibilityLabel' => $this->visibilityLabel($visibility),
                 'display' => $display,
                 'displayLabel' => $this->displayLabel($display),
+                'hasCustomColor' => filled($event->getRawOriginal('color')),
                 'category' => $event->category,
                 'location' => $event->location,
                 'description' => strip_tags((string) $event->description),

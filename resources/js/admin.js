@@ -1913,9 +1913,26 @@ const AdminUI = {
         const props = event.extendedProps || {};
         const status = props.status || 'scheduled';
         const display = props.display || event.display || 'auto';
+        const hasCustomColor = Boolean(props.hasCustomColor);
 
-        info.el.setAttribute('data-status', status);
+        info.el.setAttribute('data-status', hasCustomColor ? 'custom' : status);
         info.el.setAttribute('data-display', display);
+
+        if (hasCustomColor && display !== 'background' && display !== 'inverse-background') {
+            const backgroundColor = event.backgroundColor || event.color || '#c49a3c';
+            const textColor = event.textColor || '#111318';
+
+            info.el.style.backgroundColor = backgroundColor;
+            info.el.style.borderColor = backgroundColor;
+            info.el.style.color = textColor;
+
+            const shell = info.el.querySelector('.admin-calendar-event-shell');
+            if (shell) {
+                shell.style.background = backgroundColor;
+                shell.style.borderColor = backgroundColor;
+                shell.style.color = textColor;
+            }
+        }
 
         if (props.statusLabel || props.owner || props.category) {
             info.el.setAttribute('title', [event.title, props.statusLabel, props.owner, props.category].filter(Boolean).join(' - '));

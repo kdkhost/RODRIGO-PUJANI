@@ -238,3 +238,94 @@ export function bindRecaptchaForms(scope = document, options = {}) {
         form.dataset.recaptchaReady = 'true';
     });
 }
+
+export function bindAuthPasswordToggles(scope = document) {
+    scope.querySelectorAll('.auth-form input[type="password"]').forEach((input, index) => {
+        if (input.dataset.passwordToggleReady === 'true') {
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'auth-password-wrap';
+        input.parentNode?.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'auth-password-toggle';
+        button.setAttribute('aria-label', 'Mostrar senha');
+        button.innerHTML = '<i class="bi bi-eye"></i>';
+
+        button.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            button.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
+            button.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        });
+
+        wrapper.appendChild(button);
+        input.dataset.passwordToggleReady = 'true';
+
+        if (!input.id) {
+            input.id = `auth-password-${index + 1}`;
+        }
+    });
+}
+
+export function bindAuthRememberAndAutofillControl(scope = document) {
+    const forms = scope.querySelectorAll('.auth-form');
+    const storageKey = 'auth-login-remember-email';
+
+    forms.forEach((form) => {
+        form.setAttribute('autocomplete', 'off');
+
+        form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach((field) => {
+            field.setAttribute('autocomplete', 'off');
+            field.setAttribute('data-lpignore', 'true');
+
+            if (!field.readOnly) {
+                field.readOnly = true;
+                const unlock = () => {
+                    field.readOnly = false;
+                    field.removeEventListener('focus', unlock);
+                    field.removeEventListener('mousedown', unlock);
+                    field.removeEventListener('touchstart', unlock);
+                };
+
+                field.addEventListener('focus', unlock, { once: true });
+                field.addEventListener('mousedown', unlock, { once: true });
+                field.addEventListener('touchstart', unlock, { once: true });
+            }
+        });
+
+        const email = form.querySelector('input[name="email"]');
+        const remember = form.querySelector('input[name="remember"]');
+
+        if (email && remember) {
+            try {
+                const remembered = JSON.parse(window.localStorage.getItem(storageKey) || '{}');
+                if (remembered?.email && !email.value) {
+                    email.value = String(remembered.email);
+                    remember.checked = true;
+                }
+            } catch (_) {
+                // noop
+            }
+
+            form.addEventListener('submit', () => {
+                try {
+                    if (remember.checked && String(email.value || '').trim() !== '') {
+                        window.localStorage.setItem(storageKey, JSON.stringify({
+                            email: String(email.value || '').trim(),
+                        }));
+                        return;
+                    }
+
+                    window.localStorage.removeItem(storageKey);
+                } catch (_) {
+                    // noop
+                }
+            });
+        }
+    });
+}

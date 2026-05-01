@@ -3,6 +3,8 @@ import './bootstrap';
 import Alpine from 'alpinejs';
 import {
     applyAutoPlaceholders,
+    bindAuthPasswordToggles,
+    bindAuthRememberAndAutofillControl,
     bindRecaptchaForms,
     configureToastr,
     flushPageToasts,
@@ -17,4 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     flushPageToasts();
     applyAutoPlaceholders();
     bindRecaptchaForms(document);
+    bindAuthPasswordToggles(document);
+    bindAuthRememberAndAutofillControl(document);
 });

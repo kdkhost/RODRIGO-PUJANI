@@ -10,6 +10,9 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 - Nova tela administrativa `admin/form-security-logs` para investigação de tentativas, acessível somente ao Super Admin raiz (ID 1).
 
 ### Corrigido
+- Calendário administrativo passou a respeitar cor personalizada dos eventos cadastrados/atualizados, sem sobrescrever pelo status.
+- Formulários de login ganharam botão de visualização de senha e rotina funcional de "lembrar acesso" para e-mail.
+- Formulários de autenticação passaram a aplicar bloqueio de auto preenchimento por navegador com desbloqueio controlado no foco do campo.
 - Regras de edição no portal do cliente ajustadas para respeitar os campos marcados individualmente em "Campos permitidos para edição no portal", sem bloqueio indevido.
 - Revisão de texto/acentuação na tela `portal-cliente/perfil` para exibição correta em português brasileiro.
 - Manifest do build frontend atualizado após auditoria para manter sincronismo dos assets CSS/JS em produção.
