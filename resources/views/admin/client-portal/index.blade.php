@@ -51,22 +51,6 @@
                                     <textarea name="login_description" class="form-control" rows="3" maxlength="240" data-portal-preview-source="login_description">{{ old('login_description', $config['portal.login_description']) }}</textarea>
                                 </div>
 
-                                @foreach ([1, 2, 3] as $index)
-                                    <div class="col-md-6">
-                                        <label class="form-label">Bloco {{ $index }} - titulo</label>
-                                        <input type="text" name="metric_{{ $index }}_title" class="form-control" maxlength="40" value="{{ old("metric_{$index}_title", $config["portal.metric_{$index}_title"]) }}" data-portal-preview-source="metric_{{ $index }}_title">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Bloco {{ $index }} - subtitulo</label>
-                                        <input type="text" name="metric_{{ $index }}_subtitle" class="form-control" maxlength="70" value="{{ old("metric_{$index}_subtitle", $config["portal.metric_{$index}_subtitle"]) }}" data-portal-preview-source="metric_{{ $index }}_subtitle">
-                                    </div>
-                                @endforeach
-
-                                <div class="col-12">
-                                    <label class="form-label">Texto de suporte</label>
-                                    <textarea name="support_text" class="form-control" rows="3" maxlength="280" data-portal-preview-source="support_text">{{ old('support_text', $config['portal.support_text']) }}</textarea>
-                                </div>
-
                                 <div class="col-12">
                                     <div class="border rounded-4 p-3 bg-body-tertiary">
                                         <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
@@ -111,6 +95,22 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                @foreach ([1, 2, 3] as $index)
+                                    <div class="col-md-6">
+                                        <label class="form-label">Bloco {{ $index }} - titulo</label>
+                                        <input type="text" name="metric_{{ $index }}_title" class="form-control" maxlength="40" value="{{ old("metric_{$index}_title", $config["portal.metric_{$index}_title"]) }}" data-portal-preview-source="metric_{{ $index }}_title">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Bloco {{ $index }} - subtitulo</label>
+                                        <input type="text" name="metric_{{ $index }}_subtitle" class="form-control" maxlength="70" value="{{ old("metric_{$index}_subtitle", $config["portal.metric_{$index}_subtitle"]) }}" data-portal-preview-source="metric_{{ $index }}_subtitle">
+                                    </div>
+                                @endforeach
+
+                                <div class="col-12">
+                                    <label class="form-label">Texto de suporte</label>
+                                    <textarea name="support_text" class="form-control" rows="3" maxlength="280" data-portal-preview-source="support_text">{{ old('support_text', $config['portal.support_text']) }}</textarea>
                                 </div>
                             </div>
                         </div>
