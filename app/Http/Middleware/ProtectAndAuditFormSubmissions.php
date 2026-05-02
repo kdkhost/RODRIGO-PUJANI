@@ -77,6 +77,10 @@ class ProtectAndAuditFormSubmissions
             return false;
         }
 
+        if (str_starts_with($path, 'admin/form-security-logs')) {
+            return false;
+        }
+
         return true;
     }
 

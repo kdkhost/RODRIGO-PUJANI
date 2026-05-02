@@ -98,16 +98,34 @@
                                         @else
                                             <div class="d-grid gap-2">
                                                 @foreach($activeBlocks as $block)
-                                                    <div class="rounded-3 border p-2">
-                                                        <div class="d-flex justify-content-between gap-2">
-                                                            <strong>{{ strtoupper(str_replace('_', ' ', $block->type)) }}</strong>
-                                                            <span class="badge text-bg-warning">Ativo</span>
+                                                    <div class="rounded-3 border p-2 admin-security-block-card">
+                                                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                                                            <div>
+                                                                <strong>{{ strtoupper(str_replace('_', ' ', $block->type)) }}</strong>
+                                                                <div class="small mt-1">{{ \Illuminate\Support\Str::limit($block->value, 80) }}</div>
+                                                            </div>
+                                                            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                                                                <span class="badge text-bg-warning">Ativo</span>
+                                                                <form method="POST" action="{{ route('admin.form-security-logs.unblock', $block) }}" class="m-0">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <button
+                                                                        type="submit"
+                                                                        class="btn btn-sm btn-outline-success"
+                                                                        data-confirm-submit="true"
+                                                                        data-confirm-title="Desbloquear regra?"
+                                                                        data-confirm-text="Esta origem voltará a poder enviar formulários conforme as demais regras de segurança."
+                                                                        data-confirm-button="Desbloquear"
+                                                                    >
+                                                                        Desbloquear
+                                                                    </button>
+                                                                </form>
+                                                            </div>
                                                         </div>
-                                                        <div class="small mt-1">{{ \Illuminate\Support\Str::limit($block->value, 80) }}</div>
                                                         <div class="small text-muted mt-1">
                                                             Hits: {{ number_format((int) $block->hits, 0, ',', '.') }}
                                                             @if($block->last_hit_at)
-                                                                • ultimo: {{ $block->last_hit_at->format('d/m/Y H:i') }}
+                                                                - último: {{ $block->last_hit_at->format('d/m/Y H:i') }}
                                                             @endif
                                                         </div>
                                                     </div>
@@ -206,7 +224,17 @@
                 @endif
             </div>
 
-            <div class="card admin-table-card">
+            <div class="card admin-table-card admin-datatable-card">
+                <div class="card-header admin-datatable-card-header">
+                    <div>
+                        <div class="admin-card-kicker">DataTables AdminLTE</div>
+                        <h3 class="card-title">Registros auditados</h3>
+                    </div>
+                    <div class="admin-datatable-limit">
+                        <i class="bi bi-table"></i>
+                        <span>{{ $perPage }} por página</span>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table
                         class="table table-hover align-middle mb-0 admin-datatable-table"

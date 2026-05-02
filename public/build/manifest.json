@@ -80,7 +80,7 @@
     "src": "node_modules/summernote/dist/font/summernote.woff2"
   },
   "resources/css/admin.css": {
-    "file": "assets/admin-NOnVM7HP.css",
+    "file": "assets/admin-B_9A_Gx6.css",
     "src": "resources/css/admin.css",
     "isEntry": true,
     "name": "admin",
@@ -89,7 +89,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DAMFDMKo.css",
+    "file": "assets/app-C6m1nsrn.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -98,7 +98,7 @@
     ]
   },
   "resources/css/site.css": {
-    "file": "assets/site-xmzvAW2R.css",
+    "file": "assets/site-CO1y9gEA.css",
     "src": "resources/css/site.css",
     "isEntry": true,
     "name": "site",
