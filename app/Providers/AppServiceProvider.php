@@ -96,19 +96,40 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('publicPages', $publicPages);
 
                 $whatsappMultipleEnabled = ($settings['site.whatsapp_multiple_support']['value'] ?? '0') === '1';
-                $whatsappTeamMembers = $whatsappMultipleEnabled && Schema::hasTable('team_members')
-                    ? Cache::rememberForever('site_whatsapp.team.v1', fn () => TeamMember::query()
-                        ->where('is_active', true)
-                        ->whereNotNull('whatsapp')
-                        ->orderBy('sort_order')
-                        ->get(['id', 'name', 'role', 'whatsapp', 'image_path'])
-                        ->toArray())
-                    : [];
+
+                // Lê membros do WhatsApp com proteção contra cache serializado corrompido
+                $whatsappTeamMembers = [];
+                if ($whatsappMultipleEnabled && Schema::hasTable('team_members')) {
+                    try {
+                        $cached = Cache::get('site_whatsapp.team.v2');
+
+                        // Se o cache ainda não existe ou está corrompido, regenera
+                        if (! is_array($cached)) {
+                            Cache::forget('site_whatsapp.team.v1'); // limpa versão antiga/corrompida
+                            Cache::forget('site_whatsapp.team.v2');
+                            $cached = TeamMember::query()
+                                ->where('is_active', true)
+                                ->whereNotNull('whatsapp')
+                                ->orderBy('sort_order')
+                                ->get(['id', 'name', 'role', 'whatsapp', 'image_path'])
+                                ->toArray();
+                            Cache::put('site_whatsapp.team.v2', $cached, now()->addMinutes(60));
+                        }
+
+                        $whatsappTeamMembers = $cached;
+                    } catch (Throwable) {
+                        // Cache corrompido: limpa e deixa array vazio (sem quebrar a página)
+                        Cache::forget('site_whatsapp.team.v1');
+                        Cache::forget('site_whatsapp.team.v2');
+                        $whatsappTeamMembers = [];
+                    }
+                }
 
                 $view->with('whatsappTeamMembers', collect($whatsappTeamMembers)->map(fn($m) => (object)$m));
             } catch (Throwable) {
                 $view->with('siteSettings', collect());
                 $view->with('publicPages', collect());
+                $view->with('whatsappTeamMembers', collect()); // garante variável sempre disponível
             }
         });
     }
