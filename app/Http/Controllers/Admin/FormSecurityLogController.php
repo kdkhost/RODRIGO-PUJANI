@@ -50,9 +50,26 @@ class FormSecurityLogController extends Controller
             $query->whereHas('block', fn ($builder) => $builder->where('type', $request->input('block_type')));
         }
 
+        $summaryBase = FormSecurityLog::query();
+        $activeBlocks = SecurityAccessBlock::query()
+            ->active()
+            ->orderByDesc('last_hit_at')
+            ->orderByDesc('updated_at')
+            ->limit(8)
+            ->get();
+
         return view('admin.form-security-logs.index', [
             'logs' => $query->paginate($perPage)->withQueryString(),
             'perPage' => $perPage,
+            'securitySummary' => [
+                'total_logs' => (clone $summaryBase)->count(),
+                'blocked_logs' => (clone $summaryBase)->where('blocked', true)->count(),
+                'distinct_ips' => (clone $summaryBase)->whereNotNull('ip_address')->distinct('ip_address')->count('ip_address'),
+                'distinct_devices' => (clone $summaryBase)->whereNotNull('device_id')->distinct('device_id')->count('device_id'),
+                'mac_informed' => (clone $summaryBase)->whereNotNull('mac_address')->where('mac_address', '!=', '')->count(),
+                'active_blocks' => $activeBlocks->count(),
+            ],
+            'activeBlocks' => $activeBlocks,
         ]);
     }
 

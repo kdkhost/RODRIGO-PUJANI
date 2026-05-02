@@ -21,6 +21,107 @@
 
     <section class="app-content pb-4">
         <div class="container-fluid">
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="card admin-table-card">
+                        <div class="card-header">
+                            <div>
+                                <div class="admin-card-kicker">Camada de seguranca ativa</div>
+                                <h3 class="card-title">Monitoramento e bloqueio em tempo real</h3>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3">
+                                <div class="col-md-4 col-xl-2">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase text-muted mb-1">Registros</div>
+                                        <div class="fs-4 fw-bold">{{ number_format($securitySummary['total_logs'], 0, ',', '.') }}</div>
+                                        <div class="small text-muted">Eventos auditados</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-xl-2">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase text-muted mb-1">Bloqueados</div>
+                                        <div class="fs-4 fw-bold text-danger">{{ number_format($securitySummary['blocked_logs'], 0, ',', '.') }}</div>
+                                        <div class="small text-muted">Tentativas contidas</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-xl-2">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase text-muted mb-1">IPs unicos</div>
+                                        <div class="fs-4 fw-bold">{{ number_format($securitySummary['distinct_ips'], 0, ',', '.') }}</div>
+                                        <div class="small text-muted">Origens distintas</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-xl-2">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase text-muted mb-1">Dispositivos</div>
+                                        <div class="fs-4 fw-bold">{{ number_format($securitySummary['distinct_devices'], 0, ',', '.') }}</div>
+                                        <div class="small text-muted">IDs persistentes</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-xl-2">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase text-muted mb-1">MAC informado</div>
+                                        <div class="fs-4 fw-bold">{{ number_format($securitySummary['mac_informed'], 0, ',', '.') }}</div>
+                                        <div class="small text-muted">Somente app/cliente</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-xl-2">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase text-muted mb-1">Regras ativas</div>
+                                        <div class="fs-4 fw-bold text-warning">{{ number_format($securitySummary['active_blocks'], 0, ',', '.') }}</div>
+                                        <div class="small text-muted">Bloqueios vigentes</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-xl-7">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase fw-semibold text-muted mb-2">O que esta sendo coletado ocultamente</div>
+                                        <div class="row g-2 small">
+                                            <div class="col-md-6">- IP, forwarded-for e DNS reverso</div>
+                                            <div class="col-md-6">- ID persistente do dispositivo</div>
+                                            <div class="col-md-6">- Fingerprint tecnico do navegador</div>
+                                            <div class="col-md-6">- Navegador, sistema e plataforma</div>
+                                            <div class="col-md-6">- Tamanho de tela, timezone e idioma</div>
+                                            <div class="col-md-6">- Rede, ASN, ISP e geolocalizacao por IP</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-5">
+                                    <div class="border rounded-4 p-3 h-100">
+                                        <div class="small text-uppercase fw-semibold text-muted mb-2">Regras de bloqueio manual em vigor</div>
+                                        @if($activeBlocks->isEmpty())
+                                            <div class="small text-muted">Nenhuma regra ativa no momento.</div>
+                                        @else
+                                            <div class="d-grid gap-2">
+                                                @foreach($activeBlocks as $block)
+                                                    <div class="rounded-3 border p-2">
+                                                        <div class="d-flex justify-content-between gap-2">
+                                                            <strong>{{ strtoupper(str_replace('_', ' ', $block->type)) }}</strong>
+                                                            <span class="badge text-bg-warning">Ativo</span>
+                                                        </div>
+                                                        <div class="small mt-1">{{ \Illuminate\Support\Str::limit($block->value, 80) }}</div>
+                                                        <div class="small text-muted mt-1">
+                                                            Hits: {{ number_format((int) $block->hits, 0, ',', '.') }}
+                                                            @if($block->last_hit_at)
+                                                                • ultimo: {{ $block->last_hit_at->format('d/m/Y H:i') }}
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card admin-table-card mb-4">
                 <div class="card-body p-4">
                     <form method="GET" class="row g-3 admin-premium-form">
