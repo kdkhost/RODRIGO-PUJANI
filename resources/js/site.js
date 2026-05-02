@@ -195,12 +195,12 @@ const SiteUI = {
         const cursor = document.getElementById('cursor');
         const ring = document.getElementById('cursor-ring');
         const body = document.body;
+        const isDesktopCursor = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-        if (!cursor || !ring || !body || window.innerWidth < 768) {
+        if (!cursor || !ring || !body || window.innerWidth < 768 || !isDesktopCursor) {
             return;
         }
 
-        let pointerActive = false;
         let rafId = null;
         const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
@@ -219,13 +219,10 @@ const SiteUI = {
         };
 
         const showCursor = () => {
-            if (!pointerActive) {
-                pointerActive = true;
-                body.classList.add('site-cursor-ready');
-            }
-
             body.classList.remove('site-cursor-hidden');
         };
+
+        requestRender();
 
         document.addEventListener('pointermove', (event) => {
             pos.x = event.clientX;
@@ -248,6 +245,15 @@ const SiteUI = {
 
         document.addEventListener('mouseleave', () => {
             body.classList.add('site-cursor-hidden');
+        });
+
+        window.addEventListener('blur', () => {
+            body.classList.add('site-cursor-hidden');
+        });
+
+        window.addEventListener('focus', () => {
+            showCursor();
+            requestRender();
         });
 
         document.querySelectorAll('a, button, input, textarea, select').forEach((element) => {

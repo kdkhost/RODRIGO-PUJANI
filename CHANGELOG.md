@@ -8,6 +8,7 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 - Cursor customizado do frontend ajustado para nao ocultar o cursor nativo do navegador e nao ficar preso no canto superior esquerdo.
 - Animacao do cursor premium passou a ativar apenas apos evento real de ponteiro, com fallback seguro para touch/mobile.
 - Cursor premium voltou a reaparecer corretamente apos sair e retornar para a aba/janela do navegador, sem ficar oculto no desktop.
+- Aparencia original do cursor premium restaurada no frontend (sem cursor padrao no desktop), mantendo estabilidade para evitar travamento no topo esquerdo.
 
 ## [1.0.14] - 2026-05-02
 
