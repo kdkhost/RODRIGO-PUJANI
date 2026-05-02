@@ -223,6 +223,7 @@ const SiteUI = {
         };
 
         requestRender();
+        showCursor();
 
         document.addEventListener('pointermove', (event) => {
             pos.x = event.clientX;
@@ -239,19 +240,6 @@ const SiteUI = {
         });
 
         document.addEventListener('mouseenter', () => {
-            showCursor();
-            requestRender();
-        });
-
-        document.addEventListener('mouseleave', () => {
-            body.classList.add('site-cursor-hidden');
-        });
-
-        window.addEventListener('blur', () => {
-            body.classList.add('site-cursor-hidden');
-        });
-
-        window.addEventListener('focus', () => {
             showCursor();
             requestRender();
         });
@@ -296,7 +284,7 @@ const SiteUI = {
         }
 
         const toggleButtons = () => {
-            const visible = window.scrollY > 360;
+            const visible = window.scrollY > 120;
 
             buttons.forEach((button) => {
                 button.classList.toggle('is-visible', visible);

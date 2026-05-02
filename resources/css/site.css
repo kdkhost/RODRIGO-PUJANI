@@ -23,7 +23,7 @@ body {
     position: fixed;
     right: 1.5rem;
     bottom: 5.5rem;
-    z-index: 9300;
+    z-index: 9600;
     display: inline-flex;
     width: 52px;
     height: 52px;
@@ -60,9 +60,9 @@ body {
 }
 
 body:not(.portal-body) .site-scroll-top {
-    left: 1.5rem;
-    right: auto;
-    bottom: 6rem;
+    right: 1.5rem;
+    left: auto;
+    bottom: 5.5rem;
 }
 
 .portal-body {
@@ -1703,8 +1703,8 @@ body:not(.portal-body) .site-scroll-top {
     }
 
     body:not(.portal-body) .site-scroll-top {
-        left: 1rem;
-        right: auto;
+        right: 1rem;
+        left: auto;
         bottom: 5rem;
     }
 
