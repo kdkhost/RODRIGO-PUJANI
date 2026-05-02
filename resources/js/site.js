@@ -222,8 +222,9 @@ const SiteUI = {
             if (!pointerActive) {
                 pointerActive = true;
                 body.classList.add('site-cursor-ready');
-                body.classList.remove('site-cursor-hidden');
             }
+
+            body.classList.remove('site-cursor-hidden');
         };
 
         document.addEventListener('pointermove', (event) => {
@@ -236,6 +237,11 @@ const SiteUI = {
         document.addEventListener('pointerdown', (event) => {
             pos.x = event.clientX;
             pos.y = event.clientY;
+            showCursor();
+            requestRender();
+        });
+
+        document.addEventListener('mouseenter', () => {
             showCursor();
             requestRender();
         });
