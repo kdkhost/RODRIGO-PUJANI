@@ -7,6 +7,8 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 ### Adicionado
 - Configuracao de imagem de fundo da tela de autenticacao administrativa em `/admin/auth-appearance`, com upload, remocao e pre-visualizacao.
 - Configuracao de imagem de fundo da tela de login do portal do cliente em `/admin/client-portal`, com upload, remocao e pre-visualizacao.
+- Auditoria de formularios ampliada com dados tecnicos de dispositivo (ID, fingerprint, plataforma, navegador, sistema operacional e metadados de rede).
+- Novo modulo de bloqueio manual individual por origem em `/admin/form-security-logs` (IP, ID de dispositivo, fingerprint, MAC quando informado, ASN e user-agent).
 
 ### Alterado
 - Layout `guest` passou a usar dinamicamente a imagem definida em `auth.panel_background_path` quando existir.

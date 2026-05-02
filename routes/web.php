@@ -176,8 +176,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         });
 
     Route::middleware('root.security.auditor')
-        ->get('/form-security-logs', [FormSecurityLogController::class, 'index'])
-        ->name('form-security-logs.index');
+        ->prefix('form-security-logs')
+        ->name('form-security-logs.')
+        ->group(function (): void {
+            Route::get('/', [FormSecurityLogController::class, 'index'])->name('index');
+            Route::post('/block', [FormSecurityLogController::class, 'block'])->name('block');
+            Route::patch('/blocks/{block}/unblock', [FormSecurityLogController::class, 'unblock'])->name('unblock');
+        });
 
     $crud('pages', 'pages', PageController::class, 'pages.manage');
     $crud('page-sections', 'page-sections', PageSectionController::class, 'page-sections.manage');
