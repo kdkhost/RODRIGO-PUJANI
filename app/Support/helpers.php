@@ -16,17 +16,25 @@ if (! function_exists('setting')) {
                 return $default;
             }
 
-            $settings = Cache::rememberForever('site_settings.map.v2', fn () => Setting::query()
-                ->select(['key', 'type', 'value', 'json_value'])
-                ->get()
-                ->mapWithKeys(fn (Setting $setting): array => [
-                    $setting->key => [
-                        'type' => $setting->type,
-                        'value' => $setting->value,
-                        'json_value' => $setting->json_value,
-                    ],
-                ])
-                ->all());
+            $cached = Cache::get('site_settings.map.v2');
+
+            if (! is_array($cached)) {
+                Cache::forget('site_settings.map.v2');
+                $cached = Setting::query()
+                    ->select(['key', 'type', 'value', 'json_value'])
+                    ->get()
+                    ->mapWithKeys(fn (Setting $setting): array => [
+                        $setting->key => [
+                            'type' => $setting->type,
+                            'value' => $setting->value,
+                            'json_value' => $setting->json_value,
+                        ],
+                    ])
+                    ->all();
+                Cache::forever('site_settings.map.v2', $cached);
+            }
+
+            $settings = $cached;
 
             $item = $settings[$key] ?? null;
 
@@ -47,7 +55,10 @@ if (! function_exists('preloader_config')) {
     function preloader_config(string $surface = 'site', bool $respectScope = true): array
     {
         try {
-            $config = Cache::rememberForever('preloader.settings.v1', function (): array {
+            $cached = Cache::get('preloader.settings.v1');
+
+            if (! is_array($cached)) {
+                Cache::forget('preloader.settings.v1');
                 $logoPath = (string) setting('preloader.logo_path', '');
                 $logoUrl = null;
 
@@ -57,12 +68,12 @@ if (! function_exists('preloader_config')) {
                         : site_asset_url($logoPath);
                 }
 
-                return [
+                $cached = [
                     'enabled' => filter_var(setting('preloader.enabled', '0'), FILTER_VALIDATE_BOOLEAN),
                     'scope' => (string) setting('preloader.scope', 'all'),
                     'style' => (string) setting('preloader.style', 'spinner'),
                     'brand' => (string) setting('preloader.brand', config('app.name')),
-                    'message' => (string) setting('preloader.message', 'Carregando experiência segura...'),
+                    'message' => (string) setting('preloader.message', 'Carregando experiÃªncia segura...'),
                     'background_color' => (string) setting('preloader.background_color', '#0f1318'),
                     'accent_color' => (string) setting('preloader.accent_color', '#c49a3c'),
                     'text_color' => (string) setting('preloader.text_color', '#f4ead7'),
@@ -71,7 +82,10 @@ if (! function_exists('preloader_config')) {
                     'min_duration' => max(0, min(6000, (int) setting('preloader.min_duration', '650'))),
                     'custom_css' => (string) setting('preloader.custom_css', ''),
                 ];
-            });
+                Cache::forever('preloader.settings.v1', $cached);
+            }
+
+            $config = $cached;
 
             if ($respectScope && $config['scope'] !== 'all' && $config['scope'] !== $surface) {
                 $config['enabled'] = false;
@@ -175,9 +189,9 @@ if (! function_exists('seo_config')) {
                 
                 return [
                     'title_suffix' => (string) setting('seo.title_suffix', ' - Pujani Advogados'),
-                    'meta_description' => (string) setting('seo.meta_description', 'Escritório de advocacia premium especializado em soluções jurídicas personalizadas.'),
-                    'meta_keywords' => (string) setting('seo.meta_keywords', 'advogado, jurídico, processos, justiça, consultoria'),
-                    'hashtags' => (string) setting('seo.hashtags', '#pujaniadvogados #advocacia #justiça #direito'),
+                    'meta_description' => (string) setting('seo.meta_description', 'EscritÃ³rio de advocacia premium especializado em soluÃ§Ãµes jurÃ­dicas personalizadas.'),
+                    'meta_keywords' => (string) setting('seo.meta_keywords', 'advogado, jurÃ­dico, processos, justiÃ§a, consultoria'),
+                    'hashtags' => (string) setting('seo.hashtags', '#pujaniadvogados #advocacia #justiÃ§a #direito'),
                     'author' => (string) setting('seo.author', 'Rodrigo Pujani'),
                     'og_image_path' => $ogImagePath,
                     'og_image_url' => site_asset_url($ogImagePath),
@@ -189,9 +203,9 @@ if (! function_exists('seo_config')) {
         } catch (Throwable) {
             return [
                 'title_suffix' => ' - Pujani Advogados',
-                'meta_description' => 'Escritório de advocacia premium especializado em soluções jurídicas personalizadas.',
-                'meta_keywords' => 'advogado, jurídico, processos, justiça, consultoria',
-                'hashtags' => '#pujaniadvogados #advocacia #justiça #direito',
+                'meta_description' => 'EscritÃ³rio de advocacia premium especializado em soluÃ§Ãµes jurÃ­dicas personalizadas.',
+                'meta_keywords' => 'advogado, jurÃ­dico, processos, justiÃ§a, consultoria',
+                'hashtags' => '#pujaniadvogados #advocacia #justiÃ§a #direito',
                 'author' => 'Rodrigo Pujani',
                 'og_image_path' => '',
                 'og_image_url' => null,
@@ -218,12 +232,12 @@ if (! function_exists('smtp_config')) {
                     'password' => (string) setting('mail.password', env('MAIL_PASSWORD', '')),
                     'from_address' => (string) setting('mail.from_address', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
                     'from_name' => (string) setting('mail.from_name', env('MAIL_FROM_NAME', config('app.name'))),
-                    'template_header' => (string) setting('mail.template_header', 'Olá, {{name}}.'),
+                    'template_header' => (string) setting('mail.template_header', 'OlÃ¡, {{name}}.'),
                     'template_footer' => (string) setting('mail.template_footer', 'Equipe {{app_name}}'),
-                    'template_reset_subject' => (string) setting('mail.template_reset_subject', 'Redefinição de senha'),
-                    'template_reset_body' => (string) setting('mail.template_reset_body', "Recebemos uma solicitação para redefinir sua senha.\n\nClique no botão abaixo para continuar."),
-                    'template_generic_subject' => (string) setting('mail.template_generic_subject', 'Notificação do sistema'),
-                    'template_generic_body' => (string) setting('mail.template_generic_body', "Olá, {{name}}.\n\nVocê recebeu uma nova notificação do sistema."),
+                    'template_reset_subject' => (string) setting('mail.template_reset_subject', 'RedefiniÃ§Ã£o de senha'),
+                    'template_reset_body' => (string) setting('mail.template_reset_body', "Recebemos uma solicitaÃ§Ã£o para redefinir sua senha.\n\nClique no botÃ£o abaixo para continuar."),
+                    'template_generic_subject' => (string) setting('mail.template_generic_subject', 'NotificaÃ§Ã£o do sistema'),
+                    'template_generic_body' => (string) setting('mail.template_generic_body', "OlÃ¡, {{name}}.\n\nVocÃª recebeu uma nova notificaÃ§Ã£o do sistema."),
                 ];
             });
         } catch (Throwable) {
@@ -237,12 +251,12 @@ if (! function_exists('smtp_config')) {
                 'password' => env('MAIL_PASSWORD', ''),
                 'from_address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
                 'from_name' => env('MAIL_FROM_NAME', config('app.name')),
-                'template_header' => 'Olá, {{name}}.',
+                'template_header' => 'OlÃ¡, {{name}}.',
                 'template_footer' => 'Equipe {{app_name}}',
-                'template_reset_subject' => 'Redefinição de senha',
-                'template_reset_body' => "Recebemos uma solicitação para redefinir sua senha.\n\nClique no botão abaixo para continuar.",
-                'template_generic_subject' => 'Notificação do sistema',
-                'template_generic_body' => "Olá, {{name}}.\n\nVocê recebeu uma nova notificação do sistema.",
+                'template_reset_subject' => 'RedefiniÃ§Ã£o de senha',
+                'template_reset_body' => "Recebemos uma solicitaÃ§Ã£o para redefinir sua senha.\n\nClique no botÃ£o abaixo para continuar.",
+                'template_generic_subject' => 'NotificaÃ§Ã£o do sistema',
+                'template_generic_body' => "OlÃ¡, {{name}}.\n\nVocÃª recebeu uma nova notificaÃ§Ã£o do sistema.",
             ];
         }
     }
@@ -321,15 +335,15 @@ if (! function_exists('pwa_config')) {
                     'icon_192_url' => site_asset_url($icon192Path) ?: site_asset_url($defaultIcon192) ?: site_asset_url($faviconPath),
                     'icon_512_path' => $icon512Path,
                     'icon_512_url' => site_asset_url($icon512Path) ?: site_asset_url($defaultIcon512) ?: site_asset_url($faviconPath),
-                    'popup_badge' => (string) setting('pwa.popup_badge', 'Aplicativo disponível'),
-                    'popup_title' => (string) setting('pwa.popup_title', 'Instale o app do escritório'),
-                    'popup_description' => (string) setting('pwa.popup_description', 'Adicione o site à tela inicial para abrir mais rápido, com aparência de aplicativo e suporte offline.'),
+                    'popup_badge' => (string) setting('pwa.popup_badge', 'Aplicativo disponÃ­vel'),
+                    'popup_title' => (string) setting('pwa.popup_title', 'Instale o app do escritÃ³rio'),
+                    'popup_description' => (string) setting('pwa.popup_description', 'Adicione o site Ã  tela inicial para abrir mais rÃ¡pido, com aparÃªncia de aplicativo e suporte offline.'),
                     'popup_primary_label' => (string) setting('pwa.popup_primary_label', 'Instalar agora'),
-                    'popup_secondary_label' => (string) setting('pwa.popup_secondary_label', 'Agora não'),
+                    'popup_secondary_label' => (string) setting('pwa.popup_secondary_label', 'Agora nÃ£o'),
                     'footer_label' => (string) setting('pwa.footer_label', 'Instalar aplicativo'),
                     'mobile_menu_label' => (string) setting('pwa.mobile_menu_label', 'Instalar aplicativo'),
-                    'offline_title' => (string) setting('pwa.offline_title', 'Você está offline.'),
-                    'offline_message' => (string) setting('pwa.offline_message', 'Não foi possível carregar o conteúdo agora. Quando a conexão voltar, a navegação será retomada normalmente.'),
+                    'offline_title' => (string) setting('pwa.offline_title', 'VocÃª estÃ¡ offline.'),
+                    'offline_message' => (string) setting('pwa.offline_message', 'NÃ£o foi possÃ­vel carregar o conteÃºdo agora. Quando a conexÃ£o voltar, a navegaÃ§Ã£o serÃ¡ retomada normalmente.'),
                     'offline_button_label' => (string) setting('pwa.offline_button_label', 'Tentar novamente'),
                     'prompt_storage_key' => 'site-pwa-promo-dismissed-v1',
                 ];
@@ -354,15 +368,15 @@ if (! function_exists('pwa_config')) {
                 'icon_192_url' => null,
                 'icon_512_path' => '',
                 'icon_512_url' => null,
-                'popup_badge' => 'Aplicativo disponível',
-                'popup_title' => 'Instale o app do escritório',
-                'popup_description' => 'Adicione o site à tela inicial para abrir mais rápido, com aparência de aplicativo e suporte offline.',
+                'popup_badge' => 'Aplicativo disponÃ­vel',
+                'popup_title' => 'Instale o app do escritÃ³rio',
+                'popup_description' => 'Adicione o site Ã  tela inicial para abrir mais rÃ¡pido, com aparÃªncia de aplicativo e suporte offline.',
                 'popup_primary_label' => 'Instalar agora',
-                'popup_secondary_label' => 'Agora não',
+                'popup_secondary_label' => 'Agora nÃ£o',
                 'footer_label' => 'Instalar aplicativo',
                 'mobile_menu_label' => 'Instalar aplicativo',
-                'offline_title' => 'Você está offline.',
-                'offline_message' => 'Não foi possível carregar o conteúdo agora. Quando a conexão voltar, a navegação será retomada normalmente.',
+                'offline_title' => 'VocÃª estÃ¡ offline.',
+                'offline_message' => 'NÃ£o foi possÃ­vel carregar o conteÃºdo agora. Quando a conexÃ£o voltar, a navegaÃ§Ã£o serÃ¡ retomada normalmente.',
                 'offline_button_label' => 'Tentar novamente',
                 'prompt_storage_key' => 'site-pwa-promo-dismissed-v1',
             ];
@@ -399,18 +413,26 @@ if (! function_exists('public_pages')) {
                 return collect();
             }
 
-            $pages = Cache::rememberForever('site_pages.public.v2', fn () => Page::query()
-                ->where('status', 'published')
-                ->orderBy('sort_order')
-                ->get(['id', 'title', 'menu_title', 'slug', 'is_home'])
-                ->map(fn (Page $page): array => [
-                    'id' => $page->id,
-                    'title' => $page->title,
-                    'menu_title' => $page->menu_title,
-                    'slug' => $page->slug,
-                    'is_home' => $page->is_home,
-                ])
-                ->all());
+            $cached = Cache::get('site_pages.public.v2');
+
+            if (! is_array($cached)) {
+                Cache::forget('site_pages.public.v2');
+                $cached = Page::query()
+                    ->where('status', 'published')
+                    ->orderBy('sort_order')
+                    ->get(['id', 'title', 'menu_title', 'slug', 'is_home'])
+                    ->map(fn (Page $page): array => [
+                        'id' => $page->id,
+                        'title' => $page->title,
+                        'menu_title' => $page->menu_title,
+                        'slug' => $page->slug,
+                        'is_home' => $page->is_home,
+                    ])
+                    ->all();
+                Cache::forever('site_pages.public.v2', $cached);
+            }
+
+            $pages = $cached;
 
             return collect($pages)->map(fn (array $page): object => (object) $page);
         } catch (Throwable) {

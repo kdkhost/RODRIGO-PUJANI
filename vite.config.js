@@ -16,42 +16,6 @@ export default defineConfig({
         }),
     ],
     build: {
-        rollupOptions: {
-            output: {
-                manualChunks(id) {
-                    if (!id.includes('node_modules')) {
-                        return;
-                    }
-
-                    if (id.includes('summernote')) {
-                        return 'vendor-summernote';
-                    }
-
-                    if (id.includes('admin-lte')) {
-                        return 'vendor-admin-lte';
-                    }
-
-                    if (id.includes('@fullcalendar') || id.includes('chart.js')) {
-                        return 'vendor-analytics';
-                    }
-
-                    if (id.includes('filepond') || id.includes('inputmask')) {
-                        return 'vendor-forms';
-                    }
-
-                    if (
-                        id.includes('jquery')
-                        || id.includes('bootstrap')
-                        || id.includes('@popperjs')
-                        || id.includes('toastr')
-                        || id.includes('sweetalert2')
-                    ) {
-                        return 'vendor-admin-ui';
-                    }
-
-                    return 'vendor-core';
-                },
-            },
-        },
+        target: 'esnext',
     },
 });

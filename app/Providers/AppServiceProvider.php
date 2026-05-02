@@ -56,8 +56,11 @@ class AppServiceProvider extends ServiceProvider
                     return;
                 }
 
-                $publicPages = Schema::hasTable('pages')
-                    ? collect(Cache::rememberForever('site_pages.menu.v2', fn () => Page::query()
+                $cachedMenu = Cache::get('site_pages.menu.v2');
+
+                if (! is_array($cachedMenu)) {
+                    Cache::forget('site_pages.menu.v2');
+                    $cachedMenu = Page::query()
                         ->where('show_in_menu', true)
                         ->where('status', 'published')
                         ->orderBy('sort_order')
@@ -69,28 +72,38 @@ class AppServiceProvider extends ServiceProvider
                             'slug' => $page->slug,
                             'is_home' => $page->is_home,
                         ])
-                        ->all()))
-                        ->map(fn (array $page): object => (object) $page)
-                    : collect();
+                        ->all();
+                    Cache::forever('site_pages.menu.v2', $cachedMenu);
+                }
 
-                $settings = Cache::rememberForever('site_settings.all.v2', fn () => Setting::query()
-                    ->orderBy('group')
-                    ->orderBy('sort_order')
-                    ->get()
-                    ->mapWithKeys(fn (Setting $setting): array => [
-                        $setting->key => [
-                            'id' => $setting->id,
-                            'group' => $setting->group,
-                            'key' => $setting->key,
-                            'label' => $setting->label,
-                            'type' => $setting->type,
-                            'value' => $setting->value,
-                            'json_value' => $setting->json_value,
-                            'is_public' => $setting->is_public,
-                            'sort_order' => $setting->sort_order,
-                        ],
-                    ])
-                    ->all());
+                $publicPages = collect($cachedMenu)->map(fn (array $page): object => (object) $page);
+
+                $cachedSettings = Cache::get('site_settings.all.v2');
+
+                if (! is_array($cachedSettings)) {
+                    Cache::forget('site_settings.all.v2');
+                    $cachedSettings = Setting::query()
+                        ->orderBy('group')
+                        ->orderBy('sort_order')
+                        ->get()
+                        ->mapWithKeys(fn (Setting $setting): array => [
+                            $setting->key => [
+                                'id' => $setting->id,
+                                'group' => $setting->group,
+                                'key' => $setting->key,
+                                'label' => $setting->label,
+                                'type' => $setting->type,
+                                'value' => $setting->value,
+                                'json_value' => $setting->json_value,
+                                'is_public' => $setting->is_public,
+                                'sort_order' => $setting->sort_order,
+                            ],
+                        ])
+                        ->all();
+                    Cache::forever('site_settings.all.v2', $cachedSettings);
+                }
+
+                $settings = $cachedSettings;
 
                 $view->with('siteSettings', collect($settings)->map(fn (array $setting): object => (object) $setting));
                 $view->with('publicPages', $publicPages);

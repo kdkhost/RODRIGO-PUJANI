@@ -88,7 +88,7 @@ const SiteUI = {
                 canvas._siteChart = chart;
                 canvas.dataset.chartReady = 'true';
             } catch (error) {
-                console.error('Falha ao inicializar gráfico do portal.', error);
+                console.error('Falha ao inicializar grÃ¡fico do portal.', error);
             }
         });
     },
@@ -135,7 +135,7 @@ const SiteUI = {
                 try {
                     window.localStorage.setItem(storageKey, theme);
                 } catch (error) {
-                    // O usuário ainda consegue alternar o tema durante a sessão.
+                    // O usuÃ¡rio ainda consegue alternar o tema durante a sessÃ£o.
                 }
             }
         };
@@ -195,9 +195,9 @@ const SiteUI = {
         const cursor = document.getElementById('cursor');
         const ring = document.getElementById('cursor-ring');
         const body = document.body;
-        const isDesktopCursor = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        const isDesktop = window.innerWidth >= 768 && window.matchMedia('(hover: hover)').matches;
 
-        if (!cursor || !ring || !body || window.innerWidth < 768 || !isDesktopCursor) {
+        if (!cursor || !ring || !body || !isDesktop) {
             return;
         }
 
@@ -220,6 +220,8 @@ const SiteUI = {
 
         const showCursor = () => {
             body.classList.remove('site-cursor-hidden');
+            body.classList.add('site-cursor-ready');
+            body.classList.add('site-custom-cursor');
         };
 
         requestRender();
@@ -230,7 +232,7 @@ const SiteUI = {
             pos.y = event.clientY;
             showCursor();
             requestRender();
-        });
+        }, { passive: true });
 
         document.addEventListener('pointerdown', (event) => {
             pos.x = event.clientX;
@@ -554,11 +556,11 @@ const SiteUI = {
             }
 
             if (nameInput) {
-                nameInput.placeholder = isCompany ? 'Razão social' : 'Nome completo';
+                nameInput.placeholder = isCompany ? 'RazÃ£o social' : 'Nome completo';
             }
 
             if (nameLabel) {
-                nameLabel.textContent = isCompany ? 'Razão social' : 'Nome completo';
+                nameLabel.textContent = isCompany ? 'RazÃ£o social' : 'Nome completo';
             }
 
             companyFields.forEach((wrapper) => {
@@ -631,10 +633,10 @@ const SiteUI = {
                     acceptedFileTypes: accepted,
                     maxFileSize: input.dataset.maxFileSize || '4MB',
                     labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione arquivos</span>',
-                    labelFileTypeNotAllowed: 'Tipo de arquivo não permitido',
+                    labelFileTypeNotAllowed: 'Tipo de arquivo nÃ£o permitido',
                     fileValidateTypeLabelExpectedTypes: 'Tipos aceitos: {allTypes}',
                     labelMaxFileSizeExceeded: 'Arquivo muito grande',
-                    labelMaxFileSize: 'Tamanho máximo: {filesize}',
+                    labelMaxFileSize: 'Tamanho mÃ¡ximo: {filesize}',
                     labelTapToCancel: 'toque para cancelar',
                     labelTapToRetry: 'toque para tentar novamente',
                     labelTapToUndo: 'toque para desfazer',
@@ -659,7 +661,7 @@ const SiteUI = {
                 pond.on('updatefiles', updatePreview);
                 input.dataset.portalFilepondReady = 'true';
             } catch (error) {
-                console.error('FilePond do portal não pôde ser iniciado.', error);
+                console.error('FilePond do portal nÃ£o pÃ´de ser iniciado.', error);
             }
         });
     },
@@ -711,7 +713,7 @@ const SiteUI = {
                 }
 
                 if (Date.now() - startedAt > 5000) {
-                    reject(new Error('Driver.js não foi carregado.'));
+                    reject(new Error('Driver.js nÃ£o foi carregado.'));
                     return;
                 }
 
@@ -735,7 +737,7 @@ const SiteUI = {
                 element: '[data-portal-tour-topbar]',
                 popover: {
                     title: 'Barra superior',
-                    description: 'Aqui ficam seu perfil, o botão para reiniciar este tour e a opção de sair com segurança.',
+                    description: 'Aqui ficam seu perfil, o botÃ£o para reiniciar este tour e a opÃ§Ã£o de sair com seguranÃ§a.',
                     side: 'bottom',
                     align: 'end',
                 },
@@ -743,8 +745,8 @@ const SiteUI = {
             {
                 element: '[data-portal-tour-content]',
                 popover: {
-                    title: 'Área de acompanhamento',
-                    description: 'Nesta área você acompanha indicadores, próximos marcos, documentos, processos e movimentações liberadas pelo escritório.',
+                    title: 'Ãrea de acompanhamento',
+                    description: 'Nesta Ã¡rea vocÃª acompanha indicadores, prÃ³ximos marcos, documentos, processos e movimentaÃ§Ãµes liberadas pelo escritÃ³rio.',
                     side: 'top',
                     align: 'center',
                 },
@@ -752,8 +754,8 @@ const SiteUI = {
             {
                 element: '.portal-client-nav a[href*="perfil"]',
                 popover: {
-                    title: 'Atualização cadastral',
-                    description: 'Mantenha telefone, WhatsApp, endereço e foto atualizados para facilitar a comunicação com a equipe jurídica.',
+                    title: 'AtualizaÃ§Ã£o cadastral',
+                    description: 'Mantenha telefone, WhatsApp, endereÃ§o e foto atualizados para facilitar a comunicaÃ§Ã£o com a equipe jurÃ­dica.',
                     side: 'right',
                     align: 'start',
                 },
@@ -762,7 +764,7 @@ const SiteUI = {
                 element: '.portal-client-nav a[href*="documentos"]',
                 popover: {
                     title: 'Documentos compartilhados',
-                    description: 'Acesse em uma tela própria todos os arquivos liberados pelo escritório para consulta e download.',
+                    description: 'Acesse em uma tela prÃ³pria todos os arquivos liberados pelo escritÃ³rio para consulta e download.',
                     side: 'right',
                     align: 'start',
                 },
@@ -770,8 +772,8 @@ const SiteUI = {
             {
                 element: '[data-portal-tour-footer]',
                 popover: {
-                    title: 'Rodapé do portal',
-                    description: 'No rodapé ficam as informações institucionais do ambiente reservado do cliente.',
+                    title: 'RodapÃ© do portal',
+                    description: 'No rodapÃ© ficam as informaÃ§Ãµes institucionais do ambiente reservado do cliente.',
                     side: 'top',
                     align: 'center',
                 },
@@ -780,7 +782,7 @@ const SiteUI = {
                 element: '[data-portal-tour-whatsapp]',
                 popover: {
                     title: 'WhatsApp do processo',
-                    description: 'Quando houver processo em andamento, este botão mostra somente os advogados vinculados ao seu caso. Ao encerrar o processo, o contato deixa de aparecer.',
+                    description: 'Quando houver processo em andamento, este botÃ£o mostra somente os advogados vinculados ao seu caso. Ao encerrar o processo, o contato deixa de aparecer.',
                     side: 'left',
                     align: 'end',
                 },
@@ -799,7 +801,7 @@ const SiteUI = {
                 showProgress: true,
                 allowClose: true,
                 overlayClickBehavior: 'close',
-                nextBtnText: 'Próximo',
+                nextBtnText: 'PrÃ³ximo',
                 prevBtnText: 'Anterior',
                 doneBtnText: 'Finalizar',
                 progressText: 'Passo {{current}} de {{total}}',
@@ -839,7 +841,7 @@ const SiteUI = {
             button.addEventListener('click', (event) => {
                 event.preventDefault();
                 launchTour().catch((error) => {
-                    showToast('error', error.message || 'Não foi possível iniciar o tour guiado.');
+                    showToast('error', error.message || 'NÃ£o foi possÃ­vel iniciar o tour guiado.');
                 });
             });
 
@@ -1000,9 +1002,9 @@ const SiteUI = {
                 form.classList.add('hidden');
                 successState?.classList.remove('hidden');
                 form.reset();
-                showToast('success', 'Solicitação enviada com sucesso.');
+                showToast('success', 'SolicitaÃ§Ã£o enviada com sucesso.');
             } catch (error) {
-                const message = this.resolveErrorMessage(error, 'Não foi possível enviar sua solicitação agora.');
+                const message = this.resolveErrorMessage(error, 'NÃ£o foi possÃ­vel enviar sua solicitaÃ§Ã£o agora.');
                 this.showFormFeedback(form, message);
                 showToast('error', message);
             }
@@ -1070,7 +1072,7 @@ const SiteUI = {
 
                 window.localStorage?.removeItem(promptStorageKey);
             } catch {
-                // A limpeza local é complementar e não deve interromper a navegação.
+                // A limpeza local Ã© complementar e nÃ£o deve interromper a navegaÃ§Ã£o.
             }
         };
 
@@ -1124,7 +1126,7 @@ const SiteUI = {
         installButtons.forEach((button) => {
             button.addEventListener('click', async () => {
                 if (!this.deferredInstallPrompt) {
-                    showToast('info', 'A instalação do aplicativo não está disponível neste dispositivo agora.');
+                    showToast('info', 'A instalaÃ§Ã£o do aplicativo nÃ£o estÃ¡ disponÃ­vel neste dispositivo agora.');
                     return;
                 }
 
@@ -1177,19 +1179,33 @@ const SiteUI = {
         const box = document.getElementById('whatsapp-support-box');
 
         if (!toggle || !box) {
+            console.log('Recurso de suporte mÃºltiplo WhatsApp nÃ£o ativado nesta pÃ¡gina.');
             return;
         }
 
+        const openBox = () => {
+            box.classList.add('active');
+            toggle.classList.add('active');
+        };
+
+        const closeBox = () => {
+            box.classList.remove('active');
+            toggle.classList.remove('active');
+        };
+
         toggle.addEventListener('click', (event) => {
             event.preventDefault();
-            box.classList.toggle('active');
-            toggle.classList.toggle('active');
+            event.stopPropagation();
+            if (box.classList.contains('active')) {
+                closeBox();
+            } else {
+                openBox();
+            }
         });
 
         document.addEventListener('click', (event) => {
-            if (!box.contains(event.target) && !toggle.contains(event.target)) {
-                box.classList.remove('active');
-                toggle.classList.remove('active');
+            if (box.classList.contains('active') && !box.contains(event.target) && !toggle.contains(event.target)) {
+                closeBox();
             }
         });
 
@@ -1285,4 +1301,8 @@ const SiteUI = {
     },
 };
 
-document.addEventListener('DOMContentLoaded', () => SiteUI.boot());
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => SiteUI.boot());
+} else {
+    SiteUI.boot();
+}
