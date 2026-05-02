@@ -178,9 +178,9 @@
     <style>
         :root { --gold:#C49A3C; --gold-light:#E0BB6A; --gold-pale:#F4E4B8; --ink:#0B0C10; --ink-2:#111318; --ink-3:#1A1C22; --cream:#F0E9DC; --cream-2:#E8DED0; --muted:#7A7468; --border:rgba(196,154,60,0.18); }
         *{margin:0;padding:0;box-sizing:border-box}html{font-size:16px}
-        body { background:var(--ink); color:var(--cream); font-family:'Jost',sans-serif; font-weight:300; overflow-x:hidden; cursor:none; }
-        .cursor,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:99998}.cursor{width:10px;height:10px;background:var(--gold);border-radius:50%;mix-blend-mode:difference;z-index:99999;transition:transform .1s ease}.cursor-ring{width:36px;height:36px;border:1px solid var(--gold);border-radius:50%;opacity:.6;transition:transform .18s ease,width .2s,height .2s,opacity .2s}
-        body:hover .cursor{transform:translate(-50%,-50%)}
+        body { background:var(--ink); color:var(--cream); font-family:'Jost',sans-serif; font-weight:300; overflow-x:hidden; cursor:auto; }
+        .cursor,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:99998;opacity:0;visibility:hidden;transform:translate(-50%,-50%);will-change:left,top,transform}.cursor{width:10px;height:10px;background:var(--gold);border-radius:50%;mix-blend-mode:difference;z-index:99999;transition:opacity .16s ease,transform .1s ease}.cursor-ring{width:36px;height:36px;border:1px solid var(--gold);border-radius:50%;transition:opacity .16s ease,transform .18s ease,width .2s,height .2s}
+        body.site-cursor-ready .cursor{opacity:.92;visibility:visible}body.site-cursor-ready .cursor-ring{opacity:.6;visibility:visible}body.site-cursor-hidden .cursor,body.site-cursor-hidden .cursor-ring{opacity:0;visibility:hidden}
         body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.03;pointer-events:none;z-index:9999}
         .font-display{font-family:'Cormorant Garamond',serif}.font-title{font-family:'Cinzel',serif}
         .text-gold-gradient{background:linear-gradient(135deg,var(--gold-pale) 0%,var(--gold) 40%,var(--gold-light) 70%,var(--gold-pale) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -231,7 +231,7 @@
         .parallax{will-change:transform}
         ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--ink)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
         body.app-installed{padding-top:env(safe-area-inset-top)}body.app-installed .whatsapp-float{bottom:calc(1.5rem + env(safe-area-inset-bottom))}
-        @media (max-width:768px){body{cursor:auto}.cursor,.cursor-ring{display:none}.site-pwa-promo{left:1rem;right:1rem;bottom:1rem;max-width:none}}
+        @media (max-width:768px),(hover:none),(pointer:coarse){.cursor,.cursor-ring{display:none!important}.site-pwa-promo{left:1rem;right:1rem;bottom:1rem;max-width:none}}
         @media (max-width:480px){#hero .btn-primary,#hero .btn-ghost{width:calc(100vw - 4rem);max-width:calc(100vw - 4rem);justify-content:center}#hero p{width:calc(100vw - 4rem);max-width:calc(100vw - 4rem)}}
         
         .whatsapp-support-box {

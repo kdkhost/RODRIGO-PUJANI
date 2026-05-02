@@ -194,22 +194,59 @@ const SiteUI = {
     bindCursor() {
         const cursor = document.getElementById('cursor');
         const ring = document.getElementById('cursor-ring');
+        const body = document.body;
 
-        if (!cursor || !ring || window.innerWidth < 768) {
+        if (!cursor || !ring || !body || window.innerWidth < 768) {
             return;
         }
 
-        document.addEventListener('mousemove', (event) => {
-            cursor.style.left = `${event.clientX}px`;
-            cursor.style.top = `${event.clientY}px`;
-            ring.style.left = `${event.clientX}px`;
-            ring.style.top = `${event.clientY}px`;
-            cursor.style.transform = 'translate(-50%, -50%)';
-            ring.style.transform = 'translate(-50%, -50%)';
+        let pointerActive = false;
+        let rafId = null;
+        const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+        const render = () => {
+            rafId = null;
+            cursor.style.left = `${pos.x}px`;
+            cursor.style.top = `${pos.y}px`;
+            ring.style.left = `${pos.x}px`;
+            ring.style.top = `${pos.y}px`;
+        };
+
+        const requestRender = () => {
+            if (rafId === null) {
+                rafId = window.requestAnimationFrame(render);
+            }
+        };
+
+        const showCursor = () => {
+            if (!pointerActive) {
+                pointerActive = true;
+                body.classList.add('site-cursor-ready');
+                body.classList.remove('site-cursor-hidden');
+            }
+        };
+
+        document.addEventListener('pointermove', (event) => {
+            pos.x = event.clientX;
+            pos.y = event.clientY;
+            showCursor();
+            requestRender();
+        });
+
+        document.addEventListener('pointerdown', (event) => {
+            pos.x = event.clientX;
+            pos.y = event.clientY;
+            showCursor();
+            requestRender();
+        });
+
+        document.addEventListener('mouseleave', () => {
+            body.classList.add('site-cursor-hidden');
         });
 
         document.querySelectorAll('a, button, input, textarea, select').forEach((element) => {
             element.addEventListener('mouseenter', () => {
+                showCursor();
                 ring.style.width = '60px';
                 ring.style.height = '60px';
                 ring.style.opacity = '0.3';

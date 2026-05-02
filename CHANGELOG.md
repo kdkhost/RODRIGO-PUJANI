@@ -2,6 +2,12 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.15] - 2026-05-02
+
+### Corrigido
+- Cursor customizado do frontend ajustado para nao ocultar o cursor nativo do navegador e nao ficar preso no canto superior esquerdo.
+- Animacao do cursor premium passou a ativar apenas apos evento real de ponteiro, com fallback seguro para touch/mobile.
+
 ## [1.0.14] - 2026-05-02
 
 ### Adicionado
