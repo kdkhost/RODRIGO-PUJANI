@@ -12,6 +12,8 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 - Layout `guest` passou a usar dinamicamente a imagem definida em `auth.panel_background_path` quando existir.
 - Layout do portal do cliente passou a usar dinamicamente a imagem definida em `portal.login_background_path` quando existir.
 - Agenda administrativa passou a aplicar cor individual tambem em eventos de marcacao de fundo (`background`/`inverse-background`), com melhor contraste visual no tema escuro.
+- Dropdown de notificacoes (sininho) no mobile foi reposicionado para abrir centralizado na tela, sem corte lateral.
+- Tour guiado do painel administrativo foi ampliado para modo dinamico por contexto da pagina, com passos acionados pelos elementos reais de cada modulo.
 
 ## [1.0.12] - 2026-05-01
 

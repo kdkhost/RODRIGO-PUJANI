@@ -468,6 +468,22 @@ body:not(.portal-body) .site-scroll-top {
     z-index: 30;
 }
 
+@media (max-width: 768px) {
+    .portal-notification-dropdown {
+        position: fixed;
+        top: 82px;
+        left: 50%;
+        right: auto;
+        width: min(94vw, 420px);
+        transform: translate(-50%, 10px);
+        z-index: 1200;
+    }
+
+    .portal-notification-dropdown.is-open {
+        transform: translate(-50%, 0);
+    }
+}
+
 .portal-notification-dropdown.is-open {
     opacity: 1;
     transform: translateY(0);

@@ -2069,6 +2069,90 @@ const AdminUI = {
                 }
             ];
 
+        const contextualCandidates = [
+            {
+                selector: '#admin-calendar',
+                popover: {
+                    title: 'Agenda interativa',
+                    description: 'Clique no dia para criar compromisso, arraste eventos para reagendar e clique em cada evento para editar ou excluir.',
+                    side: 'left',
+                    align: 'start',
+                },
+            },
+            {
+                selector: '#admin-calendar-events-table',
+                popover: {
+                    title: 'Gestao detalhada da agenda',
+                    description: 'Aqui voce tem a listagem completa com filtros e acoes de manutencao dos eventos.',
+                    side: 'top',
+                    align: 'start',
+                },
+            },
+            {
+                selector: '[data-ajax-table]',
+                popover: {
+                    title: 'Lista dinamica',
+                    description: 'Use pesquisa, filtros e paginacao sem recarregar a pagina para manter fluidez no trabalho.',
+                    side: 'top',
+                    align: 'start',
+                },
+            },
+            {
+                selector: '[data-ajax-form]',
+                popover: {
+                    title: 'Formulario inteligente',
+                    description: 'Os envios sao processados em AJAX com validacoes e retorno imediato em notificacoes.',
+                    side: 'left',
+                    align: 'start',
+                },
+            },
+            {
+                selector: '[data-filepond]',
+                popover: {
+                    title: 'Upload com pre-visualizacao',
+                    description: 'Arraste e solte arquivos para enviar com validacao e visualizacao antes do salvamento.',
+                    side: 'left',
+                    align: 'start',
+                },
+            },
+            {
+                selector: 'canvas',
+                popover: {
+                    title: 'KPI e analiticos',
+                    description: 'Os graficos mostram desempenho e volume operacional com base nos dados do escritorio.',
+                    side: 'top',
+                    align: 'center',
+                },
+            },
+            {
+                selector: '.admin-notification-toggle',
+                popover: {
+                    title: 'Central de notificacoes',
+                    description: 'O sino recebe novos contatos em tempo real sem precisar atualizar a pagina.',
+                    side: 'bottom',
+                    align: 'end',
+                },
+            },
+            {
+                selector: '.admin-tour-restart-button',
+                popover: {
+                    title: 'Reiniciar tour',
+                    description: 'Use este botao sempre que quiser rever o passo a passo do painel.',
+                    side: 'bottom',
+                    align: 'end',
+                },
+            },
+            {
+                selector: '.admin-page-hero',
+                popover: {
+                    title: 'Cabecalho da secao',
+                    description: 'Aqui voce ve contexto do modulo atual e acessa acoes principais dessa pagina.',
+                    side: 'bottom',
+                    align: 'start',
+                },
+            },
+        ];
+
         const finalStep = [
             {
                 element: '.admin-app-footer',
@@ -2081,7 +2165,12 @@ const AdminUI = {
             }
         ];
 
-        const steps = [...commonSteps, ...roleSteps, ...finalStep]
+        const contextualSteps = contextualCandidates
+            .filter((item) => document.querySelector(item.selector))
+            .map((item) => ({ element: item.selector, popover: item.popover }));
+
+        const dedupe = new Set();
+        const steps = [...commonSteps, ...roleSteps, ...contextualSteps, ...finalStep]
             .map((step) => {
                 const selectors = String(step.element || '')
                     .split(',')
@@ -2089,7 +2178,12 @@ const AdminUI = {
                     .filter(Boolean);
                 const matchedSelector = selectors.find((selector) => document.querySelector(selector));
 
-                return matchedSelector ? { ...step, element: matchedSelector } : null;
+                if (!matchedSelector || dedupe.has(matchedSelector)) {
+                    return null;
+                }
+
+                dedupe.add(matchedSelector);
+                return { ...step, element: matchedSelector };
             })
             .filter(Boolean);
 
