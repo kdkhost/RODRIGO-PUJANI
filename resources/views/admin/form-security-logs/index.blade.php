@@ -1,15 +1,15 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Auditoria de formularios')
+@section('title', 'Auditoria de formulários')
 
 @section('content')
     <div class="app-content-header admin-page-hero">
         <div class="container-fluid">
             <div class="admin-page-hero-inner">
                 <div>
-                    <div class="admin-eyebrow">Seguranca operacional</div>
-                    <h1>Auditoria de formularios</h1>
-                    <p>Rastreie tentativas de contato, login, redefinicao de senha e demais envios com bloqueio manual por origem.</p>
+                    <div class="admin-eyebrow">Segurança operacional</div>
+                    <h1>Auditoria de formulários</h1>
+                    <p>Rastreie tentativas de contato, login, redefinição de senha e demais envios com bloqueio manual por origem.</p>
                 </div>
                 <div class="admin-hero-stamp">
                     <i class="bi bi-shield-exclamation"></i>
@@ -142,7 +142,7 @@
                             <input type="text" class="form-control" name="fingerprint" value="{{ request('fingerprint') }}" placeholder="Hash do navegador">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Endereco MAC</label>
+                            <label class="form-label">Endereço MAC</label>
                             <input type="text" class="form-control" name="mac_address" value="{{ request('mac_address') }}" placeholder="Quando enviado por app/cliente">
                         </div>
                         <div class="col-md-2">
@@ -166,9 +166,9 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Por pagina</label>
+                            <label class="form-label">Por página</label>
                             <select class="form-select" name="per_page">
-                                @foreach([15, 30, 50, 100] as $option)
+                                @foreach([10, 25, 50, 100] as $option)
                                     <option value="{{ $option }}" @selected($perPage === $option)>{{ $option }} registros</option>
                                 @endforeach
                             </select>
@@ -193,7 +193,7 @@
                 <div class="small text-muted">
                     Exibindo
                     <strong>{{ $logs->firstItem() ?? 0 }}</strong>
-                    ate
+                    até
                     <strong>{{ $logs->lastItem() ?? 0 }}</strong>
                     de
                     <strong>{{ $logs->total() }}</strong>
@@ -208,7 +208,14 @@
 
             <div class="card admin-table-card">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table
+                        class="table table-hover align-middle mb-0 admin-datatable-table"
+                        data-admin-datatable
+                        data-page-length="{{ $perPage }}"
+                        data-datatable-paging="false"
+                        data-datatable-search="false"
+                        data-datatable-dom="t"
+                    >
                         <thead>
                             <tr>
                                 <th style="min-width: 150px;">Data</th>
@@ -217,11 +224,11 @@
                                 <th style="min-width: 270px;">Dispositivo</th>
                                 <th style="min-width: 250px;">Rede/IP</th>
                                 <th style="min-width: 170px;">Status</th>
-                                <th style="min-width: 220px;">Acoes</th>
+                                <th class="no-sort text-end" style="min-width: 220px;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($logs as $log)
+                            @foreach($logs as $log)
                                 @php
                                     $location = collect([$log->city, $log->region, $log->country])->filter()->implode(' / ');
                                     $browser = trim(collect([$log->browser_name, $log->browser_version])->filter()->implode(' '));
@@ -232,7 +239,7 @@
                                     <td>
                                         <div class="fw-semibold">{{ $log->submitted_at?->format('d/m/Y H:i:s') }}</div>
                                         <small class="text-muted d-block">{{ $log->method }} {{ $log->path }}</small>
-                                        <small class="text-muted d-block">Sessao: {{ \Illuminate\Support\Str::limit($log->session_id ?: '-', 18) }}</small>
+                                        <small class="text-muted d-block">Sessão: {{ \Illuminate\Support\Str::limit($log->session_id ?: '-', 18) }}</small>
                                     </td>
                                     <td>
                                         <div class="fw-semibold">{{ $log->route_name ?: '-' }}</div>
@@ -261,7 +268,7 @@
                                         <div class="small"><strong>Navegador:</strong> {{ $browser !== '' ? $browser : '-' }}</div>
                                         <div class="small"><strong>Sistema:</strong> {{ $os !== '' ? $os : '-' }}</div>
                                         <div class="small"><strong>Fingerprint:</strong> {{ \Illuminate\Support\Str::limit($log->device_fingerprint ?: '-', 40) }}</div>
-                                        <div class="small"><strong>MAC:</strong> {{ $log->mac_address ?: 'Nao disponivel via navegador web' }}</div>
+                                        <div class="small"><strong>MAC:</strong> {{ $log->mac_address ?: 'Não disponível via navegador web' }}</div>
                                         <details class="mt-2 small">
                                             <summary>Metadados do aparelho</summary>
                                             <div class="mt-2 p-2 rounded border bg-body-tertiary">
@@ -306,7 +313,7 @@
                                             </div>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="text-end">
                                         <div class="d-grid gap-2">
                                             @if($log->ip_address)
                                                 <form method="POST" action="{{ route('admin.form-security-logs.block') }}">
@@ -378,14 +385,16 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-5">Nenhum registro encontrado para os filtros aplicados.</td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
+
+                @if($logs->isEmpty())
+                    <div class="admin-datatable-empty">
+                        Nenhum registro encontrado para os filtros aplicados.
+                    </div>
+                @endif
 
                 @if($logs->hasPages())
                     <div class="card-footer d-flex justify-content-end">

@@ -5,6 +5,8 @@
 @import 'summernote/dist/summernote-lite.min.css';
 @import 'filepond/dist/filepond.min.css';
 @import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css';
+@import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css';
+@import 'datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css';
 
 :root {
     --admin-asset-version: 20260430;
@@ -885,6 +887,79 @@ img.admin-avatar {
 
 .table > :not(caption) > * > * {
     padding: 0.95rem 1rem;
+}
+
+.admin-datatable-table {
+    width: 100% !important;
+}
+
+.admin-datatable-table.dataTable {
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+.admin-datatable-table.dataTable thead th,
+.admin-datatable-table.dataTable thead td {
+    border-bottom-color: var(--admin-border);
+    outline: 0;
+}
+
+.admin-datatable-table.dataTable > tbody > tr {
+    transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.admin-datatable-table.dataTable > tbody > tr:hover > * {
+    background-color: rgba(196, 154, 60, 0.06);
+}
+
+.admin-datatable-table.dataTable > tbody > tr.child ul.dtr-details {
+    width: 100%;
+}
+
+.admin-datatable-table.dataTable > tbody > tr.child span.dtr-title {
+    min-width: 9rem;
+    color: var(--admin-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-datatable-table.dataTable > tbody > tr.child span.dtr-data {
+    color: var(--admin-ink);
+}
+
+.admin-datatable-table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control::before,
+.admin-datatable-table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control::before {
+    border: 0;
+    border-radius: 999px;
+    background: var(--admin-primary);
+    box-shadow: 0 8px 18px rgba(196, 154, 60, 0.22);
+    color: #111318;
+    font-weight: 900;
+}
+
+.admin-datatable-empty {
+    margin: 1rem;
+    padding: 1.25rem;
+    border: 1px dashed var(--admin-border);
+    border-radius: 0.8rem;
+    background: rgba(196, 154, 60, 0.06);
+    color: var(--admin-muted);
+    text-align: center;
+    font-weight: 700;
+}
+
+.dt-container.dt-bootstrap5 {
+    color: var(--admin-ink);
+}
+
+.dt-container.dt-bootstrap5 .dt-search input,
+.dt-container.dt-bootstrap5 .dt-length select {
+    border-color: var(--admin-border);
+    border-radius: 0.62rem;
+    background-color: var(--admin-card-bg);
+    color: var(--admin-ink);
 }
 
 .table-hover > tbody > tr:hover > * {

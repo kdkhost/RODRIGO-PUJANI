@@ -5,6 +5,8 @@ import $ from 'jquery';
 import toastr from 'toastr';
 import Swal from 'sweetalert2';
 import Inputmask from 'inputmask';
+import DataTable from 'datatables.net-bs5';
+import 'datatables.net-responsive-bs5';
 import * as FilePond from 'filepond';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
@@ -743,6 +745,58 @@ const AdminUI = {
         });
     },
 
+    initDataTables(scope) {
+        scope.querySelectorAll('table[data-admin-datatable]').forEach((table) => {
+            if (table.dataset.adminDatatableReady === 'true') {
+                return;
+            }
+
+            const pageLength = Number(table.dataset.pageLength || 10);
+            const enablePaging = table.dataset.datatablePaging === 'true';
+            const enableSearch = table.dataset.datatableSearch === 'true';
+            const nonOrderableTargets = Array.from(table.querySelectorAll('thead th.no-sort'))
+                .map((header) => header.cellIndex)
+                .filter((index) => index >= 0);
+
+            new DataTable(table, {
+                responsive: true,
+                paging: enablePaging,
+                searching: enableSearch,
+                info: enablePaging,
+                ordering: table.dataset.datatableOrdering !== 'false',
+                pageLength,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                columnDefs: nonOrderableTargets.length ? [
+                    { orderable: false, targets: nonOrderableTargets },
+                ] : [],
+                language: {
+                    emptyTable: 'Nenhum registro encontrado.',
+                    info: 'Mostrando _START_ até _END_ de _TOTAL_ registros',
+                    infoEmpty: 'Mostrando 0 registros',
+                    infoFiltered: '(filtrado de _MAX_ registros)',
+                    lengthMenu: 'Mostrar _MENU_ registros',
+                    loadingRecords: 'Carregando...',
+                    processing: 'Processando...',
+                    search: 'Pesquisar:',
+                    zeroRecords: 'Nenhum registro correspondente encontrado.',
+                    paginate: {
+                        first: 'Primeiro',
+                        last: 'Último',
+                        next: 'Próximo',
+                        previous: 'Anterior',
+                    },
+                    aria: {
+                        orderable: 'Ordenar por esta coluna',
+                        orderableReverse: 'Inverter ordenação desta coluna',
+                    },
+                },
+                dom: table.dataset.datatableDom || 't',
+            });
+
+            table.dataset.adminDatatableReady = 'true';
+        });
+    },
+
     extractContactMessageId(url) {
         const match = String(url || '').match(/\/contact-messages\/(\d+)\/edit$/);
         return match ? Number(match[1]) : 0;
@@ -1471,6 +1525,7 @@ const AdminUI = {
         applyAutoPlaceholders(scope);
         this.initCharts(scope);
         this.initCalendars(scope);
+        this.initDataTables(scope);
 
         scope.querySelectorAll('[data-editor="summernote"]').forEach((element) => {
             if (element.dataset.editorReady) {

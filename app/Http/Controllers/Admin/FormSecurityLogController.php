@@ -13,9 +13,9 @@ class FormSecurityLogController extends Controller
 {
     public function index(Request $request): View
     {
-        $perPage = (int) $request->integer('per_page', 30);
-        if (! in_array($perPage, [15, 30, 50, 100], true)) {
-            $perPage = 30;
+        $perPage = (int) $request->integer('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
         }
 
         $query = FormSecurityLog::query()

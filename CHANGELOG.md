@@ -2,6 +2,16 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.14] - 2026-05-02
+
+### Adicionado
+- DataTables com tema Bootstrap/AdminLTE no painel administrativo, incluindo suporte responsivo para tabelas marcadas com `data-admin-datatable`.
+
+### Alterado
+- Auditoria de formulários em `/admin/form-security-logs` passou a usar a camada visual do DataTables sem perder a paginação do Laravel.
+- Paginação da auditoria de formulários padronizada para 10 registros por página por padrão, com opções de 10, 25, 50 e 100 registros.
+- Estilos premium para tabelas DataTables no tema claro/escuro, mantendo contraste, hover e expansão responsiva.
+
 ## [1.0.13] - 2026-05-01
 
 ### Adicionado
