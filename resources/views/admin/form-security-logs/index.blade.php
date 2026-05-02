@@ -3,39 +3,48 @@
 @section('title', 'Auditoria de formularios')
 
 @section('content')
-    <div class="content-header">
+    <div class="app-content-header admin-page-hero">
         <div class="container-fluid">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="admin-page-hero-inner">
                 <div>
-                    <h1 class="m-0">Auditoria de formularios</h1>
-                    <p class="text-muted mb-0">Registro avancado com dados de origem, dispositivo e bloqueio manual individual.</p>
+                    <div class="admin-eyebrow">Seguranca operacional</div>
+                    <h1>Auditoria de formularios</h1>
+                    <p>Rastreie tentativas de contato, login, redefinicao de senha e demais envios com bloqueio manual por origem.</p>
+                </div>
+                <div class="admin-hero-stamp">
+                    <i class="bi bi-shield-exclamation"></i>
+                    <span>Root only</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <section class="content pb-4">
+    <section class="app-content pb-4">
         <div class="container-fluid">
-            <div class="card admin-card mb-3">
-                <div class="card-body">
-                    <form method="GET" class="row g-3">
+            <div class="card admin-table-card mb-4">
+                <div class="card-body p-4">
+                    <form method="GET" class="row g-3 admin-premium-form">
                         <div class="col-md-3">
                             <label class="form-label">Rota</label>
-                            <input type="text" class="form-control" name="route" value="{{ request('route') }}" placeholder="Ex: site.contact.submit">
+                            <input type="text" class="form-control" name="route" value="{{ request('route') }}" placeholder="Ex: login ou site.contact.submit">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">IP</label>
                             <input type="text" class="form-control" name="ip" value="{{ request('ip') }}" placeholder="Ex: 200.10.10.10">
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">ID dispositivo</label>
-                            <input type="text" class="form-control" name="device_id" value="{{ request('device_id') }}" placeholder="Ex: dev_abc123">
+                            <label class="form-label">ID do dispositivo</label>
+                            <input type="text" class="form-control" name="device_id" value="{{ request('device_id') }}" placeholder="Ex: dev_xpto">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Fingerprint</label>
-                            <input type="text" class="form-control" name="fingerprint" value="{{ request('fingerprint') }}" placeholder="Hash">
+                            <input type="text" class="form-control" name="fingerprint" value="{{ request('fingerprint') }}" placeholder="Hash do navegador">
                         </div>
-                        <div class="col-md-1">
+                        <div class="col-md-3">
+                            <label class="form-label">Endereco MAC</label>
+                            <input type="text" class="form-control" name="mac_address" value="{{ request('mac_address') }}" placeholder="Quando enviado por app/cliente">
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">Status</label>
                             <select class="form-select" name="blocked">
                                 <option value="">Todos</option>
@@ -43,25 +52,71 @@
                                 <option value="0" @selected(request('blocked') === '0')>Permitido</option>
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-primary w-100">Filtrar</button>
+                        <div class="col-md-2">
+                            <label class="form-label">Regra ativa</label>
+                            <select class="form-select" name="block_type">
+                                <option value="">Todas</option>
+                                <option value="ip" @selected(request('block_type') === 'ip')>IP</option>
+                                <option value="device_id" @selected(request('block_type') === 'device_id')>Dispositivo</option>
+                                <option value="device_fingerprint" @selected(request('block_type') === 'device_fingerprint')>Fingerprint</option>
+                                <option value="mac_address" @selected(request('block_type') === 'mac_address')>MAC</option>
+                                <option value="asn" @selected(request('block_type') === 'asn')>ASN</option>
+                                <option value="user_agent" @selected(request('block_type') === 'user_agent')>User agent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Por pagina</label>
+                            <select class="form-select" name="per_page">
+                                @foreach([15, 30, 50, 100] as $option)
+                                    <option value="{{ $option }}" @selected($perPage === $option)>{{ $option }} registros</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end gap-2">
+                            <button class="btn btn-primary flex-grow-1" type="submit">
+                                <i class="bi bi-funnel me-1"></i>Filtrar
+                            </button>
+                            <a href="{{ route('admin.form-security-logs.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Limpar
+                            </a>
                         </div>
                     </form>
+
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <strong>Nota tecnica:</strong> navegadores web nao expoem o endereco MAC real da maquina. O sistema registra MAC apenas quando um cliente/app o envia explicitamente; para web o bloqueio efetivo fica por IP, ID persistente do dispositivo, fingerprint, ASN e user agent.
+                    </div>
                 </div>
             </div>
 
-            <div class="card admin-card">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div class="small text-muted">
+                    Exibindo
+                    <strong>{{ $logs->firstItem() ?? 0 }}</strong>
+                    ate
+                    <strong>{{ $logs->lastItem() ?? 0 }}</strong>
+                    de
+                    <strong>{{ $logs->total() }}</strong>
+                    registros.
+                </div>
+                @if($logs->hasPages())
+                    <div>
+                        {{ $logs->onEachSide(1)->links() }}
+                    </div>
+                @endif
+            </div>
+
+            <div class="card admin-table-card">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Data</th>
-                                <th>Rota</th>
-                                <th>Origem</th>
-                                <th>Dispositivo</th>
-                                <th>Rede/IP</th>
-                                <th>Status</th>
-                                <th>Bloqueio manual</th>
+                                <th style="min-width: 150px;">Data</th>
+                                <th style="min-width: 180px;">Rota</th>
+                                <th style="min-width: 220px;">Origem</th>
+                                <th style="min-width: 270px;">Dispositivo</th>
+                                <th style="min-width: 250px;">Rede/IP</th>
+                                <th style="min-width: 170px;">Status</th>
+                                <th style="min-width: 220px;">Acoes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -70,20 +125,32 @@
                                     $location = collect([$log->city, $log->region, $log->country])->filter()->implode(' / ');
                                     $browser = trim(collect([$log->browser_name, $log->browser_version])->filter()->implode(' '));
                                     $os = trim(collect([$log->os_name, $log->os_version])->filter()->implode(' '));
+                                    $frontDevice = is_array($log->device_metadata['front_device'] ?? null) ? $log->device_metadata['front_device'] : [];
                                 @endphp
                                 <tr>
                                     <td>
-                                        <div>{{ $log->submitted_at?->format('d/m/Y H:i:s') }}</div>
-                                        <small class="text-muted">{{ $log->method }} {{ $log->path }}</small>
+                                        <div class="fw-semibold">{{ $log->submitted_at?->format('d/m/Y H:i:s') }}</div>
+                                        <small class="text-muted d-block">{{ $log->method }} {{ $log->path }}</small>
+                                        <small class="text-muted d-block">Sessao: {{ \Illuminate\Support\Str::limit($log->session_id ?: '-', 18) }}</small>
                                     </td>
                                     <td>
                                         <div class="fw-semibold">{{ $log->route_name ?: '-' }}</div>
-                                        <small class="text-muted">{{ $log->host ?: '-' }}</small>
+                                        <small class="text-muted d-block">{{ $log->host ?: '-' }}</small>
+                                        @if(is_array($log->payload_preview) && count($log->payload_preview))
+                                            <details class="mt-2 small">
+                                                <summary>Campos enviados ({{ $log->payload_field_count }})</summary>
+                                                <div class="mt-2 p-2 rounded border bg-body-tertiary">
+                                                    @foreach($log->payload_preview as $field => $value)
+                                                        <div><strong>{{ $field }}:</strong> {{ is_scalar($value) ? $value : json_encode($value, JSON_UNESCAPED_UNICODE) }}</div>
+                                                    @endforeach
+                                                </div>
+                                            </details>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="small"><strong>Referer:</strong> {{ $log->referer ?: '-' }}</div>
                                         <div class="small"><strong>Origin:</strong> {{ $log->origin ?: '-' }}</div>
-                                        <div class="small"><strong>UA:</strong> {{ \Illuminate\Support\Str::limit($log->user_agent ?: '-', 120) }}</div>
+                                        <div class="small"><strong>UA:</strong> {{ \Illuminate\Support\Str::limit($log->user_agent ?: '-', 110) }}</div>
                                     </td>
                                     <td>
                                         <div class="small"><strong>ID:</strong> {{ $log->device_id ?: '-' }}</div>
@@ -92,8 +159,19 @@
                                         <div class="small"><strong>Modelo:</strong> {{ $log->device_model ?: '-' }}</div>
                                         <div class="small"><strong>Navegador:</strong> {{ $browser !== '' ? $browser : '-' }}</div>
                                         <div class="small"><strong>Sistema:</strong> {{ $os !== '' ? $os : '-' }}</div>
-                                        <div class="small"><strong>Fingerprint:</strong> {{ \Illuminate\Support\Str::limit($log->device_fingerprint ?: '-', 24) }}</div>
-                                        <div class="small"><strong>MAC:</strong> {{ $log->mac_address ?: 'Nao disponivel via navegador' }}</div>
+                                        <div class="small"><strong>Fingerprint:</strong> {{ \Illuminate\Support\Str::limit($log->device_fingerprint ?: '-', 40) }}</div>
+                                        <div class="small"><strong>MAC:</strong> {{ $log->mac_address ?: 'Nao disponivel via navegador web' }}</div>
+                                        <details class="mt-2 small">
+                                            <summary>Metadados do aparelho</summary>
+                                            <div class="mt-2 p-2 rounded border bg-body-tertiary">
+                                                <div><strong>Tela:</strong> {{ $frontDevice['screen'] ?? '-' }}</div>
+                                                <div><strong>Timezone:</strong> {{ $frontDevice['timezone'] ?? '-' }}</div>
+                                                <div><strong>Idioma:</strong> {{ $frontDevice['language'] ?? '-' }}</div>
+                                                <div><strong>Vendor:</strong> {{ $frontDevice['vendor'] ?? '-' }}</div>
+                                                <div><strong>Touch points:</strong> {{ $frontDevice['touch_points'] ?? '-' }}</div>
+                                                <div><strong>Rede:</strong> {{ $log->network_type ?: '-' }}</div>
+                                            </div>
+                                        </details>
                                     </td>
                                     <td>
                                         <div><strong>IP:</strong> {{ $log->ip_address ?: '-' }}</div>
@@ -107,11 +185,12 @@
                                     </td>
                                     <td>
                                         @if($log->blocked)
-                                            <span class="badge bg-danger">Bloqueado</span>
-                                            <div class="small text-muted">{{ $log->block_reason ?: '-' }}</div>
+                                            <span class="badge text-bg-danger">Bloqueado</span>
+                                            <div class="small text-muted mt-1">{{ $log->block_reason ?: '-' }}</div>
                                         @else
-                                            <span class="badge bg-success">Permitido</span>
+                                            <span class="badge text-bg-success">Permitido</span>
                                         @endif
+
                                         @if(is_array($log->threats) && count($log->threats))
                                             <ul class="small mb-0 ps-3 mt-2">
                                                 @foreach($log->threats as $threat)
@@ -119,9 +198,15 @@
                                                 @endforeach
                                             </ul>
                                         @endif
+
+                                        @if($log->block)
+                                            <div class="small text-muted mt-2">
+                                                Regra ativa: {{ $log->block->type }} / {{ \Illuminate\Support\Str::limit($log->block->value, 28) }}
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
-                                        <div class="d-grid gap-1 mb-2">
+                                        <div class="d-grid gap-2">
                                             @if($log->ip_address)
                                                 <form method="POST" action="{{ route('admin.form-security-logs.block') }}">
                                                     @csrf
@@ -131,6 +216,7 @@
                                                     <button class="btn btn-sm btn-outline-danger w-100" type="submit">Bloquear IP</button>
                                                 </form>
                                             @endif
+
                                             @if($log->device_id)
                                                 <form method="POST" action="{{ route('admin.form-security-logs.block') }}">
                                                     @csrf
@@ -140,6 +226,7 @@
                                                     <button class="btn btn-sm btn-outline-danger w-100" type="submit">Bloquear dispositivo</button>
                                                 </form>
                                             @endif
+
                                             @if($log->device_fingerprint)
                                                 <form method="POST" action="{{ route('admin.form-security-logs.block') }}">
                                                     @csrf
@@ -149,6 +236,7 @@
                                                     <button class="btn btn-sm btn-outline-danger w-100" type="submit">Bloquear fingerprint</button>
                                                 </form>
                                             @endif
+
                                             @if($log->mac_address)
                                                 <form method="POST" action="{{ route('admin.form-security-logs.block') }}">
                                                     @csrf
@@ -158,32 +246,52 @@
                                                     <button class="btn btn-sm btn-outline-danger w-100" type="submit">Bloquear MAC</button>
                                                 </form>
                                             @endif
+
+                                            @if($log->asn)
+                                                <form method="POST" action="{{ route('admin.form-security-logs.block') }}">
+                                                    @csrf
+                                                    <input type="hidden" name="type" value="asn">
+                                                    <input type="hidden" name="value" value="{{ $log->asn }}">
+                                                    <input type="hidden" name="reason" value="Bloqueio manual por ASN">
+                                                    <button class="btn btn-sm btn-outline-danger w-100" type="submit">Bloquear ASN</button>
+                                                </form>
+                                            @endif
+
+                                            @if($log->user_agent)
+                                                <form method="POST" action="{{ route('admin.form-security-logs.block') }}">
+                                                    @csrf
+                                                    <input type="hidden" name="type" value="user_agent">
+                                                    <input type="hidden" name="value" value="{{ \Illuminate\Support\Str::limit($log->user_agent, 255, '') }}">
+                                                    <input type="hidden" name="reason" value="Bloqueio manual por user agent">
+                                                    <button class="btn btn-sm btn-outline-danger w-100" type="submit">Bloquear user agent</button>
+                                                </form>
+                                            @endif
+
+                                            @if($log->block)
+                                                <form method="POST" action="{{ route('admin.form-security-logs.unblock', $log->block) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button class="btn btn-sm btn-outline-success w-100" type="submit">Desbloquear regra</button>
+                                                </form>
+                                            @endif
                                         </div>
-                                        @if($log->block)
-                                            <div class="small text-muted mb-1">Regra ativa: {{ $log->block->type }} / {{ \Illuminate\Support\Str::limit($log->block->value, 24) }}</div>
-                                            <form method="POST" action="{{ route('admin.form-security-logs.unblock', $log->block) }}">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button class="btn btn-sm btn-outline-success w-100" type="submit">Desbloquear regra</button>
-                                            </form>
-                                        @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">Nenhum registro encontrado.</td>
+                                    <td colspan="7" class="text-center text-muted py-5">Nenhum registro encontrado para os filtros aplicados.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+
                 @if($logs->hasPages())
-                    <div class="card-footer">
-                        {{ $logs->links() }}
+                    <div class="card-footer d-flex justify-content-end">
+                        {{ $logs->onEachSide(1)->links() }}
                     </div>
                 @endif
             </div>
         </div>
     </section>
 @endsection
-

@@ -193,3 +193,10 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 
 ### Observacoes
 - Integracoes de pagamento, WhatsApp/Evolution API e automacoes externas ainda precisam de implementacao dedicada antes de entrar em producao.
+# 2026-05-02
+
+## Ajustes
+
+- deixou mais explicitas as configuracoes de imagem de fundo em `/admin/auth-appearance` e `/admin/client-portal`, com previa visual e acesso direto ao arquivo atual;
+- ampliou a auditoria de formularios em `/admin/form-security-logs` com filtro por MAC, seletor de pagina, resumo paginado, metadados detalhados do dispositivo e bloqueio manual por IP, dispositivo, fingerprint, MAC, ASN e user agent;
+- passou a enriquecer automaticamente formularios `POST/PUT/PATCH/DELETE` com identificador persistente do dispositivo, tela, timezone, idioma, vendor, rede e modelo, cobrindo tambem login, redefinicao de senha e demais envios auditados.

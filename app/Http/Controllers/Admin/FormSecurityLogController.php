@@ -13,7 +13,14 @@ class FormSecurityLogController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = FormSecurityLog::query()->latest('submitted_at');
+        $perPage = (int) $request->integer('per_page', 30);
+        if (! in_array($perPage, [15, 30, 50, 100], true)) {
+            $perPage = 30;
+        }
+
+        $query = FormSecurityLog::query()
+            ->with('block')
+            ->latest('submitted_at');
 
         if ($request->filled('blocked')) {
             $query->where('blocked', $request->boolean('blocked'));
@@ -35,12 +42,17 @@ class FormSecurityLogController extends Controller
             $query->where('device_id', 'like', '%'.trim((string) $request->input('device_id')).'%');
         }
 
+        if ($request->filled('mac_address')) {
+            $query->where('mac_address', 'like', '%'.trim((string) $request->input('mac_address')).'%');
+        }
+
         if ($request->filled('block_type')) {
             $query->whereHas('block', fn ($builder) => $builder->where('type', $request->input('block_type')));
         }
 
         return view('admin.form-security-logs.index', [
-            'logs' => $query->paginate(30)->withQueryString(),
+            'logs' => $query->paginate($perPage)->withQueryString(),
+            'perPage' => $perPage,
         ]);
     }
 

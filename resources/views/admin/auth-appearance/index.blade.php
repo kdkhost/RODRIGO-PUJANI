@@ -63,21 +63,48 @@
                                 @endforeach
 
                                 <div class="col-12">
-                                    <label class="form-label">Imagem de fundo da coluna visual</label>
-                                    <input
-                                        type="file"
-                                        name="panel_background"
-                                        class="form-control"
-                                        data-filepond
-                                        data-accepted="image/png,image/jpeg,image/webp,image/svg+xml"
-                                        data-current-url="{{ $backgroundUrl }}"
-                                        data-current-name="{{ $backgroundPath !== '' ? basename($backgroundPath) : '' }}"
-                                    >
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input type="checkbox" id="remove_panel_background" name="remove_panel_background" value="1" class="form-check-input">
-                                        <label class="form-check-label" for="remove_panel_background">Remover imagem personalizada e voltar ao padrao</label>
+                                    <div class="border rounded-4 p-3 bg-body-tertiary">
+                                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                                            <div>
+                                                <label class="form-label mb-1">Imagem de fundo da coluna visual</label>
+                                                <div class="small text-muted">Arquivo usado nas telas de login, recuperacao e redefinicao de senha.</div>
+                                            </div>
+                                            @if($backgroundUrl !== '')
+                                                <a href="{{ $backgroundUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-image me-1"></i>Ver imagem atual
+                                                </a>
+                                            @endif
+                                        </div>
+
+                                        <div class="row g-3 align-items-start">
+                                            <div class="col-lg-8">
+                                                <input
+                                                    type="file"
+                                                    name="panel_background"
+                                                    class="form-control"
+                                                    data-filepond
+                                                    data-accepted="image/png,image/jpeg,image/webp,image/svg+xml"
+                                                    data-current-url="{{ $backgroundUrl }}"
+                                                    data-current-name="{{ $backgroundPath !== '' ? basename($backgroundPath) : '' }}"
+                                                >
+                                                <div class="form-check mt-3">
+                                                    <input type="checkbox" id="remove_panel_background" name="remove_panel_background" value="1" class="form-check-input">
+                                                    <label class="form-check-label" for="remove_panel_background">Remover imagem personalizada e voltar ao padrao</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-4">
+                                                <div class="small text-uppercase fw-semibold text-muted mb-2">Previa atual</div>
+                                                <div class="rounded-4 border overflow-hidden bg-dark-subtle" style="min-height: 168px;">
+                                                    @if($backgroundUrl !== '')
+                                                        <img src="{{ $backgroundUrl }}" alt="Fundo atual da tela de login" class="w-100 h-100 object-fit-cover" style="min-height: 168px;">
+                                                    @else
+                                                        <div class="d-flex align-items-center justify-content-center h-100 text-muted px-3 py-5 text-center">
+                                                            Nenhuma imagem personalizada cadastrada.
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -125,7 +152,7 @@
                             </div>
                             @if($backgroundPath !== '')
                                 <div class="mt-3 small text-muted">
-                                    Imagem atual: <a href="{{ $backgroundUrl }}" target="_blank" rel="noopener">{{ $backgroundPath }}</a>
+                                    Arquivo atual: <a href="{{ $backgroundUrl }}" target="_blank" rel="noopener">{{ $backgroundPath }}</a>
                                 </div>
                             @endif
                         </div>

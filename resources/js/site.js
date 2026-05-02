@@ -9,6 +9,7 @@ import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import {
     appendRecaptchaToken,
     applyAutoPlaceholders,
+    bindDeviceAuditFields,
     bindRecaptchaForms,
     configureToastr,
     flushPageToasts,
@@ -32,6 +33,7 @@ const SiteUI = {
         configureToastr();
         flushPageToasts();
         applyAutoPlaceholders();
+        bindDeviceAuditFields(document);
         bindRecaptchaForms(document);
         this.bindPortalTheme();
         this.initCharts();

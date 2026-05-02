@@ -16,7 +16,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
-import { applyAutoPlaceholders, configureToastr } from './shared/ui';
+import { applyAutoPlaceholders, bindDeviceAuditFields, configureToastr } from './shared/ui';
 
 window.bootstrap = bootstrap;
 window.$ = window.jQuery = $;
@@ -74,6 +74,7 @@ const AdminUI = {
         this.bindTourGuide();
         this.initNotificationCenter();
         this.initPlugins(document);
+        bindDeviceAuditFields(document);
         this.initAjaxTables(document);
     },
 

@@ -329,3 +329,116 @@ export function bindAuthRememberAndAutofillControl(scope = document) {
         }
     });
 }
+
+function randomDeviceToken() {
+    if (window.crypto?.randomUUID) {
+        return window.crypto.randomUUID();
+    }
+
+    return `dev-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function resolvePersistentDeviceId() {
+    const storageKey = 'pujani-device-id';
+
+    try {
+        let value = window.localStorage.getItem(storageKey);
+
+        if (!value) {
+            value = randomDeviceToken();
+            window.localStorage.setItem(storageKey, value);
+        }
+
+        return value;
+    } catch (error) {
+        return randomDeviceToken();
+    }
+}
+
+function ensureHiddenField(form, name) {
+    let field = form.querySelector(`input[name="${name}"]`);
+
+    if (!field) {
+        field = document.createElement('input');
+        field.type = 'hidden';
+        field.name = name;
+        form.appendChild(field);
+    }
+
+    return field;
+}
+
+async function collectDeviceAuditContext() {
+    const uaData = navigator.userAgentData || null;
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
+    let platform = navigator.platform || '';
+    let model = '';
+
+    if (uaData?.platform) {
+        platform = uaData.platform;
+    }
+
+    if (uaData?.getHighEntropyValues) {
+        try {
+            const entropy = await uaData.getHighEntropyValues(['model', 'platformVersion']);
+            model = entropy?.model || '';
+        } catch (error) {
+            // Alguns navegadores bloqueiam high entropy values sem permissao adicional.
+        }
+    }
+
+    return {
+        id: resolvePersistentDeviceId(),
+        screen: `${window.screen?.width || 0}x${window.screen?.height || 0}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        language: navigator.language || '',
+        platform,
+        touchPoints: String(navigator.maxTouchPoints || 0),
+        vendor: navigator.vendor || '',
+        network: connection?.effectiveType || connection?.type || '',
+        model,
+        mac: '',
+    };
+}
+
+export function bindDeviceAuditFields(scope = document) {
+    const forms = Array.from(scope.querySelectorAll('form'));
+
+    if (!forms.length) {
+        return;
+    }
+
+    forms.forEach((form) => {
+        if (form.dataset.deviceAuditReady === 'true') {
+            return;
+        }
+
+        const method = String(form.getAttribute('method') || 'GET').toUpperCase();
+
+        if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+            return;
+        }
+
+        const syncFields = async () => {
+            const device = await collectDeviceAuditContext();
+
+            ensureHiddenField(form, '_device_id').value = device.id;
+            ensureHiddenField(form, '_device_screen').value = device.screen;
+            ensureHiddenField(form, '_device_timezone').value = device.timezone;
+            ensureHiddenField(form, '_device_language').value = device.language;
+            ensureHiddenField(form, '_device_platform').value = device.platform;
+            ensureHiddenField(form, '_device_touch_points').value = device.touchPoints;
+            ensureHiddenField(form, '_device_vendor').value = device.vendor;
+            ensureHiddenField(form, '_device_network').value = device.network;
+            ensureHiddenField(form, '_device_model').value = device.model;
+            ensureHiddenField(form, '_device_mac').value = device.mac;
+        };
+
+        syncFields().catch(() => null);
+        form.addEventListener('submit', () => {
+            syncFields().catch(() => null);
+        });
+
+        form.dataset.deviceAuditReady = 'true';
+    });
+}

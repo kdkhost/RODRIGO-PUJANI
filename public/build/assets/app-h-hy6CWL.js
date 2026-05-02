@@ -1,1 +1,0 @@
-import{c as o,f as t,a as e,b as s}from"./ui-K-bnh-yZ.js";import{m as a}from"./vendor-core-CNVHzkfz.js";import"./vendor-admin-ui-Bf8_ubM0.js";window.Alpine=a;a.start();document.addEventListener("DOMContentLoaded",()=>{o(),t(),e(),s(document)});
