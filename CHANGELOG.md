@@ -200,3 +200,4 @@ Todas as mudancas relevantes deste projeto sao registradas aqui.
 - deixou mais explicitas as configuracoes de imagem de fundo em `/admin/auth-appearance` e `/admin/client-portal`, com previa visual e acesso direto ao arquivo atual;
 - ampliou a auditoria de formularios em `/admin/form-security-logs` com filtro por MAC, seletor de pagina, resumo paginado, metadados detalhados do dispositivo e bloqueio manual por IP, dispositivo, fingerprint, MAC, ASN e user agent;
 - passou a enriquecer automaticamente formularios `POST/PUT/PATCH/DELETE` com identificador persistente do dispositivo, tela, timezone, idioma, vendor, rede e modelo, cobrindo tambem login, redefinicao de senha e demais envios auditados.
+- separou os metadados ocultos do dispositivo do preview funcional do payload, mantendo a coleta em segundo plano apenas no canal interno de auditoria.

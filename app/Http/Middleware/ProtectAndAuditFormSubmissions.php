@@ -25,7 +25,7 @@ class ProtectAndAuditFormSubmissions
             return $next($request);
         }
 
-        $rawPayload = $request->except(['password', 'password_confirmation', '_token', 'g-recaptcha-response', 'recaptcha_token']);
+        $rawPayload = $this->sanitizablePayload($request);
         $sanitized = InputSecuritySanitizer::sanitize(is_array($rawPayload) ? $rawPayload : []);
         $request->merge($sanitized['data']);
 
@@ -78,6 +78,30 @@ class ProtectAndAuditFormSubmissions
         }
 
         return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function sanitizablePayload(Request $request): array
+    {
+        $excluded = [
+            'password',
+            'password_confirmation',
+            '_token',
+            'g-recaptcha-response',
+            'recaptcha_token',
+        ];
+
+        $payload = $request->except($excluded);
+
+        foreach (array_keys($payload) as $key) {
+            if (str_starts_with((string) $key, '_device_')) {
+                unset($payload[$key]);
+            }
+        }
+
+        return is_array($payload) ? $payload : [];
     }
 
     /**
