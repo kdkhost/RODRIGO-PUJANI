@@ -12,6 +12,11 @@ class AddSecurityHeaders
     {
         $response = $next($request);
 
+        $contentType = (string) $response->headers->get('Content-Type', '');
+        if (str_starts_with(strtolower($contentType), 'text/html')) {
+            $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
+        }
+
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), geolocation=(), microphone=()');

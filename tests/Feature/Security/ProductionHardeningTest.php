@@ -28,11 +28,21 @@ class ProductionHardeningTest extends TestCase
     {
         $this->get('/login')
             ->assertOk()
+            ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
             ->assertHeader('X-Content-Type-Options', 'nosniff')
             ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
             ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
             ->assertHeader('Permissions-Policy', 'camera=(), geolocation=(), microphone=()')
             ->assertHeader('Content-Security-Policy-Report-Only');
+    }
+
+    public function test_site_layout_uses_encoding_safe_testimonial_quote(): void
+    {
+        $layout = file_get_contents(resource_path('views/site/layouts/app.blade.php'));
+        $mojibakeQuote = "\u{00E2}\u{20AC}\u{0153}";
+
+        $this->assertStringContainsString("content:'\\201C'", $layout);
+        $this->assertStringNotContainsString("content:'{$mojibakeQuote}'", $layout);
     }
 
     public function test_environment_file_is_not_available_through_system_file_manager(): void

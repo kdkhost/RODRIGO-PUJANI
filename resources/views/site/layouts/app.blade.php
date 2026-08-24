@@ -199,7 +199,7 @@
         .area-icon{width:48px;height:48px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:border-color .3s,background .3s}.card-glass:hover .area-icon{border-color:var(--gold);background:rgba(196,154,60,0.1)}
         .team-card .overlay{opacity:0;transition:opacity .4s}.team-card:hover .overlay{opacity:1}
         .timeline-dot{width:10px;height:10px;border:2px solid var(--gold);border-radius:50%;background:var(--ink);flex-shrink:0}
-        .testimonial-card{position:relative}.testimonial-card::before{content:'“';font-family:'Cormorant Garamond',serif;font-size:6rem;line-height:1;color:var(--gold);opacity:.15;position:absolute;top:-10px;left:16px}
+        .testimonial-card{position:relative}.testimonial-card::before{content:'\201C';font-family:'Cormorant Garamond',serif;font-size:3.5rem;line-height:1;color:var(--gold);opacity:.12;position:absolute;top:12px;right:20px;left:auto;pointer-events:none}
         nav{position:fixed;top:0;left:0;right:0;z-index:1000;transition:background .4s,backdrop-filter .4s,border-color .4s}
         nav.scrolled{background:rgba(11,12,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
         .nav-link{position:relative;letter-spacing:.12em;text-transform:uppercase;font-size:.72rem;font-weight:500;color:rgba(240,233,220,.65);transition:color .3s}
