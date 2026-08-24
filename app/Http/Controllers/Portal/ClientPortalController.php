@@ -8,7 +8,9 @@ use App\Models\LegalCase;
 use App\Models\LegalDocument;
 use App\Models\PortalMessage;
 use App\Services\RecaptchaService;
+use App\Services\LegalDocumentStorage;
 use App\Support\PublicUpload;
+use App\Support\HtmlContentSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -285,8 +287,7 @@ class ClientPortalController extends Controller
             'message' => ['required', 'string', 'max:6000'],
         ]);
 
-        $safeMessage = trim((string) ($validated['message'] ?? ''));
-        $safeMessage = strip_tags($safeMessage, '<p><br><strong><b><em><i><u><ul><ol><li><blockquote><a>');
+        $safeMessage = app(HtmlContentSanitizer::class)->message(trim((string) ($validated['message'] ?? '')));
         if ($safeMessage === '' || $safeMessage === '<p><br></p>') {
             return redirect()
                 ->route('portal.messages.index')
@@ -437,7 +438,7 @@ class ClientPortalController extends Controller
                 : 'Foto de perfil atualizada com sucesso. A edicao cadastral depende de liberacao do escritorio.');
     }
 
-    public function downloadDocument(Request $request, string $document): BinaryFileResponse
+    public function downloadDocument(Request $request, string $document, LegalDocumentStorage $storage): BinaryFileResponse
     {
         $client = $this->portalClient($request);
 
@@ -445,10 +446,19 @@ class ClientPortalController extends Controller
             ->whereKey($document)
             ->firstOrFail();
 
-        $path = public_path(ltrim((string) $legalDocument->path, '/'));
-        abort_unless(is_file($path), 404);
+        $path = $storage->absolutePath($legalDocument);
+        abort_unless($path, 404);
 
-        return response()->download($path, $legalDocument->original_name ?: basename($path));
+        activity_log('portal_documents', 'downloaded', $legalDocument, [
+            'client_id' => $client->id,
+            'disk' => $legalDocument->disk,
+        ], 'Documento compartilhado baixado pelo cliente.');
+
+        return response()->download(
+            $path,
+            $storage->safeDownloadName($legalDocument->original_name ?: $legalDocument->file_name),
+            ['X-Content-Type-Options' => 'nosniff']
+        );
     }
 
     public function logout(Request $request): RedirectResponse

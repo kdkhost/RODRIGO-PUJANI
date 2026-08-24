@@ -171,7 +171,7 @@
             margin-bottom: 0;
         }
 
-        {!! $theme['custom_css'] !!}
+        {!! safe_css($theme['custom_css']) !!}
 
         @media only screen and (max-width: 640px) {
             .system-mail-shell {
@@ -214,14 +214,14 @@
             </div>
             <div class="system-mail-body">
                 @if(!empty($header))
-                    <div class="system-mail-header">{!! $header !!}</div>
+                    <div class="system-mail-header">{!! safe_html($header) !!}</div>
                 @endif
 
                 @if(!empty($header) && !empty($body))
                     <div class="system-mail-divider"></div>
                 @endif
 
-                <div class="system-mail-content">{!! $body !!}</div>
+                <div class="system-mail-content">{!! safe_html($body) !!}</div>
 
                 @if(!empty($actionUrl))
                     <div class="system-mail-action">
@@ -230,7 +230,7 @@
                 @endif
 
                 @if(!empty($footer))
-                    <div class="system-mail-footer">{!! $footer !!}</div>
+                    <div class="system-mail-footer">{!! safe_html($footer) !!}</div>
                 @endif
             </div>
         </div>

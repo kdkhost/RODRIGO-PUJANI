@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\MailTemplate;
 use App\Models\Setting;
+use App\Support\CssContentSanitizer;
+use App\Support\HtmlContentSanitizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -90,6 +92,11 @@ class MailTemplateController extends AdminCrudController
         $validated['slug'] = Str::slug((string) $validated['slug']);
         $validated += $this->booleanData($request, ['show_logo', 'is_active']);
         $validated['is_default'] = filled($validated['system_key'] ?? null);
+        $html = app(HtmlContentSanitizer::class);
+        foreach (['header_html', 'body_html', 'footer_html'] as $field) {
+            $validated[$field] = $html->richText($validated[$field] ?? '');
+        }
+        $validated['custom_css'] = app(CssContentSanitizer::class)->sanitize($validated['custom_css'] ?? '');
 
         return $validated;
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Page;
 use App\Models\PageSection;
+use App\Support\HtmlContentSanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -57,6 +58,9 @@ class PageSectionController extends AdminCrudController
     protected function mutateData(array $validated, Request $request, ?Model $record = null): array
     {
         $validated += $this->booleanData($request, ['is_active']);
+        $sanitizer = app(HtmlContentSanitizer::class);
+        $validated['title'] = $sanitizer->richText($validated['title'] ?? '');
+        $validated['content'] = $sanitizer->richText($validated['content'] ?? '');
         $validated['data'] = blank($request->input('data_json'))
             ? null
             : json_decode((string) $request->input('data_json'), true);

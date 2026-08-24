@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Page;
+use App\Support\HtmlContentSanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -66,6 +67,7 @@ class PageController extends AdminCrudController
         );
 
         $validated += $this->booleanData($request, ['is_home', 'show_in_menu']);
+        $validated['body'] = app(HtmlContentSanitizer::class)->richText($validated['body'] ?? '');
         $validated['cover_path'] = $this->storeMediaFile($request, 'cover_image', 'pages', $record?->cover_path);
 
         return $validated;

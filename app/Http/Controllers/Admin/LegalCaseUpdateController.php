@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalCaseUpdate;
+use App\Support\HtmlContentSanitizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -98,6 +99,7 @@ class LegalCaseUpdateController extends AdminCrudController
 
         $validated['client_id'] = $legalCase->client_id;
         $validated['created_by'] ??= $record?->created_by ?: $request->user()?->id;
+        $validated['body'] = app(HtmlContentSanitizer::class)->richText($validated['body'] ?? '');
         $validated += $this->booleanData($request, ['is_visible_to_client']);
 
         return $validated;

@@ -7,7 +7,7 @@
         <div class="text-center mb-16">
             <div class="section-label aos mb-4 inline-block">— Profissionais de Alto Nível</div>
             <h2 class="font-display leading-tight aos delay-100" style="font-size:clamp(2.2rem,5vw,4rem);font-weight:300;">
-                {!! $section?->title ?: 'Nossa <span class="text-gold-gradient font-semibold">Equipe</span>' !!}
+                {!! safe_html($section?->title ?: 'Nossa <span class="text-gold-gradient font-semibold">Equipe</span>') !!}
             </h2>
             @if($section?->subtitle)
                 <p class="text-cream/40 max-w-lg mx-auto mt-4 aos delay-200">{{ $section->subtitle }}</p>
@@ -44,7 +44,7 @@
                         <div class="overlay absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style="background:rgba(11,12,16,0.92);border:1px solid rgba(196,154,60,0.3);">
                             <div class="font-display text-2xl font-semibold text-cream/90 mb-1">{{ $member->name }}</div>
                             <div class="text-xs text-gold/60 tracking-widest uppercase mb-4">{{ $member->role }}</div>
-                            <p class="text-xs text-cream/50 leading-relaxed mb-5">{!! strip_tags($member->bio) !!}</p>
+                            <p class="text-xs text-cream/50 leading-relaxed mb-5">{{ strip_tags($member->bio) }}</p>
                             <div class="flex gap-3 justify-center">
                                 @if($member->linkedin_url)
                                     <a href="{{ $member->linkedin_url }}" target="_blank" rel="noopener" class="w-8 h-8 border border-gold/30 flex items-center justify-center text-gold/60 hover:border-gold hover:text-gold transition-colors">

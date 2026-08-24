@@ -25,7 +25,7 @@
             </div>
 
             <div class="portal-rich-text">
-                {!! $legalCase->portal_summary ?: ($legalCase->summary ?: '<p>O escritório ainda não publicou um resumo específico para este processo.</p>') !!}
+                {!! safe_html($legalCase->portal_summary ?: ($legalCase->summary ?: '<p>O escritório ainda não publicou um resumo específico para este processo.</p>')) !!}
             </div>
 
             <dl class="portal-case-meta portal-case-meta-wide">
@@ -94,7 +94,7 @@
                             <small>{{ $update->occurred_at?->format('d/m/Y H:i') }}</small>
                         </div>
                         @if(filled($update->body))
-                            <div class="portal-rich-text portal-rich-text-sm">{!! $update->body !!}</div>
+                            <div class="portal-rich-text portal-rich-text-sm">{!! safe_html($update->body) !!}</div>
                         @endif
                     </div>
                 </article>

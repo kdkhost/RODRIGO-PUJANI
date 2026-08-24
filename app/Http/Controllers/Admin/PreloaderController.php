@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Support\PublicUpload;
+use App\Support\CssContentSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -63,7 +64,7 @@ class PreloaderController extends Controller
             'preloader.accent_color' => $validated['accent_color'],
             'preloader.text_color' => $validated['text_color'],
             'preloader.min_duration' => (string) $validated['min_duration'],
-            'preloader.custom_css' => $validated['custom_css'] ?? '',
+            'preloader.custom_css' => app(CssContentSanitizer::class)->sanitize($validated['custom_css'] ?? ''),
         ];
 
         $currentLogo = (string) setting('preloader.logo_path', '');

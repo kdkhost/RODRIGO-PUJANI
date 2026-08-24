@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\CssContentSanitizer;
+use App\Support\HtmlContentSanitizer;
+
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use App\Models\Client;
@@ -418,12 +421,12 @@ class SystemSettingsController extends Controller
                 'mail.password' => trim((string) ($validated['mail_password'] ?? $mailConfig['password'] ?? '')),
                 'mail.from_address' => trim((string) ($validated['mail_from_address'] ?? $mailConfig['from_address'] ?? '')),
                 'mail.from_name' => trim((string) ($validated['mail_from_name'] ?? $mailConfig['from_name'] ?? '')),
-                'mail.template_header' => trim((string) ($validated['mail_template_header'] ?? $mailConfig['template_header'] ?? '')),
-                'mail.template_footer' => trim((string) ($validated['mail_template_footer'] ?? $mailConfig['template_footer'] ?? '')),
+                'mail.template_header' => app(HtmlContentSanitizer::class)->richText($validated['mail_template_header'] ?? $mailConfig['template_header'] ?? ''),
+                'mail.template_footer' => app(HtmlContentSanitizer::class)->richText($validated['mail_template_footer'] ?? $mailConfig['template_footer'] ?? ''),
                 'mail.template_reset_subject' => trim((string) ($validated['mail_template_reset_subject'] ?? $mailConfig['template_reset_subject'] ?? 'Redefinicao de senha')),
-                'mail.template_reset_body' => trim((string) ($validated['mail_template_reset_body'] ?? $mailConfig['template_reset_body'] ?? 'Ola, {{name}}. Use o botao abaixo para redefinir sua senha.')),
+                'mail.template_reset_body' => app(HtmlContentSanitizer::class)->richText($validated['mail_template_reset_body'] ?? $mailConfig['template_reset_body'] ?? 'Olá, {{name}}. Use o botão abaixo para redefinir sua senha.'),
                 'mail.template_generic_subject' => trim((string) ($validated['mail_template_generic_subject'] ?? $mailConfig['template_generic_subject'] ?? 'Notificacao do sistema')),
-                'mail.template_generic_body' => trim((string) ($validated['mail_template_generic_body'] ?? $mailConfig['template_generic_body'] ?? 'Ola, {{name}}. Esta e uma mensagem automatica do sistema.')),
+                'mail.template_generic_body' => app(HtmlContentSanitizer::class)->richText($validated['mail_template_generic_body'] ?? $mailConfig['template_generic_body'] ?? 'Olá, {{name}}. Esta é uma mensagem automática do sistema.'),
                 'mail.template_show_logo' => $request->boolean('mail_template_show_logo') ? '1' : '0',
                 'mail.template_font_family' => trim((string) ($validated['mail_template_font_family'] ?? $mailTheme['font_family'] ?? 'Segoe UI, Arial, sans-serif')),
                 'mail.template_layout' => trim((string) ($validated['mail_template_layout'] ?? $mailTheme['layout'] ?? 'premium')),
@@ -436,7 +439,7 @@ class SystemSettingsController extends Controller
                 'mail.template_border_color' => strtoupper((string) ($validated['mail_template_border_color'] ?? $mailTheme['border_color'] ?? '#e5e7ef')),
                 'mail.template_button_background_color' => strtoupper((string) ($validated['mail_template_button_background_color'] ?? $mailTheme['button_background_color'] ?? '#c49a3c')),
                 'mail.template_button_text_color' => strtoupper((string) ($validated['mail_template_button_text_color'] ?? $mailTheme['button_text_color'] ?? '#10131a')),
-                'mail.template_custom_css' => trim((string) ($validated['mail_template_custom_css'] ?? $mailTheme['custom_css'] ?? '')),
+                'mail.template_custom_css' => app(CssContentSanitizer::class)->sanitize($validated['mail_template_custom_css'] ?? $mailTheme['custom_css'] ?? ''),
             ],
             'support' => [
                 'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',

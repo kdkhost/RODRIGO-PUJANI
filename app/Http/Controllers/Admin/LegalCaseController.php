@@ -7,6 +7,7 @@ use App\Models\LegalCase;
 use App\Models\User;
 use App\Services\LegalCaseDataJudSyncService;
 use App\Services\LegalCaseDjenSyncService;
+use App\Support\HtmlContentSanitizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -150,6 +151,10 @@ class LegalCaseController extends AdminCrudController
         $validated['tribunal_alias'] = filled($validated['tribunal_alias'] ?? null)
             ? strtolower(trim((string) $validated['tribunal_alias']))
             : null;
+        $sanitizer = app(HtmlContentSanitizer::class);
+        foreach (['summary', 'strategy_notes', 'portal_summary'] as $field) {
+            $validated[$field] = $sanitizer->richText($validated[$field] ?? '');
+        }
 
         if (! $request->user()?->canViewAllLegalOperations()) {
             $validated['primary_lawyer_id'] = $request->user()->id;

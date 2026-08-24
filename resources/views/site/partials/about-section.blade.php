@@ -12,7 +12,7 @@
                     {{ $section?->title ?: '"O direito não é apenas uma profissão — é um compromisso com a justiça e com as pessoas."' }}
                 </blockquote>
                 <div class="text-cream/50 leading-relaxed mb-10 aos delay-200">
-                    {!! $section?->content ?: ($page->body ?: '<p>Fundado com a missão de democratizar o acesso à advocacia de alto nível, o escritório Pujani Advogados reúne profissionais especializados com formação nas melhores instituições do país.</p>') !!}
+                    {!! safe_html($section?->content ?: ($page->body ?: '<p>Fundado com a missão de democratizar o acesso à advocacia de alto nível, o escritório Pujani Advogados reúne profissionais especializados com formação nas melhores instituições do país.</p>')) !!}
                 </div>
 
                 <div class="space-y-6 aos delay-300">

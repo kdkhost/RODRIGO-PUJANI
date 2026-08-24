@@ -83,7 +83,7 @@
                             @endif
                         </span>
                         <div class="portal-rich-text portal-rich-text-sm">
-                            {!! $message->message !!}
+                            {!! safe_html($message->message, 'message') !!}
                         </div>
                     </div>
                 </article>

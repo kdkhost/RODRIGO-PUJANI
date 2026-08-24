@@ -75,5 +75,5 @@
 @endif
 
 @if(! empty($preloader['custom_css']))
-    <style>{!! $preloader['custom_css'] !!}</style>
+    <style>{!! safe_css($preloader['custom_css']) !!}</style>
 @endif

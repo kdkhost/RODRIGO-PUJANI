@@ -16,10 +16,10 @@
             <div>
                 <div class="section-label aos mb-6">— Fale Conosco</div>
                 <h2 class="font-display leading-tight mb-6 aos delay-100" style="font-size:clamp(2.2rem,5vw,4rem);font-weight:300;">
-                    {!! $section?->title ?: 'Inicie sua<br><span class="text-gold-gradient font-semibold">jornada jurídica</span>' !!}
+                    {!! safe_html($section?->title ?: 'Inicie sua<br><span class="text-gold-gradient font-semibold">jornada jurídica</span>') !!}
                 </h2>
                 <div class="text-cream/50 leading-relaxed mb-10 aos delay-200 max-w-md">
-                    {!! $section?->content ?: 'Agende sua primeira consulta sem compromisso. Nossa equipe analisará seu caso e apresentará o melhor caminho jurídico para você.' !!}
+                    {!! safe_html($section?->content ?: 'Agende sua primeira consulta sem compromisso. Nossa equipe analisará seu caso e apresentará o melhor caminho jurídico para você.') !!}
                 </div>
 
                 <div class="space-y-6 aos delay-300">
@@ -38,7 +38,7 @@
                             </div>
                             <div>
                                 <div class="text-xs text-gold/50 tracking-widest uppercase mb-1">{{ $contactItem['label'] }}</div>
-                                <div class="text-cream/70 text-sm">{!! $contactItem['value'] !!}</div>
+                                <div class="text-cream/70 text-sm">{!! safe_html($contactItem['value'], 'message') !!}</div>
                             </div>
                         </div>
                     @endforeach

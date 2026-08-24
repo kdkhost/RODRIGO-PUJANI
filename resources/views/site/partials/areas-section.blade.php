@@ -8,7 +8,7 @@
         <div class="text-center mb-16">
             <div class="section-label aos mb-4 inline-block">— Expertise Jurídica</div>
             <h2 class="font-display leading-tight aos delay-100" style="font-size:clamp(2.2rem,5vw,4rem);font-weight:300;">
-                {!! $section?->title ?: 'Áreas de <span class="text-gold-gradient font-semibold">Atuação</span>' !!}
+                {!! safe_html($section?->title ?: 'Áreas de <span class="text-gold-gradient font-semibold">Atuação</span>') !!}
             </h2>
             <p class="text-cream/40 max-w-lg mx-auto mt-4 aos delay-200">{{ $section?->subtitle ?: 'Cobertura jurídica abrangente com especialistas dedicados em cada área do direito brasileiro.' }}</p>
         </div>

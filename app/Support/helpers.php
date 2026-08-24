@@ -8,6 +8,20 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
+if (! function_exists('safe_html')) {
+    function safe_html(?string $html, string $profile = 'rich'): string
+    {
+        return app(\App\Support\HtmlContentSanitizer::class)->sanitize($html, $profile);
+    }
+}
+
+if (! function_exists('safe_css')) {
+    function safe_css(?string $css): string
+    {
+        return app(\App\Support\CssContentSanitizer::class)->sanitize($css);
+    }
+}
+
 if (! function_exists('setting')) {
     function setting(string $key, mixed $default = null): mixed
     {
