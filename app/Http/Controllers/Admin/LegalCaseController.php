@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\User;
 use App\Services\LegalCaseDataJudSyncService;
+use App\Services\LegalCaseDjenSyncService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -188,6 +189,26 @@ class LegalCaseController extends AdminCrudController
 
         return response()->json([
             'message' => "Sincronização concluída. {$result['created']} andamento(s) novo(s) e {$result['updated']} atualizado(s).",
+            'tableTarget' => '#admin-resource-table',
+            'closeModal' => false,
+        ]);
+    }
+
+    public function syncDjen(string $record, Request $request, LegalCaseDjenSyncService $service): JsonResponse
+    {
+        /** @var LegalCase $legalCase */
+        $legalCase = $this->resolveRecord($record);
+
+        try {
+            $result = $service->sync($legalCase, $request->user()?->id);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        activity_log('legal_cases', 'synced_djen', $legalCase, $result, 'Comunicações sincronizadas com o DJEN.');
+
+        return response()->json([
+            'message' => "DJEN sincronizado. {$result['created']} comunicação(ões) nova(s) e {$result['updated']} atualizada(s).",
             'tableTarget' => '#admin-resource-table',
             'closeModal' => false,
         ]);

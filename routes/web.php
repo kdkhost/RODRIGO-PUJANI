@@ -192,6 +192,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware('permission:legal-cases.manage')
         ->post('legal-cases/{record}/sync-datajud', [LegalCaseController::class, 'syncDataJud'])
         ->name('legal-cases.sync-datajud');
+    Route::middleware('permission:legal-cases.manage')
+        ->post('legal-cases/{record}/sync-djen', [LegalCaseController::class, 'syncDjen'])
+        ->name('legal-cases.sync-djen');
     $crud('legal-case-updates', 'legal-case-updates', LegalCaseUpdateController::class, 'legal-case-updates.manage');
     $crud('legal-tasks', 'legal-tasks', LegalTaskController::class, 'legal-tasks.manage');
     $crud('legal-documents', 'legal-documents', LegalDocumentController::class, 'legal-documents.manage');

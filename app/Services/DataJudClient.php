@@ -18,7 +18,7 @@ class DataJudClient
             ->toString();
         $normalizedProcessNumber = preg_replace('/\D+/', '', $processNumber);
 
-        if ($alias === '' || blank($normalizedProcessNumber)) {
+        if (preg_match('/^[a-z0-9-]+$/', $alias) !== 1 || strlen((string) $normalizedProcessNumber) !== 20) {
             throw new RuntimeException('Informe o alias do tribunal e o número CNJ do processo.');
         }
 
@@ -28,7 +28,9 @@ class DataJudClient
             throw new RuntimeException('Não foi possível obter a chave pública atual do DataJud.');
         }
 
-        $response = Http::timeout(20)
+        $response = Http::connectTimeout(5)
+            ->timeout(20)
+            ->retry(2, 500, throw: false)
             ->acceptJson()
             ->withHeaders([
                 'Authorization' => 'APIKey '.$apiKey,
@@ -55,17 +57,17 @@ class DataJudClient
         $override = trim((string) setting('portal.datajud_api_key', ''));
 
         if ($override !== '') {
-            return $override;
+            return preg_replace('/^Authorization:\s*APIKey\s+/i', '', $override);
         }
 
         return Cache::remember('portal.datajud.public_key', now()->addHours(12), function (): ?string {
-            $response = Http::timeout(15)->get('https://datajud-wiki.cnj.jus.br/api-publica/acesso/');
+            $response = Http::connectTimeout(5)->timeout(15)->retry(2, 500, throw: false)->get('https://datajud-wiki.cnj.jus.br/api-publica/acesso/');
 
             if (! $response->ok()) {
                 return null;
             }
 
-            if (preg_match('/Authorization:\s*APIKey\s+([A-Za-z0-9=:_\-]+)/', $response->body(), $matches) !== 1) {
+            if (preg_match('/Authorization:\s*APIKey\s+([A-Za-z0-9+\/=:_\-]+)/', $response->body(), $matches) !== 1) {
                 return null;
             }
 

@@ -47,6 +47,14 @@
                                     </button>
                                 </form>
                             @endif
+                            @if($item->process_number)
+                                <form action="{{ route('admin.legal-cases.sync-djen', $item->id) }}" method="POST" data-ajax-form class="d-inline">
+                                    @csrf
+                                    <button class="btn btn-sm btn-outline-info" type="submit" data-confirm-submit="true" data-confirm-title="Consultar o DJEN?" data-confirm-text="As comunicações públicas deste processo serão importadas para o histórico do caso.">
+                                        DJEN
+                                    </button>
+                                </form>
+                            @endif
                             <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>
                             <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button>
                         </div>
