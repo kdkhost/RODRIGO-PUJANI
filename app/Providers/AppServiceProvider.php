@@ -7,7 +7,9 @@ use App\Models\Setting;
 use App\Models\TeamMember;
 use App\Services\InstallerService;
 use App\Contracts\LegalDocumentScannerInterface;
+use App\Contracts\DocumentSignatureProviderInterface;
 use App\Services\NullLegalDocumentScanner;
+use App\Services\InternalElectronicSignatureProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(LegalDocumentScannerInterface::class, NullLegalDocumentScanner::class);
+        $this->app->bind(DocumentSignatureProviderInterface::class, InternalElectronicSignatureProvider::class);
     }
 
     /**

@@ -42,6 +42,12 @@ class PermissionsSeeder extends Seeder
             'client-portal.manage',
             'preloader.manage',
             'impersonate.users',
+            'signature-requests.view',
+            'signature-requests.create',
+            'signature-requests.manage',
+            'signature-requests.cancel',
+            'signature-requests.download',
+            'signature-requests.audit',
         ];
 
         foreach ($permissions as $name) {
