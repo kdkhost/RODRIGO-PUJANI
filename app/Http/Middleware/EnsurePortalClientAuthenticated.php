@@ -24,7 +24,8 @@ class EnsurePortalClientAuthenticated
             ->first();
 
         if (! $client) {
-            $request->session()->forget('portal_client_id');
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             return redirect()
                 ->route('portal.login')

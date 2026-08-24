@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -54,6 +55,25 @@ class Client extends Model
             'portal_access_code_updated_at' => 'datetime',
             'portal_last_login_at' => 'datetime',
         ];
+    }
+
+    protected function documentNumber(): Attribute
+    {
+        return Attribute::make(
+            set: function (?string $value): array {
+                $normalized = self::normalizeDocumentNumber($value);
+
+                return [
+                    'document_number' => $value,
+                    'document_number_normalized' => $normalized !== '' ? $normalized : null,
+                ];
+            },
+        );
+    }
+
+    public static function normalizeDocumentNumber(?string $value): string
+    {
+        return (string) preg_replace('/\D+/', '', (string) $value);
     }
 
     public function assignedLawyer(): BelongsTo

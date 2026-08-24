@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -91,15 +92,28 @@ class PermissionsSeeder extends Seeder
             'legal-documents.manage',
         ]);
 
-        $admin = User::query()->updateOrCreate(
+        $configuredPassword = env('APP_ADMIN_PASSWORD');
+        $admin = User::query()->firstOrCreate(
             ['email' => env('APP_ADMIN_EMAIL', 'admin@pujani.adv.br')],
             [
                 'name' => env('APP_ADMIN_NAME', 'Administrador Pujani'),
-                'password' => Hash::make(env('APP_ADMIN_PASSWORD', 'Admin@12345')),
+                'password' => Hash::make(filled($configuredPassword) ? (string) $configuredPassword : Str::password(32)),
                 'timezone' => 'America/Sao_Paulo',
                 'is_active' => true,
             ]
         );
+
+        $admin->forceFill([
+            'name' => env('APP_ADMIN_NAME', 'Administrador Pujani'),
+            'timezone' => 'America/Sao_Paulo',
+            'is_active' => true,
+        ]);
+
+        if (filled($configuredPassword)) {
+            $admin->password = Hash::make((string) $configuredPassword);
+        }
+
+        $admin->save();
 
         $admin->syncRoles([$superAdmin->name]);
 

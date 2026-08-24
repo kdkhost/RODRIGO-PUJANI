@@ -16,6 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -42,21 +44,37 @@ class ClientPortalController extends Controller
 
         $recaptcha->validateOrFail($request, 'portal_login');
 
-        $documentDigits = preg_replace('/\D+/', '', $data['document_number']);
+        $documentDigits = Client::normalizeDocumentNumber($data['document_number']);
+        $attemptKey = $this->portalLoginRateKey($request, $documentDigits);
+        $documentKey = 'portal-login:document:'.hash('sha256', $documentDigits);
+
+        if (RateLimiter::tooManyAttempts($attemptKey, 5) || RateLimiter::tooManyAttempts($documentKey, 15)) {
+            return $this->portalLoginFailure($request, 'rate_limited');
+        }
 
         $client = Client::query()
+            ->where('document_number_normalized', $documentDigits)
             ->where('portal_enabled', true)
             ->where('is_active', true)
-            ->get()
-            ->first(fn (Client $item): bool => preg_replace('/\D+/', '', (string) $item->document_number) === $documentDigits);
+            ->first();
 
         if (! $client || ! Hash::check($data['access_code'], (string) $client->portal_access_code)) {
-            return back()
-                ->withInput($request->except('access_code'))
-                ->withErrors([
-                    'document_number' => 'Nao foi possivel validar o acesso com os dados informados.',
-                ]);
+            $attempts = RateLimiter::attempts($attemptKey) + 1;
+            $decaySeconds = min(3600, 60 * (2 ** intdiv(max(0, $attempts - 1), 3)));
+            RateLimiter::hit($attemptKey, $decaySeconds);
+            RateLimiter::hit($documentKey, $decaySeconds);
+
+            Log::warning('Falha de autenticacao no portal do cliente.', [
+                'document_hash' => hash('sha256', $documentDigits),
+                'ip_hash' => hash('sha256', (string) $request->ip()),
+                'attempts' => $attempts,
+            ]);
+
+            return $this->portalLoginFailure($request, 'invalid_credentials');
         }
+
+        RateLimiter::clear($attemptKey);
+        RateLimiter::clear($documentKey);
 
         $request->session()->put('portal_client_id', $client->id);
         $request->session()->regenerate();
@@ -67,6 +85,25 @@ class ClientPortalController extends Controller
         ])->save();
 
         return redirect()->route('portal.dashboard');
+    }
+
+    private function portalLoginRateKey(Request $request, string $document): string
+    {
+        return 'portal-login:'.hash('sha256', (string) $request->ip().'|'.$document);
+    }
+
+    private function portalLoginFailure(Request $request, string $reason): RedirectResponse
+    {
+        Log::notice('Acesso ao portal do cliente negado.', [
+            'reason' => $reason,
+            'ip_hash' => hash('sha256', (string) $request->ip()),
+        ]);
+
+        return back()
+            ->withInput($request->except(['access_code', 'document_number']))
+            ->withErrors([
+                'document_number' => 'Nao foi possivel validar o acesso com os dados informados. Aguarde e tente novamente.',
+            ]);
     }
 
     public function dashboard(Request $request): View
