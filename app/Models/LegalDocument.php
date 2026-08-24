@@ -16,9 +16,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'original_name',
     'file_name',
     'path',
+    'disk',
     'mime_type',
     'extension',
     'size',
+    'sha256',
+    'storage_status',
+    'scanned_at',
     'notes',
     'is_sensitive',
     'shared_with_client',
@@ -31,6 +35,7 @@ class LegalDocument extends Model
             'size' => 'integer',
             'is_sensitive' => 'boolean',
             'shared_with_client' => 'boolean',
+            'scanned_at' => 'datetime',
         ];
     }
 

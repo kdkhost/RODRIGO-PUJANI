@@ -22,7 +22,7 @@
                     </td>
                     <td>
                         @if($item->path)
-                            <a href="{{ site_asset_url($item->path) }}" target="_blank" rel="noopener">{{ $item->original_name ?: $item->file_name }}</a>
+                            <a href="{{ route('admin.legal-documents.download', $item) }}">{{ $item->original_name ?: $item->file_name }}</a>
                             <div class="admin-entity-meta">{{ $item->size ? number_format($item->size / 1024, 1, ',', '.').' KB' : 'Tamanho não informado' }}</div>
                         @else
                             <span class="text-muted">Sem arquivo</span>

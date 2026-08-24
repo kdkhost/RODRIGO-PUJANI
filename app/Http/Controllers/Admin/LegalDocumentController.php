@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocument;
+use App\Services\LegalDocumentStorage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LegalDocumentController extends AdminCrudController
 {
@@ -97,18 +99,28 @@ class LegalDocumentController extends AdminCrudController
                 ->value('client_id');
         }
 
+        if (filled($validated['legal_case_id'] ?? null)) {
+            $caseClientId = LegalCase::query()
+                ->visibleTo($request->user())
+                ->whereKey($validated['legal_case_id'])
+                ->value('client_id');
+
+            if (filled($validated['client_id'] ?? null) && (int) $validated['client_id'] !== (int) $caseClientId) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'client_id' => 'O cliente selecionado não é o proprietário do processo informado.',
+                ]);
+            }
+
+            $validated['client_id'] = $caseClientId;
+        }
+
         if ($request->hasFile('file')) {
-            $this->deleteMediaFile($record?->path);
+            $oldDocument = $record?->exists ? clone $record : null;
+            $validated = array_merge($validated, app(LegalDocumentStorage::class)->store($request->file('file')));
 
-            $path = $this->storeMediaFile($request, 'file', 'legal-documents', null, false);
-            $file = $request->file('file');
-
-            $validated['original_name'] = $file->getClientOriginalName();
-            $validated['file_name'] = basename($path);
-            $validated['path'] = $path;
-            $validated['mime_type'] = $file->getMimeType();
-            $validated['extension'] = $file->getClientOriginalExtension();
-            $validated['size'] = $file->getSize();
+            if ($oldDocument) {
+                app(LegalDocumentStorage::class)->delete($oldDocument);
+            }
         }
 
         unset($validated['file']);
@@ -120,14 +132,38 @@ class LegalDocumentController extends AdminCrudController
 
     protected function beforeDelete(Model $record): void
     {
-        $this->deleteMediaFile($record->path);
+        if ($record instanceof LegalDocument) {
+            app(LegalDocumentStorage::class)->delete($record);
+        }
     }
 
     protected function resolveRecord(string $record): Model
     {
-        return LegalDocument::query()
+        $document = LegalDocument::query()
             ->with(['legalCase:id,title', 'client:id,name', 'uploader:id,name'])
             ->visibleTo(auth()->user())
             ->findOrFail($record);
+
+        $this->authorize('view', $document);
+
+        return $document;
+    }
+
+    public function download(string $record, LegalDocumentStorage $storage): BinaryFileResponse
+    {
+        /** @var LegalDocument $document */
+        $document = LegalDocument::query()->findOrFail($record);
+        $this->authorize('download', $document);
+
+        $path = $storage->absolutePath($document);
+        abort_unless($path, 404);
+
+        activity_log('legal_documents', 'downloaded', $document, ['disk' => $document->disk], 'Documento jurídico baixado.');
+
+        return response()->download(
+            $path,
+            $storage->safeDownloadName($document->original_name ?: $document->file_name),
+            ['X-Content-Type-Options' => 'nosniff']
+        );
     }
 }

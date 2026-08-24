@@ -198,6 +198,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     $crud('legal-case-updates', 'legal-case-updates', LegalCaseUpdateController::class, 'legal-case-updates.manage');
     $crud('legal-tasks', 'legal-tasks', LegalTaskController::class, 'legal-tasks.manage');
     $crud('legal-documents', 'legal-documents', LegalDocumentController::class, 'legal-documents.manage');
+    Route::get('legal-documents/{record}/download', [LegalDocumentController::class, 'download'])
+        ->middleware('permission:legal-documents.manage')
+        ->name('legal-documents.download');
     $crud('team-members', 'team-members', TeamMemberController::class, 'team-members.manage');
     $crud('testimonials', 'testimonials', TestimonialController::class, 'testimonials.manage');
     $crud('contact-messages', 'contact-messages', AdminContactMessageController::class, 'contact-messages.manage');
