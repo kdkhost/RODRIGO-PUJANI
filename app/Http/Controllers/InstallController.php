@@ -56,11 +56,10 @@ class InstallController extends Controller
             'admin_name' => ['required', 'string', 'max:120'],
             'admin_email' => ['required', 'email', 'max:255'],
             'admin_password' => ['required', 'string', 'min:8', 'confirmed'],
-            'fresh_install' => ['nullable', 'boolean'],
         ]);
 
         try {
-            $user = $this->installer->install($data, $request->boolean('fresh_install'));
+            $user = $this->installer->install($data, false);
 
             Auth::login($user);
             $request->session()->regenerate();

@@ -311,7 +311,8 @@ class AdminAuthorizationTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.system-files.index'))
             ->assertOk()
-            ->assertSee('Arquivo .env')
+            ->assertDontSee('Arquivo .env')
+            ->assertSee('Arquivo .htaccess')
             ->assertSee('Cofre técnico');
     }
 

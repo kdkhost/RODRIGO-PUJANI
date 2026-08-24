@@ -15,8 +15,16 @@ class EnsureInstalled
 
     public function handle(Request $request, Closure $next): Response
     {
+        if (app()->environment('production') && $request->routeIs('install.*')) {
+            abort(404);
+        }
+
         if (app()->runningUnitTests()) {
             return $next($request);
+        }
+
+        if (app()->environment('production') && ! $this->installer->isInstalled()) {
+            abort(503, 'Sistema indisponivel. Execute a instalacao exclusivamente pelo terminal.');
         }
 
         if ($this->installer->isInstalled()) {

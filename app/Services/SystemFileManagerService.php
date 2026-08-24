@@ -11,6 +11,7 @@ class SystemFileManagerService
     public function all(): array
     {
         return collect(array_keys($this->definitions()))
+            ->reject(fn (string $key): bool => $key === 'env')
             ->map(fn (string $key): array => $this->describe($key))
             ->all();
     }
@@ -132,6 +133,12 @@ class SystemFileManagerService
 
     protected function definition(string $key): array
     {
+        if ($key === 'env') {
+            throw ValidationException::withMessages([
+                'file' => 'O arquivo .env nao pode ser lido ou alterado pelo navegador.',
+            ]);
+        }
+
         $definition = $this->definitions()[$key] ?? null;
 
         if (! $definition) {

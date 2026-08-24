@@ -298,10 +298,6 @@
                             <label for="admin_password_confirmation">Confirmação da senha</label>
                             <input id="admin_password_confirmation" name="admin_password_confirmation" type="password" autocomplete="new-password" required>
                         </div>
-                        <label class="switch full">
-                            <input type="checkbox" name="fresh_install" value="1" @checked(old('fresh_install'))>
-                            <span>Recriar o banco do zero antes de instalar. Use apenas quando quiser apagar todas as tabelas existentes.</span>
-                        </label>
                     </div>
                 </section>
 

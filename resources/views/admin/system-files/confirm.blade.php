@@ -35,7 +35,7 @@
                             <div class="admin-system-guard-points">
                                 <div>
                                     <strong>Arquivos críticos</strong>
-                                    <span>.env e .htaccess afetam autenticação, rotas, cache, redirecionamentos e disponibilidade.</span>
+                                    <span>O .htaccess afeta rotas, redirecionamentos, cabeçalhos e disponibilidade.</span>
                                 </div>
                                 <div>
                                     <strong>Escopo isolado</strong>
