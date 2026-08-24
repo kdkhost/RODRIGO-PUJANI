@@ -6,6 +6,7 @@ staged_files="$(git diff --cached --name-only --diff-filter=ACM)"
 [ -z "$staged_files" ] && exit 0
 
 bom_found=0
+mojibake_found=0
 while IFS= read -r file; do
   [ -z "$file" ] && continue
   [ ! -f "$file" ] && continue
@@ -15,10 +16,19 @@ while IFS= read -r file; do
     echo "BOM detectado (UTF-8 com BOM): $file"
     bom_found=1
   fi
+
+  case "$file" in
+    *.php|*.blade.php|*.js|*.ts|*.css|*.json|*.xml|*.yml|*.yaml|*.sql|*.md|*.ps1|*.sh|*.env|*.txt|*.html|*.htaccess|*.editorconfig|*.gitattributes)
+      if LC_ALL=C grep -Iq . "$file" && grep -nE 'Ã|Â|â€|�|\\u00[cC]3' "$file" >/dev/null 2>&1; then
+        echo "Mojibake conhecido detectado: $file"
+        mojibake_found=1
+      fi
+      ;;
+  esac
 done <<< "$staged_files"
 
-if [ "$bom_found" -ne 0 ]; then
-  echo "Commit bloqueado. Converta os arquivos para UTF-8 sem BOM e tente novamente."
+if [ "$bom_found" -ne 0 ] || [ "$mojibake_found" -ne 0 ]; then
+  echo "Commit bloqueado. Corrija UTF-8/BOM/mojibake e tente novamente."
   exit 1
 fi
 

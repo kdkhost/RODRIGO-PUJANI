@@ -23,7 +23,7 @@
     $companyName = $branding['brand_name'];
     $companyPhone = setting('site.company_phone', '(11) 3456-7890');
     $companyEmail = setting('site.company_email', 'contato@pujani.adv.br');
-    $companyAddress = setting('site.company_address', 'Av. Paulista, 1842 Â· Bela Vista Â· SÃ£o Paulo/SP');
+    $companyAddress = setting('site.company_address', 'Av. Paulista, 1842 · Bela Vista · São Paulo/SP');
     $whatsappDigits = preg_replace('/\D+/', '', setting('site.company_whatsapp', '(11) 99876-5432'));
     $currentUrl = $seo?->canonical_url ?: url()->current();
     $author = $seoConfig['author'] ?: 'Rodrigo Pujani';
@@ -82,7 +82,7 @@
         'address' => [
             '@type' => 'PostalAddress',
             'streetAddress' => $companyAddress,
-            'addressLocality' => 'SÃ£o Paulo',
+            'addressLocality' => 'São Paulo',
             'addressRegion' => 'SP',
             'addressCountry' => 'BR',
             'postalCode' => setting('site.company_cep', '01310-200'),
@@ -199,7 +199,7 @@
         .area-icon{width:48px;height:48px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:border-color .3s,background .3s}.card-glass:hover .area-icon{border-color:var(--gold);background:rgba(196,154,60,0.1)}
         .team-card .overlay{opacity:0;transition:opacity .4s}.team-card:hover .overlay{opacity:1}
         .timeline-dot{width:10px;height:10px;border:2px solid var(--gold);border-radius:50%;background:var(--ink);flex-shrink:0}
-        .testimonial-card{position:relative}.testimonial-card::before{content:'â€œ';font-family:'Cormorant Garamond',serif;font-size:6rem;line-height:1;color:var(--gold);opacity:.15;position:absolute;top:-10px;left:16px}
+        .testimonial-card{position:relative}.testimonial-card::before{content:'“';font-family:'Cormorant Garamond',serif;font-size:6rem;line-height:1;color:var(--gold);opacity:.15;position:absolute;top:-10px;left:16px}
         nav{position:fixed;top:0;left:0;right:0;z-index:1000;transition:background .4s,backdrop-filter .4s,border-color .4s}
         nav.scrolled{background:rgba(11,12,16,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
         .nav-link{position:relative;letter-spacing:.12em;text-transform:uppercase;font-size:.72rem;font-weight:500;color:rgba(240,233,220,.65);transition:color .3s}
@@ -457,10 +457,10 @@
                         </div>
                         <div>
                             <div class="font-title text-sm tracking-widest text-cream/90">PUJANI ADVOGADOS</div>
-                            <div class="text-[0.55rem] tracking-[0.3em] text-gold/50 uppercase">Advocacia de ExcelÃªncia</div>
+                            <div class="text-[0.55rem] tracking-[0.3em] text-gold/50 uppercase">Advocacia de Excelência</div>
                         </div>
                     </div>
-                    <p class="text-cream/35 text-sm leading-relaxed max-w-sm">{{ $page->excerpt ?: 'Mais de duas dÃ©cadas defendendo direitos e construindo resultados com Ã©tica, precisÃ£o e compromisso.' }}</p>
+                    <p class="text-cream/35 text-sm leading-relaxed max-w-sm">{{ $page->excerpt ?: 'Mais de duas décadas defendendo direitos e construindo resultados com ética, precisão e compromisso.' }}</p>
                     <div class="flex gap-3 mt-6">
                         <a href="{{ setting('site.social_linkedin', '#') }}" target="_blank" rel="noopener" class="w-9 h-9 border border-gold/20 flex items-center justify-center text-gold/50 hover:border-gold/50 hover:text-gold/80 transition-all duration-300" aria-label="LinkedIn">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
@@ -474,7 +474,7 @@
                     </div>
                 </div>
                 <div>
-                    <div class="text-xs text-gold/50 tracking-widest uppercase mb-5">NavegaÃ§Ã£o</div>
+                    <div class="text-xs text-gold/50 tracking-widest uppercase mb-5">Navegação</div>
                     <div class="space-y-3">
                         @foreach($menuPages as $menuPage)
                             <a href="{{ $pageUrl($menuPage->slug) }}" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">{{ $menuPage->menu_title ?: $menuPage->title }}</a>
@@ -484,9 +484,9 @@
                 <div>
                     <div class="text-xs text-gold/50 tracking-widest uppercase mb-5">Legal</div>
                     <div class="space-y-3">
-                        <a href="{{ route('site.show', 'politica-de-privacidade') }}" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">PolÃ­tica de Privacidade</a>
+                        <a href="{{ route('site.show', 'politica-de-privacidade') }}" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">Política de Privacidade</a>
                         <a href="{{ route('site.show', 'termos-de-uso') }}" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">Termos de Uso</a>
-                        <a href="https://www.oab.org.br" target="_blank" rel="noopener" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">CÃ³digo de Ã‰tica OAB</a>
+                        <a href="https://www.oab.org.br" target="_blank" rel="noopener" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">Código de Ética OAB</a>
                         <a href="{{ route('site.show', 'aviso-lgpd') }}" class="block text-sm text-cream/40 hover:text-gold/70 transition-colors">Aviso LGPD</a>
                     </div>
                     <div class="mt-8">
@@ -506,11 +506,11 @@
             </div>
             <div class="divider"></div>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8">
-                <div class="text-xs text-cream/20 tracking-widest">Â© {{ now()->year }} {{ $companyName }} Â· Todos os direitos reservados</div>
+                <div class="text-xs text-cream/20 tracking-widest">© {{ now()->year }} {{ $companyName }} · Todos os direitos reservados</div>
                 <div class="flex gap-4 text-xs text-cream/15">
                     <a href="{{ route('site.sitemap') }}" class="hover:text-gold/50 transition-colors">Sitemap</a>
-                    <span>Â·</span>
-                    <div class="text-xs text-cream/15">Este site nÃ£o constitui consultoria jurÃ­dica. Consulte um advogado para orientaÃ§Ã£o especÃ­fica.</div>
+                    <span>·</span>
+                    <div class="text-xs text-cream/15">Este site não constitui consultoria jurídica. Consulte um advogado para orientação específica.</div>
                 </div>
             </div>
 
@@ -571,7 +571,7 @@
                         @endforeach
                     </div>
                     <div class="whatsapp-support-footer">
-                        Atendimento JurÃ­dico Especializado
+                        Atendimento Jurídico Especializado
                     </div>
                 </div>
             @endif

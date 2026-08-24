@@ -20,12 +20,12 @@
 
         <div class="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-                <div class="section-label aos mb-6">â€” Por Que Nos Escolher</div>
+                <div class="section-label aos mb-6">— Por Que Nos Escolher</div>
                 <h2 class="font-display leading-tight mb-8 aos delay-100" style="font-size:clamp(2rem,4vw,3.2rem);font-weight:300;">
-                    {!! $section?->title ?: 'EstratÃ©gia jurÃ­dica que<br><span class="text-gold-gradient font-semibold">transforma resultados</span>' !!}
+                    {!! $section?->title ?: 'Estratégia jurídica que<br><span class="text-gold-gradient font-semibold">transforma resultados</span>' !!}
                 </h2>
                 <div class="text-cream/50 leading-relaxed mb-8 aos delay-200">
-                    {!! $section?->content ?: e($page->excerpt ?: 'NÃ£o apenas representamos. ConstruÃ­mos estratÃ©gias personalizadas que consideram cada detalhe do caso, o contexto do cliente e os objetivos de negÃ³cio.') !!}
+                    {!! $section?->content ?: e($page->excerpt ?: 'Não apenas representamos. Construímos estratégias personalizadas que consideram cada detalhe do caso, o contexto do cliente e os objetivos de negócio.') !!}
                 </div>
                 <a href="{{ $caseUrl }}" class="btn-primary px-8 py-4 inline-block aos delay-300"><span>Iniciar Meu Caso</span></a>
             </div>
