@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -215,6 +216,10 @@ JS;
         $buildVersion = file_exists($buildManifestPath)
             ? substr(sha1_file($buildManifestPath), 0, 12)
             : config('app.version', '1');
+        $siteContentFingerprint = substr(sha1(collect(File::allFiles(resource_path('views/site')))
+            ->sortBy(fn ($file): string => $file->getRelativePathname())
+            ->map(fn ($file): string => $file->getRelativePathname().':'.sha1_file($file->getPathname()))
+            ->implode('|')), 0, 12);
         $pwaFingerprint = substr(sha1(json_encode([
             $pwa['enabled'],
             $pwa['installation_enabled'],
@@ -228,7 +233,7 @@ JS;
             $pwa['icon_192_path'],
             $pwa['icon_512_path'],
         ])), 0, 12);
-        $cacheName = 'pujani-pwa-'.$buildVersion.'-'.$pwaFingerprint;
+        $cacheName = 'pujani-pwa-'.$buildVersion.'-'.$pwaFingerprint.'-'.$siteContentFingerprint;
         $offlineUrl = route('site.offline');
         $homeUrl = route('site.home');
 
@@ -246,6 +251,20 @@ const clearOwnCaches = () => caches.keys().then((keys) => Promise.all(
         .map((key) => caches.delete(key))
 ));
 
+const precacheFreshContent = async () => {
+    await caches.delete(CACHE_NAME);
+    const cache = await caches.open(CACHE_NAME);
+
+    await Promise.all(PRECACHE_URLS.map(async (url) => {
+        const request = new Request(url, { cache: 'reload' });
+        const response = await fetch(request);
+
+        if (response.ok) {
+            await cache.put(url, response);
+        }
+    }));
+};
+
 const shouldIgnoreRequest = (request, url) => {
     return request.method !== 'GET'
         || url.origin !== self.location.origin
@@ -258,8 +277,7 @@ const shouldIgnoreRequest = (request, url) => {
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(PRECACHE_URLS))
+        precacheFreshContent()
             .then(() => self.skipWaiting())
     );
 });
@@ -280,7 +298,9 @@ self.addEventListener('message', (event) => {
     }
 
     if (event.data && event.data.type === 'PUJANI_UPDATE_PWA') {
-        event.waitUntil(clearOwnCaches());
+        event.waitUntil(
+            clearOwnCaches().then(() => precacheFreshContent())
+        );
     }
 });
 
@@ -311,7 +331,7 @@ self.addEventListener('fetch', (event) => {
 
     if (request.mode === 'navigate') {
         event.respondWith(
-            fetch(request)
+            fetch(new Request(request, { cache: 'no-store' }))
                 .then((response) => {
                     const contentType = response.headers.get('content-type') || '';
 

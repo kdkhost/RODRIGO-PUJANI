@@ -36,13 +36,33 @@ class ProductionHardeningTest extends TestCase
             ->assertHeader('Content-Security-Policy-Report-Only');
     }
 
-    public function test_site_layout_uses_encoding_safe_testimonial_quote(): void
+    public function test_testimonial_cards_do_not_render_a_decorative_glyph_over_the_rating(): void
     {
         $layout = file_get_contents(resource_path('views/site/layouts/app.blade.php'));
-        $mojibakeQuote = "\u{00E2}\u{20AC}\u{0153}";
 
-        $this->assertStringContainsString("content:'\\201C'", $layout);
-        $this->assertStringNotContainsString("content:'{$mojibakeQuote}'", $layout);
+        $this->assertStringContainsString('.testimonial-card{position:relative}', $layout);
+        $this->assertStringNotContainsString('.testimonial-card::before', $layout);
+    }
+
+    public function test_service_worker_refreshes_server_rendered_content_without_http_cache(): void
+    {
+        $response = $this->get('/sw.js');
+
+        $response->assertOk();
+
+        $script = $response->getContent();
+        $cacheControl = (string) $response->headers->get('Cache-Control');
+
+        $this->assertStringContainsString('no-cache', $cacheControl);
+        $this->assertStringContainsString('no-store', $cacheControl);
+        $this->assertStringContainsString('must-revalidate', $cacheControl);
+        $this->assertMatchesRegularExpression(
+            "/const CACHE_NAME = 'pujani-pwa-[^']+-[a-f0-9]{12}';/",
+            $script
+        );
+        $this->assertStringContainsString('precacheFreshContent', $script);
+        $this->assertStringContainsString("cache: 'reload'", $script);
+        $this->assertStringContainsString("cache: 'no-store'", $script);
     }
 
     public function test_environment_file_is_not_available_through_system_file_manager(): void
