@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -109,6 +109,11 @@ class Client extends Model
     public function portalMessages(): HasMany
     {
         return $this->hasMany(PortalMessage::class);
+    }
+
+    public function signatureRequests(): HasMany
+    {
+        return $this->hasMany(SignatureRequest::class);
     }
 
     public static function portalEditableFieldOptions(): array

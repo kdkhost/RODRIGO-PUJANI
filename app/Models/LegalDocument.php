@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'legal_case_id',
@@ -52,6 +53,11 @@ class LegalDocument extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function signatureRequests(): HasMany
+    {
+        return $this->hasMany(SignatureRequest::class);
     }
 
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
