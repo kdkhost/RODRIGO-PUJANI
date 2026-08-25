@@ -30,7 +30,16 @@ class SignatureRequestController extends Controller
     public function create(Request $request): View
     {
         $this->authorize('create', SignatureRequest::class);
-        $documents = LegalDocument::query()->visibleTo($request->user())->whereNotNull('client_id')->whereNotNull('path')->latest()->get(['id', 'title', 'client_id']);
+        $documents = LegalDocument::query()
+            ->visibleTo($request->user())
+            ->whereNotNull('client_id')
+            ->where('disk', 'legal_documents')
+            ->where('storage_status', 'private')
+            ->where('mime_type', 'application/pdf')
+            ->where('extension', 'pdf')
+            ->whereNotNull('sha256')
+            ->latest()
+            ->get(['id', 'title', 'client_id']);
 
         return view('admin.signature-requests.create', ['documents' => $documents, 'selectedDocument' => (int) $request->integer('document')]);
     }
