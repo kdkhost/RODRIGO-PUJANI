@@ -3,6 +3,7 @@
 use App\Models\ActivityLog;
 use App\Models\Page;
 use App\Models\Setting;
+use App\Support\SmtpSecret;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -235,7 +236,9 @@ if (! function_exists('smtp_config')) {
     function smtp_config(): array
     {
         try {
-            return Cache::rememberForever('mail.config.v1', function (): array {
+            return Cache::rememberForever('mail.config.v2', function (): array {
+                $storedPassword = (string) setting('mail.password', '');
+
                 return [
                     'enabled' => filter_var(setting('mail.enabled', '0'), FILTER_VALIDATE_BOOLEAN),
                     'mailer' => (string) setting('mail.mailer', env('MAIL_MAILER', 'smtp')),
@@ -243,7 +246,7 @@ if (! function_exists('smtp_config')) {
                     'port' => (int) setting('mail.port', env('MAIL_PORT', 587)),
                     'encryption' => (string) setting('mail.encryption', env('MAIL_ENCRYPTION', 'tls')),
                     'username' => (string) setting('mail.username', env('MAIL_USERNAME', '')),
-                    'password' => (string) setting('mail.password', env('MAIL_PASSWORD', '')),
+                    'password_configured' => filled($storedPassword) || filled(env('MAIL_PASSWORD')),
                     'from_address' => (string) setting('mail.from_address', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
                     'from_name' => (string) setting('mail.from_name', env('MAIL_FROM_NAME', config('app.name'))),
                     'template_header' => (string) setting('mail.template_header', 'Olá, {{name}}.'),
@@ -262,7 +265,7 @@ if (! function_exists('smtp_config')) {
                 'port' => (int) env('MAIL_PORT', 587),
                 'encryption' => env('MAIL_ENCRYPTION', 'tls'),
                 'username' => env('MAIL_USERNAME', ''),
-                'password' => env('MAIL_PASSWORD', ''),
+                'password_configured' => filled(env('MAIL_PASSWORD')),
                 'from_address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
                 'from_name' => env('MAIL_FROM_NAME', config('app.name')),
                 'template_header' => 'Olá, {{name}}.',
@@ -273,6 +276,20 @@ if (! function_exists('smtp_config')) {
                 'template_generic_body' => "Olá, {{name}}.\n\nVocê recebeu uma nova notificação do sistema.",
             ];
         }
+    }
+}
+
+if (! function_exists('smtp_runtime_config')) {
+    function smtp_runtime_config(): array
+    {
+        $config = smtp_config();
+        $storedPassword = (string) setting('mail.password', '');
+
+        return $config + [
+            'password' => $storedPassword !== ''
+                ? SmtpSecret::decrypt($storedPassword)
+                : (string) env('MAIL_PASSWORD', ''),
+        ];
     }
 }
 

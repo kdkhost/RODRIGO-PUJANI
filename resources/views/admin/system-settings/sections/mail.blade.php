@@ -44,7 +44,7 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label" for="mail_password">Senha SMTP</label>
-                <input id="mail_password" type="password" name="mail_password" class="form-control" value="{{ old('mail_password', $mailConfig['password']) }}" placeholder="********">
+                <input id="mail_password" type="password" name="mail_password" class="form-control" value="" placeholder="{{ $mailConfig['password_configured'] ? 'Senha configurada; deixe vazio para preservar' : 'Informe a senha SMTP' }}" autocomplete="new-password">
             </div>
             <div class="col-md-3">
                 <label class="form-label" for="mail_from_address">E-mail remetente</label>
