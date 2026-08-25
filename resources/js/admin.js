@@ -72,7 +72,7 @@ const AdminUI = {
         this.bindBackToTop();
         this.bindLiveClocks();
         this.bindDocumentEvents();
-        this.bindSidebarAccordion();
+        this.bindSidebarTreeviewState();
         this.bindTourGuide();
         this.initNotificationCenter();
         this.initPlugins(document);
@@ -527,42 +527,27 @@ const AdminUI = {
         });
     },
 
-    bindSidebarAccordion() {
+    bindSidebarTreeviewState() {
         const menu = document.querySelector('.admin-sidebar-menu');
 
         if (!menu || menu.dataset.adminSidebarReady === 'true') {
             return;
         }
 
-        menu.addEventListener('click', (event) => {
-            const trigger = event.target.closest('.admin-sidebar-parent-link');
+        const items = Array.from(menu.querySelectorAll(':scope > .nav-item'));
+        const syncExpandedStates = () => {
+            items.forEach((item) => {
+                const trigger = item.querySelector(':scope > .admin-sidebar-parent-link');
+                trigger?.setAttribute('aria-expanded', item.classList.contains('menu-open') ? 'true' : 'false');
+            });
+        };
 
-            if (!trigger || !menu.contains(trigger)) {
-                return;
-            }
+        items.forEach((item) => {
+            item.addEventListener('expanded.lte.treeview', syncExpandedStates);
+            item.addEventListener('collapsed.lte.treeview', syncExpandedStates);
+        });
 
-            event.preventDefault();
-            event.stopPropagation();
-
-            const item = trigger.closest('.nav-item');
-
-            if (!item) {
-                return;
-            }
-
-            const shouldOpen = !item.classList.contains('menu-open');
-            const accordion = menu.dataset.accordion !== 'false';
-
-            if (accordion) {
-                menu.querySelectorAll(':scope > .nav-item.menu-open').forEach((openItem) => {
-                    if (openItem !== item) {
-                        openItem.classList.remove('menu-open');
-                    }
-                });
-            }
-
-            item.classList.toggle('menu-open', shouldOpen);
-        }, true);
+        syncExpandedStates();
 
         menu.dataset.adminSidebarReady = 'true';
     },

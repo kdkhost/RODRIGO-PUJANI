@@ -2,7 +2,11 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\User;
 use App\Services\SystemFileManagerService;
+use Database\Seeders\PermissionsSeeder;
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -42,6 +46,63 @@ class ProductionHardeningTest extends TestCase
 
         $this->assertStringContainsString('.testimonial-card{position:relative}', $layout);
         $this->assertStringNotContainsString('.testimonial-card::before', $layout);
+    }
+
+    public function test_admin_sidebar_uses_only_the_native_adminlte_treeview_controller(): void
+    {
+        $this->seed(PermissionsSeeder::class);
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('Administrador');
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $document = new DOMDocument();
+        $previousState = libxml_use_internal_errors(true);
+        $document->loadHTML('<?xml encoding="UTF-8">'.$html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousState);
+        $xpath = new DOMXPath($document);
+        $treeviews = $xpath->query("//ul[contains(concat(' ', normalize-space(@class), ' '), ' admin-sidebar-menu ') and @data-lte-toggle='treeview']");
+
+        $this->assertCount(1, $treeviews);
+        $treeview = $treeviews->item(0);
+        $this->assertSame('true', $treeview?->attributes?->getNamedItem('data-accordion')?->nodeValue);
+        $this->assertSame('180', $treeview?->attributes?->getNamedItem('data-animation-speed')?->nodeValue);
+
+        $parentLinks = $xpath->query("./li[contains(concat(' ', normalize-space(@class), ' '), ' nav-item ')]/a[contains(concat(' ', normalize-space(@class), ' '), ' admin-sidebar-parent-link ')]", $treeview);
+        $this->assertGreaterThan(1, $parentLinks->count());
+
+        $openGroups = 0;
+        foreach ($parentLinks as $link) {
+            $item = $link->parentNode;
+            $isOpen = str_contains(' '.preg_replace('/\s+/', ' ', (string) $item?->attributes?->getNamedItem('class')?->nodeValue).' ', ' menu-open ');
+            $this->assertSame($isOpen ? 'true' : 'false', $link->attributes?->getNamedItem('aria-expanded')?->nodeValue);
+
+            $controls = $link->attributes?->getNamedItem('aria-controls')?->nodeValue;
+            $this->assertNotEmpty($controls);
+            $this->assertNotNull($document->getElementById($controls));
+            $openGroups += $isOpen ? 1 : 0;
+        }
+
+        $this->assertSame(1, $openGroups);
+
+        $script = file_get_contents(resource_path('js/admin.js'));
+        $methodStart = strpos($script, '    bindSidebarTreeviewState() {');
+        $methodEnd = strpos($script, 'initNotificationCenter()', $methodStart);
+        $treeviewStateSynchronizer = substr($script, $methodStart, $methodEnd - $methodStart);
+
+        $this->assertSame(1, substr_count($script, "import('admin-lte')"));
+        $this->assertStringNotContainsString('bindSidebarAccordion', $script);
+        $this->assertStringNotContainsString("addEventListener('click'", $treeviewStateSynchronizer);
+        $this->assertStringNotContainsString("classList.add('menu-open'", $treeviewStateSynchronizer);
+        $this->assertStringNotContainsString("classList.remove('menu-open'", $treeviewStateSynchronizer);
+        $this->assertStringNotContainsString("classList.toggle('menu-open'", $treeviewStateSynchronizer);
+        $this->assertStringNotContainsString('style.display', $treeviewStateSynchronizer);
+        $this->assertStringContainsString('expanded.lte.treeview', $treeviewStateSynchronizer);
+        $this->assertStringContainsString('collapsed.lte.treeview', $treeviewStateSynchronizer);
     }
 
     public function test_service_worker_refreshes_server_rendered_content_without_http_cache(): void

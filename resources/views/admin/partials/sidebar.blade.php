@@ -94,6 +94,7 @@
         class="nav sidebar-menu admin-sidebar-menu flex-column"
         data-lte-toggle="treeview"
         data-accordion="true"
+        data-animation-speed="180"
         role="menu"
     >
         @foreach ($preparedGroups as $group)
@@ -102,7 +103,13 @@
             @endphp
 
             <li class="nav-item {{ $isOpen ? 'menu-open' : '' }}">
-                <a href="#" class="nav-link admin-sidebar-parent-link {{ $group['active'] ? 'active' : '' }}">
+                <a
+                    href="#"
+                    class="nav-link admin-sidebar-parent-link {{ $group['active'] ? 'active' : '' }}"
+                    role="button"
+                    aria-expanded="{{ $isOpen ? 'true' : 'false' }}"
+                    aria-controls="admin-sidebar-group-{{ $loop->index }}"
+                >
                     <i class="nav-icon bi {{ $group['icon'] }}"></i>
                     <p>
                         <span>{{ $group['label'] }}</span>
@@ -111,7 +118,7 @@
                     </p>
                 </a>
 
-                <ul class="nav nav-treeview">
+                <ul class="nav nav-treeview" id="admin-sidebar-group-{{ $loop->index }}">
                     @foreach ($group['items'] as $item)
                         <li class="nav-item">
                             <a href="{{ route($item['route']) }}" class="nav-link {{ request()->routeIs($item['active']) ? 'active' : '' }}">
