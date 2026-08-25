@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Client;
+use App\Models\DjenPublication;
 use App\Models\LegalCase;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
@@ -14,7 +15,7 @@ class LegalCaseDjenSyncTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_import_public_djen_communications_without_duplicating_them(): void
+    public function test_admin_imports_public_djen_communications_for_review_without_duplicating_or_exposing_them(): void
     {
         $this->seed(PermissionsSeeder::class);
         $admin = User::factory()->create(['is_active' => true]);
@@ -38,6 +39,7 @@ class LegalCaseDjenSyncTest extends TestCase
             'items' => [[
                 'hash' => 'hash-publicacao-1',
                 'numeroComunicacao' => 123,
+                'numero_processo' => '10000001020268260100',
                 'data_disponibilizacao' => '2026-08-20',
                 'siglaTribunal' => 'TJSP',
                 'tipoComunicacao' => 'Intimação',
@@ -47,11 +49,13 @@ class LegalCaseDjenSyncTest extends TestCase
         ], 200)]);
 
         $url = route('admin.legal-cases.sync-djen', $legalCase);
-        $this->actingAs($admin)->postJson($url)->assertOk()->assertJsonPath('message', 'DJEN sincronizado. 1 comunicação(ões) nova(s) e 0 atualizada(s).');
-        $this->actingAs($admin)->postJson($url)->assertOk()->assertJsonPath('message', 'DJEN sincronizado. 0 comunicação(ões) nova(s) e 0 atualizada(s).');
+        $this->actingAs($admin)->postJson($url)->assertOk();
+        $this->actingAs($admin)->postJson($url)->assertOk();
 
-        $this->assertDatabaseCount('legal_case_updates', 1);
-        $this->assertDatabaseHas('legal_case_updates', ['legal_case_id' => $legalCase->id, 'source' => 'djen', 'external_id' => 'djen:hash-publicacao-1']);
-        $this->assertStringNotContainsString('<script>', (string) $legalCase->updates()->first()->body);
+        $this->assertDatabaseCount('djen_publications', 1);
+        $this->assertDatabaseCount('legal_case_updates', 0);
+        $publication = DjenPublication::query()->firstOrFail();
+        $this->assertSame(DjenPublication::STATUS_PENDING, $publication->review_status);
+        $this->assertSame('<script>alert(1)</script> Prazo iniciado.', $publication->raw_text);
     }
 }
