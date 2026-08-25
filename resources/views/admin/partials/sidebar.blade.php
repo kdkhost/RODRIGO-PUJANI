@@ -12,6 +12,7 @@
             ['label' => 'Andamentos', 'route' => 'admin.legal-case-updates.index', 'active' => 'admin.legal-case-updates.*', 'icon' => 'bi-journal-text', 'permission' => 'legal-case-updates.manage'],
             ['label' => 'Tarefas e prazos', 'route' => 'admin.legal-tasks.index', 'active' => 'admin.legal-tasks.*', 'icon' => 'bi-list-check', 'permission' => 'legal-tasks.manage'],
             ['label' => 'Documentos', 'route' => 'admin.legal-documents.index', 'active' => 'admin.legal-documents.*', 'icon' => 'bi-folder2-open', 'permission' => 'legal-documents.manage'],
+            ['label' => 'Assinaturas', 'route' => 'admin.signature-requests.index', 'active' => 'admin.signature-requests.*', 'icon' => 'bi-pen', 'permission' => 'signature-requests.view'],
         ],
         'Conteúdo' => [
             ['label' => 'Páginas', 'route' => 'admin.pages.index', 'active' => 'admin.pages.*', 'icon' => 'bi-window-stack', 'permission' => 'pages.manage'],
@@ -120,4 +121,3 @@
         @endforeach
     </ul>
 </nav>
-

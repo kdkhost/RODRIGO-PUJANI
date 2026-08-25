@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\LegalCaseController;
 use App\Http\Controllers\Admin\LegalCaseUpdateController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\LegalTaskController;
+use App\Http\Controllers\Admin\SignatureRequestController;
 use App\Http\Controllers\Admin\MediaAssetController;
 use App\Http\Controllers\Admin\MailTemplateController;
 use App\Http\Controllers\Admin\PageController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Portal\ClientPortalController as PortalClientPortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SiteController;
+use App\Http\Controllers\SignatureController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +51,13 @@ $crud = function (string $uri, string $name, string $controller, string $permiss
 
 Route::get('/instalar', [InstallController::class, 'index'])->name('install.index');
 Route::post('/instalar', [InstallController::class, 'store'])->name('install.store');
+
+Route::middleware(['check.maintenance', 'throttle:30,1'])->prefix('assinatura')->name('signatures.public.')->group(function (): void {
+    Route::get('/resultado', [SignatureController::class, 'result'])->name('result');
+    Route::get('/{token}', [SignatureController::class, 'show'])->name('show');
+    Route::post('/{token}/assinar', [SignatureController::class, 'sign'])->name('sign');
+    Route::post('/{token}/recusar', [SignatureController::class, 'decline'])->name('decline');
+});
 
 Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
     Route::get('/manifest.webmanifest', [SiteController::class, 'manifest'])->name('site.manifest');
@@ -68,6 +77,8 @@ Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
             Route::get('/perfil', [PortalClientPortalController::class, 'profile'])->name('profile');
             Route::put('/perfil', [PortalClientPortalController::class, 'updateProfile'])->name('profile.update');
             Route::get('/documentos', [PortalClientPortalController::class, 'documents'])->name('documents.index');
+            Route::get('/assinaturas', [PortalClientPortalController::class, 'signatures'])->name('signatures.index');
+            Route::get('/assinaturas/{signatureRequest}/comprovante', [PortalClientPortalController::class, 'signatureEvidence'])->name('signatures.evidence');
             Route::get('/mensagens', [PortalClientPortalController::class, 'messages'])->name('messages.index');
             Route::post('/mensagens', [PortalClientPortalController::class, 'storeMessage'])->name('messages.store');
             Route::get('/notificacoes', [PortalClientPortalController::class, 'notifications'])->name('notifications.feed');
@@ -201,6 +212,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('legal-documents/{record}/download', [LegalDocumentController::class, 'download'])
         ->middleware('permission:legal-documents.manage')
         ->name('legal-documents.download');
+    Route::prefix('signature-requests')->name('signature-requests.')->group(function (): void {
+        Route::get('/', [SignatureRequestController::class, 'index'])->name('index');
+        Route::get('/create', [SignatureRequestController::class, 'create'])->name('create');
+        Route::post('/', [SignatureRequestController::class, 'store'])->name('store');
+        Route::get('/{signatureRequest}', [SignatureRequestController::class, 'show'])->name('show');
+        Route::post('/{signatureRequest}/resend', [SignatureRequestController::class, 'resend'])->name('resend');
+        Route::post('/{signatureRequest}/cancel', [SignatureRequestController::class, 'cancel'])->name('cancel');
+        Route::get('/{signatureRequest}/evidence', [SignatureRequestController::class, 'evidence'])->name('evidence');
+        Route::get('/{signatureRequest}/document', [SignatureRequestController::class, 'completedDocument'])->name('document');
+    });
     $crud('team-members', 'team-members', TeamMemberController::class, 'team-members.manage');
     $crud('testimonials', 'testimonials', TestimonialController::class, 'testimonials.manage');
     $crud('contact-messages', 'contact-messages', AdminContactMessageController::class, 'contact-messages.manage');

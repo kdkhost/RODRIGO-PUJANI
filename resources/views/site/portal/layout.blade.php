@@ -148,6 +148,10 @@
                             <i class="bi bi-folder2-open"></i>
                             <span>Documentos</span>
                         </a>
+                        <a href="{{ route('portal.signatures.index') }}" class="{{ request()->routeIs('portal.signatures.*') ? 'active' : '' }}">
+                            <i class="bi bi-pen"></i>
+                            <span>Assinaturas</span>
+                        </a>
                         <a href="{{ route('portal.messages.index') }}" class="{{ request()->routeIs('portal.messages.*') ? 'active' : '' }}">
                             <i class="bi bi-chat-left-text"></i>
                             <span>Mensagens</span>

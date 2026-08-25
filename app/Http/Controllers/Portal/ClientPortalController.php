@@ -7,6 +7,8 @@ use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocument;
 use App\Models\PortalMessage;
+use App\Models\SignatureRequest;
+use App\Services\ElectronicSignatureService;
 use App\Services\RecaptchaService;
 use App\Services\LegalDocumentStorage;
 use App\Support\PublicUpload;
@@ -21,6 +23,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClientPortalController extends Controller
 {
@@ -473,6 +476,29 @@ class ClientPortalController extends Controller
             ->with('portal_status', $canUpdateRegistration
                 ? 'Dados cadastrais atualizados com sucesso.'
                 : 'Foto de perfil atualizada com sucesso. A edicao cadastral depende de liberacao do escritorio.');
+    }
+
+    public function signatures(Request $request, ElectronicSignatureService $service): View
+    {
+        $client = $this->portalClient($request);
+        SignatureRequest::query()->where('client_id', $client->id)->where('status', 'pending')->where('expires_at', '<', now())->each(fn ($item) => $service->expire($item));
+        $signatureRequests = SignatureRequest::query()->where('client_id', $client->id)->with(['document','signers'])->latest()->paginate(20);
+        return view('site.portal.signatures', [
+            'portalPanel' => $this->portalPanel(),
+            'client' => $client,
+            'portalSupport' => $this->portalSupportConfig($client),
+            'portalNotifications' => $this->portalNotificationsPayload($client),
+            'signatureRequests' => $signatureRequests,
+        ]);
+    }
+
+    public function signatureEvidence(Request $request, SignatureRequest $signatureRequest, ElectronicSignatureService $service): StreamedResponse
+    {
+        $client = $this->portalClient($request);
+        abort_unless((int) $signatureRequest->client_id === (int) $client->id && $signatureRequest->status === 'completed', 404);
+        $signatureRequest->load('document');
+        abort_unless($service->verifyEvidence($signatureRequest), 409, 'Comprovante inválido.');
+        return \Illuminate\Support\Facades\Storage::disk($signatureRequest->document->disk)->download($signatureRequest->document->evidence_path, 'comprovante-'.$signatureRequest->public_uuid.'.json', ['X-Content-Type-Options'=>'nosniff']);
     }
 
     public function downloadDocument(Request $request, string $document, LegalDocumentStorage $storage): BinaryFileResponse
