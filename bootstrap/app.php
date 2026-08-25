@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureAdminAccess::class,
             'check.maintenance' => \App\Http\Middleware\CheckMaintenanceAccess::class,
             'portal.client' => \App\Http\Middleware\EnsurePortalClientAuthenticated::class,
+            'signature.enabled' => \App\Http\Middleware\EnsureElectronicSignatureEnabled::class,
             'track.visit' => \App\Http\Middleware\TrackPageVisit::class,
             'system-files.confirmed' => \App\Http\Middleware\EnsureSystemFilesPageConfirmed::class,
             'root.security.auditor' => \App\Http\Middleware\EnsureRootSecurityAuditor::class,

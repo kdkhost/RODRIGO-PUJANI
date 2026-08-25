@@ -40,11 +40,15 @@ class LegalDocumentPolicy
 
     public function sendForSignature(User $user, LegalDocument $document): bool
     {
-        return $user->can('signature-requests.create') && $this->view($user, $document);
+        return config('signatures.enabled', false)
+            && $user->can('signature-requests.create')
+            && $this->view($user, $document);
     }
 
     public function viewSignatureEvidence(User $user, LegalDocument $document): bool
     {
-        return $user->can('signature-requests.audit') && $this->view($user, $document);
+        return config('signatures.enabled', false)
+            && $user->can('signature-requests.audit')
+            && $this->view($user, $document);
     }
 }

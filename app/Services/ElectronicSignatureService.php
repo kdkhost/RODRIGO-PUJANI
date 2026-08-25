@@ -20,6 +20,8 @@ class ElectronicSignatureService
 {
     public function create(LegalDocument $legalDocument, array $data, int $creatorId): SignatureRequest
     {
+        $this->ensureEnabled();
+
         return DB::transaction(function () use ($legalDocument, $data, $creatorId): SignatureRequest {
             abort_unless($legalDocument->disk === 'legal_documents' && filled($legalDocument->path), 422, 'Documento privado inválido.');
             $disk = Storage::disk('legal_documents');
@@ -59,6 +61,8 @@ class ElectronicSignatureService
 
     public function send(SignatureRequest $request): void
     {
+        $this->ensureEnabled();
+
         DB::transaction(function () use ($request): void {
             $request->refresh();
             if ($request->isTerminal()) {
@@ -77,6 +81,8 @@ class ElectronicSignatureService
 
     public function sign(SignatureSigner $signer, array $evidence): void
     {
+        $this->ensureEnabled();
+
         DB::transaction(function () use ($signer, $evidence): void {
             $signer->load('signatureRequest.document');
             $request = $signer->signatureRequest;
@@ -105,6 +111,8 @@ class ElectronicSignatureService
 
     public function decline(SignatureSigner $signer, ?string $reason): void
     {
+        $this->ensureEnabled();
+
         DB::transaction(function () use ($signer, $reason): void {
             $signer->load('signatureRequest');
             $this->assertActionable($signer->signatureRequest, $signer);
@@ -117,6 +125,8 @@ class ElectronicSignatureService
 
     public function cancel(SignatureRequest $request, string $reason): void
     {
+        $this->ensureEnabled();
+
         if ($request->isTerminal()) {
             throw ValidationException::withMessages(['request' => 'Esta solicitação já foi encerrada.']);
         }
@@ -130,6 +140,8 @@ class ElectronicSignatureService
 
     public function expire(SignatureRequest $request): bool
     {
+        $this->ensureEnabled();
+
         if ($request->isTerminal() || ! $request->expires_at?->isPast()) {
             return false;
         }
@@ -145,6 +157,8 @@ class ElectronicSignatureService
 
     public function resolveToken(string $token): SignatureSigner
     {
+        $this->ensureEnabled();
+
         $signer = SignatureSigner::query()->with('signatureRequest.document')->where('token_hash', hash('sha256', $token))->firstOrFail();
         $this->expire($signer->signatureRequest);
         $signer->refresh();
@@ -155,6 +169,8 @@ class ElectronicSignatureService
 
     public function markViewed(SignatureSigner $signer): void
     {
+        $this->ensureEnabled();
+
         if ($signer->viewed_at) {
             return;
         }
@@ -164,6 +180,8 @@ class ElectronicSignatureService
 
     public function verifyEvidence(SignatureRequest $request): bool
     {
+        $this->ensureEnabled();
+
         $document = $request->document;
         if (! $document?->evidence_path || ! Storage::disk($document->disk)->exists($document->evidence_path)) {
             return false;
@@ -242,5 +260,10 @@ class ElectronicSignatureService
         foreach ($request->signers()->get(['name', 'email']) as $recipient) {
             Notification::route('mail', [$recipient->email => $recipient->name])->notify(new SignatureStatusNotification($request, $event));
         }
+    }
+
+    private function ensureEnabled(): void
+    {
+        abort_unless((bool) config('signatures.enabled', false), 404);
     }
 }

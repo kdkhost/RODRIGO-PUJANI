@@ -14,6 +14,12 @@ class ExpireSignatureRequests extends Command
 
     public function handle(ElectronicSignatureService $service): int
     {
+        if (! config('signatures.enabled', false)) {
+            $this->warn('Módulo de assinatura eletrônica desabilitado; nenhuma alteração foi realizada.');
+
+            return self::SUCCESS;
+        }
+
         $count = 0;
         SignatureRequest::query()->whereIn('status', ['draft', 'pending'])->where('expires_at', '<', now())->chunkById(100, function ($items) use ($service, &$count): void {
             foreach ($items as $item) {

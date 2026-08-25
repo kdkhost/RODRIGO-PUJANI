@@ -36,11 +36,13 @@
                     </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
+                            @if(config('signatures.enabled', false))
                             @can('create', App\Models\SignatureRequest::class)
                                 @if($item->path && $item->client_id)
                                     <a class="btn btn-sm btn-outline-success" href="{{ route('admin.signature-requests.create', ['document'=>$item->id]) }}">Assinar</a>
                                 @endif
                             @endcan
+                            @endif
                             <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>
                             <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button>
                         </div>

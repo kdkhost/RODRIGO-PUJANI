@@ -52,7 +52,7 @@ $crud = function (string $uri, string $name, string $controller, string $permiss
 Route::get('/instalar', [InstallController::class, 'index'])->name('install.index');
 Route::post('/instalar', [InstallController::class, 'store'])->name('install.store');
 
-Route::middleware(['check.maintenance', 'throttle:30,1'])->prefix('assinatura')->name('signatures.public.')->group(function (): void {
+Route::middleware(['check.maintenance', 'signature.enabled', 'throttle:30,1'])->prefix('assinatura')->name('signatures.public.')->group(function (): void {
     Route::get('/resultado', [SignatureController::class, 'result'])->name('result');
     Route::get('/{token}', [SignatureController::class, 'show'])->name('show');
     Route::post('/{token}/assinar', [SignatureController::class, 'sign'])->name('sign');
@@ -77,8 +77,10 @@ Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
             Route::get('/perfil', [PortalClientPortalController::class, 'profile'])->name('profile');
             Route::put('/perfil', [PortalClientPortalController::class, 'updateProfile'])->name('profile.update');
             Route::get('/documentos', [PortalClientPortalController::class, 'documents'])->name('documents.index');
-            Route::get('/assinaturas', [PortalClientPortalController::class, 'signatures'])->name('signatures.index');
-            Route::get('/assinaturas/{signatureRequest}/comprovante', [PortalClientPortalController::class, 'signatureEvidence'])->name('signatures.evidence');
+            Route::middleware('signature.enabled')->group(function (): void {
+                Route::get('/assinaturas', [PortalClientPortalController::class, 'signatures'])->name('signatures.index');
+                Route::get('/assinaturas/{signatureRequest}/comprovante', [PortalClientPortalController::class, 'signatureEvidence'])->name('signatures.evidence');
+            });
             Route::get('/mensagens', [PortalClientPortalController::class, 'messages'])->name('messages.index');
             Route::post('/mensagens', [PortalClientPortalController::class, 'storeMessage'])->name('messages.store');
             Route::get('/notificacoes', [PortalClientPortalController::class, 'notifications'])->name('notifications.feed');
@@ -212,7 +214,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('legal-documents/{record}/download', [LegalDocumentController::class, 'download'])
         ->middleware('permission:legal-documents.manage')
         ->name('legal-documents.download');
-    Route::prefix('signature-requests')->name('signature-requests.')->group(function (): void {
+    Route::middleware('signature.enabled')->prefix('signature-requests')->name('signature-requests.')->group(function (): void {
         Route::get('/', [SignatureRequestController::class, 'index'])->name('index');
         Route::get('/create', [SignatureRequestController::class, 'create'])->name('create');
         Route::post('/', [SignatureRequestController::class, 'store'])->name('store');

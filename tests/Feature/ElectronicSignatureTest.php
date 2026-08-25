@@ -21,6 +21,7 @@ class ElectronicSignatureTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config()->set('signatures.enabled', true);
         Storage::fake('legal_documents');
         Notification::fake();
         $this->seed(PermissionsSeeder::class);
