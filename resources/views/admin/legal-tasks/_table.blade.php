@@ -31,9 +31,15 @@
                     <td>
                         <div class="admin-entity-title">{{ $item->due_at?->format('d/m/Y H:i') ?: 'Sem prazo' }}</div>
                         <div class="admin-entity-meta">{{ $item->location ?: 'Sem local definido' }}</div>
+                        @if($item->calendarEvent)
+                            <div class="admin-entity-meta mt-1"><i class="bi bi-calendar-check me-1"></i>Vinculado à agenda</div>
+                        @endif
                     </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
+                            @if(Route::has($routeBase.'.history'))
+                                <button class="btn btn-sm btn-outline-secondary" data-modal-url="{{ route($routeBase.'.history', $item->id) }}">Histórico</button>
+                            @endif
                             <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>
                             <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button>
                         </div>

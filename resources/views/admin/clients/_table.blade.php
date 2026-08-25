@@ -42,6 +42,9 @@
                     </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
+                            @can('legal-workspace.view')
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.clients.workspace', $item) }}">Visão integrada</a>
+                            @endcan
                             <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>
                             <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button>
                         </div>

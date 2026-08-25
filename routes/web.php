@@ -7,13 +7,24 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ClientPortalController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DjenMonitorController;
+use App\Http\Controllers\Admin\DjenPublicationController;
+use App\Http\Controllers\Admin\FinancialEntryController;
+use App\Http\Controllers\Admin\GoogleCalendarController;
+use App\Http\Controllers\Admin\HearingTranscriptionController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\DocumentationController;
 use App\Http\Controllers\Admin\FormSecurityLogController;
+use App\Http\Controllers\Admin\LegalAiIntegrationController;
 use App\Http\Controllers\Admin\LegalCaseController;
 use App\Http\Controllers\Admin\LegalCaseUpdateController;
+use App\Http\Controllers\Admin\LegalDeadlinePreferenceController;
 use App\Http\Controllers\Admin\LegalDocumentController;
+use App\Http\Controllers\Admin\LegalDocumentGenerationController;
+use App\Http\Controllers\Admin\LegalDocumentTemplateController;
 use App\Http\Controllers\Admin\LegalTaskController;
+use App\Http\Controllers\Admin\LegalUpdateSummaryController;
+use App\Http\Controllers\Admin\LegalWorkspaceController;
 use App\Http\Controllers\Admin\SignatureRequestController;
 use App\Http\Controllers\Admin\MediaAssetController;
 use App\Http\Controllers\Admin\MailTemplateController;
@@ -113,6 +124,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::delete('/events/{event}', [CalendarController::class, 'destroy'])->name('destroy');
         });
 
+    Route::middleware('permission:google-calendar.manage')
+        ->prefix('google-calendar')
+        ->name('google-calendar.')
+        ->group(function (): void {
+            Route::get('/', [GoogleCalendarController::class, 'index'])->name('index');
+            Route::get('/conectar', [GoogleCalendarController::class, 'connect'])->name('connect');
+            Route::get('/callback', [GoogleCalendarController::class, 'callback'])->name('callback');
+            Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
+            Route::put('/', [GoogleCalendarController::class, 'update'])->name('update');
+            Route::post('/sincronizar', [GoogleCalendarController::class, 'sync'])->name('sync');
+            Route::delete('/', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');
+        });
+
+    Route::middleware('permission:legal-deadlines.reminders')
+        ->put('/legal-deadlines/preferences', [LegalDeadlinePreferenceController::class, 'update'])
+        ->name('legal-deadlines.preferences.update');
+
     Route::middleware('permission:preloader.manage')
         ->prefix('preloader')
         ->name('preloader.')
@@ -202,6 +230,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     $crud('practice-areas', 'practice-areas', PracticeAreaController::class, 'practice-areas.manage');
     $crud('clients', 'clients', ClientController::class, 'clients.manage');
     $crud('legal-cases', 'legal-cases', LegalCaseController::class, 'legal-cases.manage');
+    Route::middleware('permission:legal-workspace.view')->group(function (): void {
+        Route::get('legal-cases/{legalCase}/workspace', [LegalWorkspaceController::class, 'legalCase'])->name('legal-cases.workspace');
+        Route::get('clients/{client}/workspace', [LegalWorkspaceController::class, 'client'])->name('clients.workspace');
+    });
     Route::middleware('permission:legal-cases.manage')
         ->post('legal-cases/{record}/sync-datajud', [LegalCaseController::class, 'syncDataJud'])
         ->name('legal-cases.sync-datajud');
@@ -210,10 +242,73 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('legal-cases.sync-djen');
     $crud('legal-case-updates', 'legal-case-updates', LegalCaseUpdateController::class, 'legal-case-updates.manage');
     $crud('legal-tasks', 'legal-tasks', LegalTaskController::class, 'legal-tasks.manage');
+    Route::get('legal-tasks/{record}/history', [LegalTaskController::class, 'history'])
+        ->middleware('permission:legal-tasks.manage')
+        ->name('legal-tasks.history');
     $crud('legal-documents', 'legal-documents', LegalDocumentController::class, 'legal-documents.manage');
     Route::get('legal-documents/{record}/download', [LegalDocumentController::class, 'download'])
         ->middleware('permission:legal-documents.manage')
         ->name('legal-documents.download');
+
+    Route::prefix('djen-publications')->name('djen-publications.')->group(function (): void {
+        Route::get('/', [DjenPublicationController::class, 'index'])->middleware('permission:djen-publications.view')->name('index');
+        Route::get('/{publication}', [DjenPublicationController::class, 'show'])->middleware('permission:djen-publications.view')->name('show');
+        Route::post('/{publication}/aprovar', [DjenPublicationController::class, 'approve'])->middleware('permission:djen-publications.review')->name('approve');
+        Route::post('/{publication}/rejeitar', [DjenPublicationController::class, 'reject'])->middleware('permission:djen-publications.review')->name('reject');
+        Route::post('/{publication}/reabrir', [DjenPublicationController::class, 'reopen'])->middleware('permission:djen-publications.review')->name('reopen');
+    });
+    Route::prefix('djen-monitors')->name('djen-monitors.')->group(function (): void {
+        Route::post('/', [DjenMonitorController::class, 'store'])->middleware('permission:djen-monitors.manage')->name('store');
+        Route::put('/{monitor}', [DjenMonitorController::class, 'update'])->middleware('permission:djen-monitors.manage')->name('update');
+        Route::post('/{monitor}/sincronizar', [DjenMonitorController::class, 'sync'])->middleware('permission:djen-monitors.sync')->name('sync');
+    });
+
+    Route::prefix('legal-document-templates')->name('legal-document-templates.')->group(function (): void {
+        Route::get('/', [LegalDocumentTemplateController::class, 'index'])->middleware('permission:legal-document-templates.view')->name('index');
+        Route::get('/create', [LegalDocumentTemplateController::class, 'create'])->middleware('permission:legal-document-templates.manage')->name('create');
+        Route::post('/', [LegalDocumentTemplateController::class, 'store'])->middleware('permission:legal-document-templates.manage')->name('store');
+        Route::get('/{legalDocumentTemplate}', [LegalDocumentTemplateController::class, 'show'])->middleware('permission:legal-document-templates.view')->name('show');
+        Route::get('/{legalDocumentTemplate}/edit', [LegalDocumentTemplateController::class, 'edit'])->middleware('permission:legal-document-templates.manage')->name('edit');
+        Route::put('/{legalDocumentTemplate}', [LegalDocumentTemplateController::class, 'update'])->middleware('permission:legal-document-templates.manage')->name('update');
+        Route::post('/{legalDocumentTemplate}/versions', [LegalDocumentTemplateController::class, 'storeVersion'])->middleware('permission:legal-document-templates.manage')->name('versions.store');
+        Route::get('/{legalDocumentTemplate}/generate', [LegalDocumentGenerationController::class, 'create'])->middleware('permission:legal-document-templates.generate')->name('generate.create');
+        Route::post('/{legalDocumentTemplate}/generate', [LegalDocumentGenerationController::class, 'store'])->middleware('permission:legal-document-templates.generate')->name('generate.store');
+    });
+
+    $crud('financial-entries', 'financial-entries', FinancialEntryController::class, 'financial.manage');
+
+    Route::middleware('permission:hearing-transcriptions.manage')
+        ->prefix('hearing-transcriptions')
+        ->name('hearing-transcriptions.')
+        ->group(function (): void {
+            Route::get('/', [HearingTranscriptionController::class, 'index'])->name('index');
+            Route::post('/', [HearingTranscriptionController::class, 'store'])->name('store');
+            Route::get('/{transcription}', [HearingTranscriptionController::class, 'show'])->name('show');
+            Route::put('/{transcription}', [HearingTranscriptionController::class, 'update'])->name('update');
+            Route::post('/{transcription}/processar', [HearingTranscriptionController::class, 'process'])->name('process');
+            Route::get('/{transcription}/audio', [HearingTranscriptionController::class, 'download'])->name('download');
+            Route::get('/{transcription}/ata.docx', [HearingTranscriptionController::class, 'exportMinutes'])->name('export');
+            Route::post('/{transcription}/aprovar', [HearingTranscriptionController::class, 'approve'])
+                ->middleware('permission:hearing-transcriptions.approve')
+                ->name('approve');
+        });
+
+    Route::middleware('permission:legal-ai.configure')
+        ->prefix('legal-ai')
+        ->name('legal-ai.')
+        ->group(function (): void {
+            Route::get('/', [LegalAiIntegrationController::class, 'index'])->name('index');
+            Route::put('/', [LegalAiIntegrationController::class, 'update'])->name('update');
+        });
+    Route::prefix('legal-update-summaries')->name('legal-update-summaries.')->group(function (): void {
+        Route::post('/updates/{update}/generate', [LegalUpdateSummaryController::class, 'generate'])->middleware('permission:legal-ai.generate')->name('generate');
+        Route::put('/{summary}', [LegalUpdateSummaryController::class, 'update'])->middleware('permission:legal-ai.review')->name('update');
+        Route::post('/{summary}/approve', [LegalUpdateSummaryController::class, 'approve'])->middleware('permission:legal-ai.approve')->name('approve');
+        Route::post('/{summary}/reject', [LegalUpdateSummaryController::class, 'reject'])->middleware('permission:legal-ai.review')->name('reject');
+        Route::post('/{summary}/publish', [LegalUpdateSummaryController::class, 'publish'])
+            ->middleware('permission:legal-ai.publish')
+            ->name('publish');
+    });
     Route::middleware('signature.enabled')->prefix('signature-requests')->name('signature-requests.')->group(function (): void {
         Route::get('/', [SignatureRequestController::class, 'index'])->name('index');
         Route::get('/create', [SignatureRequestController::class, 'create'])->name('create');

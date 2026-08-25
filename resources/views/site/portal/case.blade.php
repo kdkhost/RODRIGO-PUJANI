@@ -93,7 +93,10 @@
                             <strong>{{ $update->title }}</strong>
                             <small>{{ $update->occurred_at?->format('d/m/Y H:i') }}</small>
                         </div>
-                        @if(filled($update->body))
+                        @if($update->publishedSummary)
+                            <small class="portal-chip">Resumo revisado pelo escritório</small>
+                            <div class="portal-rich-text portal-rich-text-sm">{!! nl2br(e($update->publishedSummary->summary_text)) !!}</div>
+                        @elseif(filled($update->body))
                             <div class="portal-rich-text portal-rich-text-sm">{!! safe_html($update->body) !!}</div>
                         @endif
                     </div>

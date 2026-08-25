@@ -6,6 +6,22 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('signatures:expire')->hourly()->withoutOverlapping();
+Schedule::command('djen:dispatch-due')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping(14)
+    ->name('djen-dispatch-due');
+Schedule::command('legal:process-deadline-notifications')
+    ->everyMinute()
+    ->withoutOverlapping(5)
+    ->name('legal-deadline-notifications');
+Schedule::command('google-calendar:sync')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping(14)
+    ->name('google-calendar-sync');
+Schedule::command('queue:work --stop-when-empty --queue=integrations,legal-productivity,default --tries=3 --timeout=900 --max-time=50')
+    ->everyMinute()
+    ->withoutOverlapping(20)
+    ->name('shared-hosting-queue-drain');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

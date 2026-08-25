@@ -46,6 +46,11 @@
                                 <span>{{ $item->location }}</span>
                             @endif
                             <span>{{ $visibilityLabels[$item->visibility ?: 'team'] ?? ucfirst($item->visibility ?: 'team') }}</span>
+                            @if($item->client)<span>{{ $item->client->name }}</span>@endif
+                            @if($item->legalCase)<span>{{ $item->legalCase->title }}</span>@endif
+                            @if($item->legalTask)<span><i class="bi bi-link-45deg"></i>Prazo canônico</span>@endif
+                            @if($item->shared_with_client)<span><i class="bi bi-person-check"></i>Portal</span>@endif
+                            @if($item->google_sync_enabled)<span><i class="bi bi-google"></i>Google</span>@endif
                         </div>
                     </td>
                     <td>
@@ -85,7 +90,9 @@
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
                             <button class="btn btn-sm btn-outline-primary" type="button" data-modal-url="{{ route('admin.calendar.edit', $item) }}">Editar</button>
-                            <button class="btn btn-sm btn-outline-danger" type="button" data-delete-url="{{ route('admin.calendar.destroy', $item) }}" data-table-target="#admin-calendar-events-table" data-calendar-target="#admin-calendar">Excluir</button>
+                            @if(!$item->legal_task_id)
+                                <button class="btn btn-sm btn-outline-danger" type="button" data-delete-url="{{ route('admin.calendar.destroy', $item) }}" data-table-target="#admin-calendar-events-table" data-calendar-target="#admin-calendar">Excluir</button>
+                            @endif
                         </div>
                     </td>
                 </tr>

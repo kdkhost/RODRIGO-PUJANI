@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'legal_case_id',
@@ -44,6 +46,21 @@ class LegalCaseUpdate extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function djenPublication(): HasOne
+    {
+        return $this->hasOne(DjenPublication::class, 'legal_case_update_id');
+    }
+
+    public function summaries(): HasMany
+    {
+        return $this->hasMany(LegalUpdateSummary::class);
+    }
+
+    public function publishedSummary(): HasOne
+    {
+        return $this->hasOne(LegalUpdateSummary::class)->where('status', 'published')->latestOfMany();
     }
 
     public function scopeVisibleTo(Builder $query, ?User $user): Builder

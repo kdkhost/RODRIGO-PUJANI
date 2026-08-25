@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\CalendarEvent;
 use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocument;
@@ -122,7 +123,7 @@ class ClientPortalController extends Controller
             ->get();
 
         $recentUpdates = $client->legalCaseUpdates()
-            ->with('legalCase:id,title')
+            ->with(['legalCase:id,title', 'publishedSummary'])
             ->where('is_visible_to_client', true)
             ->orderByDesc('occurred_at')
             ->limit(8)
@@ -130,6 +131,26 @@ class ClientPortalController extends Controller
 
         $sharedDocuments = $this->portalDocumentsQuery($client)
             ->orderByDesc('created_at')
+            ->limit(8)
+            ->get();
+
+        $sharedCalendarEvents = CalendarEvent::query()
+            ->where('client_id', $client->id)
+            ->where('shared_with_client', true)
+            ->whereNotIn('status', ['canceled'])
+            ->where('start_at', '>=', now()->startOfDay())
+            ->where(function ($query) use ($client): void {
+                $query
+                    ->whereNull('legal_case_id')
+                    ->orWhereHas('legalCase', function ($caseQuery) use ($client): void {
+                        $caseQuery
+                            ->where('client_id', $client->id)
+                            ->where('is_active', true)
+                            ->where('portal_visible', true);
+                    });
+            })
+            ->with('legalCase:id,title,process_number')
+            ->orderBy('start_at')
             ->limit(8)
             ->get();
 
@@ -157,12 +178,14 @@ class ClientPortalController extends Controller
             'cases' => $cases,
             'recentUpdates' => $recentUpdates,
             'sharedDocuments' => $sharedDocuments,
+            'sharedCalendarEvents' => $sharedCalendarEvents,
             'stats' => [
                 'cases' => $cases->count(),
                 'deadlines' => $cases->filter(fn (LegalCase $legalCase) => filled($legalCase->next_deadline_at))->count(),
                 'hearings' => $cases->filter(fn (LegalCase $legalCase) => filled($legalCase->next_hearing_at))->count(),
                 'documents' => $sharedDocuments->count(),
                 'updates' => $recentUpdates->count(),
+                'agenda' => $sharedCalendarEvents->count(),
             ],
             'caseStatusBreakdown' => $cases
                 ->groupBy('status')
@@ -221,6 +244,7 @@ class ClientPortalController extends Controller
             ->findOrFail($case);
 
         $updates = $legalCase->updates()
+            ->with('publishedSummary')
             ->where('is_visible_to_client', true)
             ->orderByDesc('occurred_at')
             ->get();

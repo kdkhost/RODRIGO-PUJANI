@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\TeamMember;
+use App\Models\LegalTask;
+use App\Observers\LegalTaskObserver;
 use App\Services\InstallerService;
 use App\Contracts\LegalDocumentScannerInterface;
 use App\Contracts\DocumentSignatureProviderInterface;
@@ -35,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        LegalTask::observe(LegalTaskObserver::class);
+
         Paginator::defaultView('pagination::premium');
         Paginator::defaultSimpleView('pagination::simple-bootstrap-5');
 

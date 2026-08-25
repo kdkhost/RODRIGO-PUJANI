@@ -28,9 +28,14 @@
                     <h1>{{ $pageTitle }}</h1>
                     <p>Painel vivo da agenda com compromissos, bloqueios, responsáveis e visão imediata da carga operacional.</p>
                 </div>
-                <button class="btn btn-primary admin-action-button" type="button" data-modal-url="{{ route('admin.calendar.create') }}" data-modal-title="Novo evento">
-                    <i class="bi bi-calendar-plus me-1"></i>Novo evento
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                    @if(Route::has('admin.google-calendar.index') && auth()->user()?->can('google-calendar.manage'))
+                        <a class="btn btn-outline-primary" href="{{ route('admin.google-calendar.index') }}"><i class="bi bi-google me-1"></i>Google Calendar</a>
+                    @endif
+                    <button class="btn btn-primary admin-action-button" type="button" data-modal-url="{{ route('admin.calendar.create') }}" data-modal-title="Novo evento">
+                        <i class="bi bi-calendar-plus me-1"></i>Novo evento
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -90,6 +95,24 @@
                     <option value="">Todos os responsáveis</option>
                     @foreach ($users as $user)
                         <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    @endforeach
+                </select>
+                <select name="client_id" class="form-select" data-table-filter data-table-target="#admin-calendar-events-table">
+                    <option value="">Todos os clientes</option>
+                    @foreach ($clients as $client)
+                        <option value="{{ $client->id }}">{{ $client->name }}</option>
+                    @endforeach
+                </select>
+                <select name="legal_case_id" class="form-select" data-table-filter data-table-target="#admin-calendar-events-table">
+                    <option value="">Todos os processos</option>
+                    @foreach ($cases as $case)
+                        <option value="{{ $case->id }}">{{ $case->title }}</option>
+                    @endforeach
+                </select>
+                <select name="event_type" class="form-select" data-table-filter data-table-target="#admin-calendar-events-table">
+                    <option value="">Todos os tipos</option>
+                    @foreach ($eventTypes as $eventType)
+                        <option value="{{ $eventType }}">{{ str($eventType)->replace('_', ' ')->headline() }}</option>
                     @endforeach
                 </select>
                 <input type="date" name="date_from" class="form-control" data-table-filter data-table-target="#admin-calendar-events-table" aria-label="Data inicial">

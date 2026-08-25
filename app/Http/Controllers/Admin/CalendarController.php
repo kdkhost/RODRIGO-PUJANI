@@ -4,13 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
+use App\Models\Client;
+use App\Models\LegalCase;
+use App\Models\LegalTask;
 use App\Models\User;
+use App\Services\LegalTaskCalendarService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CalendarController extends Controller
@@ -18,6 +23,7 @@ class CalendarController extends Controller
     private const STATUSES = ['scheduled', 'confirmed', 'done', 'canceled'];
     private const VISIBILITIES = ['private', 'team', 'public'];
     private const DISPLAYS = ['auto', 'background', 'inverse-background'];
+    private const EVENT_TYPES = ['appointment', 'deadline', 'hearing', 'meeting', 'filing', 'follow_up', 'review', 'internal'];
 
     public function index(): View
     {
@@ -38,7 +44,7 @@ class CalendarController extends Controller
         }
 
         $records = (clone $eventsQuery)
-            ->with(['owner:id,name', 'creator:id,name'])
+            ->with($this->eventRelations())
             ->orderBy('start_at')
             ->paginate(10)
             ->withQueryString();
@@ -46,6 +52,9 @@ class CalendarController extends Controller
         return view('admin.calendar.index', [
             'pageTitle' => 'Agenda',
             'users' => $this->availableOwners(),
+            'clients' => $this->availableClients(),
+            'cases' => $this->availableCases(),
+            'eventTypes' => self::EVENT_TYPES,
             'statuses' => self::STATUSES,
             'visibilities' => self::VISIBILITIES,
             'displays' => self::DISPLAYS,
@@ -64,7 +73,7 @@ class CalendarController extends Controller
                 'background' => (clone $eventsQuery)->whereIn('display', ['background', 'inverse-background'])->count(),
             ],
             'upcomingEvents' => (clone $eventsQuery)
-                ->with(['owner:id,name'])
+                ->with($this->eventRelations())
                 ->where('start_at', '>=', now()->startOfDay())
                 ->orderBy('start_at')
                 ->limit(6)
@@ -94,11 +103,14 @@ class CalendarController extends Controller
             'visibility' => ['nullable', Rule::in(self::VISIBILITIES)],
             'display' => ['nullable', Rule::in(self::DISPLAYS)],
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'client_id' => ['nullable', 'integer', 'exists:clients,id'],
+            'legal_case_id' => ['nullable', 'integer', 'exists:legal_cases,id'],
+            'event_type' => ['nullable', Rule::in(self::EVENT_TYPES)],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
         ]);
 
-        $query = $this->visibleEventsQuery()->with(['owner:id,name', 'creator:id,name']);
+        $query = $this->visibleEventsQuery()->with($this->eventRelations());
         $this->applySearchFilter($query, $validated['search'] ?? null);
         $this->applyRangeFilter(
             $query,
@@ -128,12 +140,15 @@ class CalendarController extends Controller
             'visibility' => ['nullable', Rule::in(self::VISIBILITIES)],
             'display' => ['nullable', Rule::in(self::DISPLAYS)],
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'client_id' => ['nullable', 'integer', 'exists:clients,id'],
+            'legal_case_id' => ['nullable', 'integer', 'exists:legal_cases,id'],
+            'event_type' => ['nullable', Rule::in(self::EVENT_TYPES)],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
             'per_page' => ['nullable', 'integer', 'min:5', 'max:100'],
         ]);
 
-        $query = $this->visibleEventsQuery()->with(['owner:id,name', 'creator:id,name']);
+        $query = $this->visibleEventsQuery()->with($this->eventRelations());
         $this->applySearchFilter($query, $validated['search'] ?? null);
         $this->applyRangeFilter(
             $query,
@@ -165,6 +180,7 @@ class CalendarController extends Controller
             'status' => 'scheduled',
             'visibility' => 'team',
             'category' => 'Atendimento',
+            'event_type' => 'appointment',
             'color' => '#c49a3c',
             'text_color' => '#111318',
             'display' => 'auto',
@@ -174,12 +190,13 @@ class CalendarController extends Controller
         return $this->formResponse($event, 'Novo evento');
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, LegalTaskCalendarService $taskCalendar): JsonResponse
     {
         $event = new CalendarEvent();
         $event->fill($this->validatedData($request));
         $event->created_by = Auth::id();
         $event->save();
+        $taskCalendar->syncCalendarEventToTask($event);
 
         activity_log('calendar', 'created', $event, $event->toArray(), 'Evento criado na agenda.');
 
@@ -197,12 +214,13 @@ class CalendarController extends Controller
         return $this->formResponse($event, 'Editar evento');
     }
 
-    public function update(Request $request, CalendarEvent $event): JsonResponse
+    public function update(Request $request, CalendarEvent $event, LegalTaskCalendarService $taskCalendar): JsonResponse
     {
         $this->guardVisibleEvent($event);
 
         $event->fill($this->validatedData($request));
         $event->save();
+        $taskCalendar->syncCalendarEventToTask($event);
 
         activity_log('calendar', 'updated', $event, $event->toArray(), 'Evento atualizado na agenda.');
 
@@ -213,7 +231,7 @@ class CalendarController extends Controller
         ]);
     }
 
-    public function move(Request $request, CalendarEvent $event): JsonResponse
+    public function move(Request $request, CalendarEvent $event, LegalTaskCalendarService $taskCalendar): JsonResponse
     {
         $this->guardVisibleEvent($event);
 
@@ -232,6 +250,7 @@ class CalendarController extends Controller
             'end_at' => filled($validated['end_at'] ?? null) ? Carbon::parse($validated['end_at']) : null,
             'all_day' => $request->boolean('all_day'),
         ])->save();
+        $taskCalendar->syncCalendarEventToTask($event);
 
         activity_log('calendar', 'moved', $event, $event->only(['start_at', 'end_at', 'all_day']), 'Evento reposicionado na agenda.');
 
@@ -241,6 +260,12 @@ class CalendarController extends Controller
     public function destroy(CalendarEvent $event): JsonResponse
     {
         $this->guardVisibleEvent($event);
+
+        if ($event->legal_task_id) {
+            return response()->json([
+                'message' => 'Este evento representa um prazo jurídico. Cancele ou exclua a tarefa de origem.',
+            ], 422);
+        }
 
         $event->delete();
 
@@ -260,10 +285,14 @@ class CalendarController extends Controller
             'html' => view('admin.calendar._form', [
                 'record' => $event,
                 'users' => $this->availableOwners(),
-                'canChooseOwner' => ! Auth::user()?->isAssociatedLawyer(),
+                'clients' => $this->availableClients(),
+                'cases' => $this->availableCases(),
+                'tasks' => $this->availableTasks($event),
+                'canChooseOwner' => Auth::user()?->canViewAllLegalOperations(),
                 'statuses' => self::STATUSES,
                 'visibilities' => self::VISIBILITIES,
                 'displays' => self::DISPLAYS,
+                'eventTypes' => self::EVENT_TYPES,
             ])->render(),
         ]);
     }
@@ -287,6 +316,17 @@ class CalendarController extends Controller
             'overlap' => ['nullable', 'boolean'],
             'display' => ['required', Rule::in(self::DISPLAYS)],
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'client_id' => ['nullable', 'integer'],
+            'legal_case_id' => ['nullable', 'integer'],
+            'legal_task_id' => [
+                'nullable',
+                'integer',
+                Rule::unique('calendar_events', 'legal_task_id')->ignore($request->route('event')?->id),
+            ],
+            'event_type' => ['nullable', Rule::in(self::EVENT_TYPES)],
+            'reminder_minutes' => ['nullable', 'integer', 'min:0', 'max:40320'],
+            'shared_with_client' => ['nullable', 'boolean'],
+            'google_sync_enabled' => ['nullable', 'boolean'],
             'extended_props_text' => [
                 'nullable',
                 'string',
@@ -309,11 +349,56 @@ class CalendarController extends Controller
         $validated['all_day'] = $request->boolean('all_day');
         $validated['editable'] = $request->boolean('editable');
         $validated['overlap'] = $request->boolean('overlap');
+        $validated['shared_with_client'] = $request->boolean('shared_with_client');
+        $validated['google_sync_enabled'] = $request->boolean('google_sync_enabled');
+        $validated['event_type'] = $validated['event_type'] ?? $request->route('event')?->event_type ?? 'appointment';
         $validated['extended_props'] = filled($validated['extended_props_text'] ?? null)
             ? json_decode((string) $validated['extended_props_text'], true)
             : null;
 
-        if (Auth::user()?->isAssociatedLawyer()) {
+        $visibleClientIds = $this->availableClients()->pluck('id')->map(fn ($id) => (int) $id);
+        $visibleCaseIds = $this->availableCases()->pluck('id')->map(fn ($id) => (int) $id);
+        $visibleTaskIds = $this->availableTasks($request->route('event'))->pluck('id')->map(fn ($id) => (int) $id);
+
+        if (filled($validated['client_id'] ?? null) && ! $visibleClientIds->contains((int) $validated['client_id'])) {
+            throw ValidationException::withMessages(['client_id' => 'O cliente selecionado não está disponível para este usuário.']);
+        }
+
+        $legalCase = null;
+        if (filled($validated['legal_case_id'] ?? null)) {
+            if (! $visibleCaseIds->contains((int) $validated['legal_case_id'])) {
+                throw ValidationException::withMessages(['legal_case_id' => 'O processo selecionado não está disponível para este usuário.']);
+            }
+
+            $legalCase = LegalCase::query()->find($validated['legal_case_id']);
+            if (filled($validated['client_id'] ?? null) && (int) $validated['client_id'] !== (int) $legalCase?->client_id) {
+                throw ValidationException::withMessages(['client_id' => 'O cliente informado não pertence ao processo selecionado.']);
+            }
+            $validated['client_id'] = $legalCase?->client_id;
+        }
+
+        if (filled($validated['legal_task_id'] ?? null)) {
+            if (! $visibleTaskIds->contains((int) $validated['legal_task_id'])) {
+                throw ValidationException::withMessages(['legal_task_id' => 'O prazo selecionado não está disponível para este usuário.']);
+            }
+
+            $task = LegalTask::query()->find($validated['legal_task_id']);
+            $validated['legal_case_id'] = $task?->legal_case_id;
+            $validated['client_id'] = $task?->legal_case_id
+                ? LegalCase::query()->whereKey($task->legal_case_id)->value('client_id')
+                : $task?->client_id;
+            $validated['owner_id'] = $task?->assigned_user_id;
+            $validated['event_type'] = $task?->task_type ?: $validated['event_type'];
+            $validated['source'] = 'legal_task';
+        } else {
+            $validated['source'] = $request->route('event')?->source ?: 'manual';
+        }
+
+        if ($validated['shared_with_client'] && blank($validated['client_id'] ?? null)) {
+            throw ValidationException::withMessages(['shared_with_client' => 'Selecione um cliente antes de compartilhar o evento no portal.']);
+        }
+
+        if (! Auth::user()?->canViewAllLegalOperations()) {
             $validated['owner_id'] = Auth::id();
         }
 
@@ -383,6 +468,14 @@ class CalendarController extends Controller
                 'description' => strip_tags((string) $event->description),
                 'owner' => $event->owner?->name,
                 'createdBy' => $event->creator?->name,
+                'client' => $event->client?->name,
+                'clientId' => $event->client_id,
+                'legalCase' => $event->legalCase?->title,
+                'legalCaseId' => $event->legal_case_id,
+                'legalTaskId' => $event->legal_task_id,
+                'eventType' => $event->event_type,
+                'sharedWithClient' => (bool) $event->shared_with_client,
+                'googleSyncEnabled' => (bool) $event->google_sync_enabled,
                 'externalUrl' => $event->url,
                 'editUrl' => route('admin.calendar.edit', $event),
                 'moveUrl' => route('admin.calendar.move', $event),
@@ -428,7 +521,7 @@ class CalendarController extends Controller
             ->visibleTo(Auth::user())
             ->where('is_active', true)
             ->when(
-                Auth::user()?->isAssociatedLawyer(),
+                ! Auth::user()?->canViewAllLegalOperations(),
                 fn (Builder $query) => $query->whereKey(Auth::id())
             )
             ->orderBy('name')
@@ -437,18 +530,7 @@ class CalendarController extends Controller
 
     private function visibleEventsQuery(): Builder
     {
-        return CalendarEvent::query()
-            ->when(Auth::user()?->isAssociatedLawyer(), function (Builder $query): void {
-                $query->where(function (Builder $builder): void {
-                    $builder
-                        ->where('owner_id', Auth::id())
-                        ->orWhere(function (Builder $nested): void {
-                            $nested
-                                ->whereNull('owner_id')
-                                ->where('created_by', Auth::id());
-                        });
-                });
-            });
+        return CalendarEvent::query()->visibleTo(Auth::user());
     }
 
     private function applySearchFilter(Builder $query, ?string $search): void
@@ -469,7 +551,7 @@ class CalendarController extends Controller
 
     private function applyAttributeFilters(Builder $query, array $validated): void
     {
-        foreach (['category', 'status', 'visibility', 'owner_id', 'display'] as $field) {
+        foreach (['category', 'status', 'visibility', 'owner_id', 'display', 'client_id', 'legal_case_id', 'event_type'] as $field) {
             if (filled($validated[$field] ?? null)) {
                 $query->where($field, $validated[$field]);
             }
@@ -507,7 +589,7 @@ class CalendarController extends Controller
 
     private function guardVisibleEvent(CalendarEvent $event): void
     {
-        if (! Auth::user()?->isAssociatedLawyer()) {
+        if (Auth::user()?->canViewAllLegalOperations()) {
             return;
         }
 
@@ -520,5 +602,48 @@ class CalendarController extends Controller
         }
 
         abort(404);
+    }
+
+    private function availableClients()
+    {
+        return Client::query()
+            ->visibleTo(Auth::user())
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    private function availableCases()
+    {
+        return LegalCase::query()
+            ->visibleTo(Auth::user())
+            ->where('is_active', true)
+            ->orderBy('title')
+            ->get(['id', 'client_id', 'title', 'process_number']);
+    }
+
+    private function availableTasks(?CalendarEvent $event = null)
+    {
+        return LegalTask::query()
+            ->visibleTo(Auth::user())
+            ->whereNotIn('status', ['done', 'canceled'])
+            ->where(function (Builder $query) use ($event): void {
+                $query
+                    ->whereDoesntHave('calendarEvent')
+                    ->when($event?->legal_task_id, fn (Builder $nested) => $nested->orWhereKey($event->legal_task_id));
+            })
+            ->orderByRaw('due_at is null, due_at asc')
+            ->get(['id', 'legal_case_id', 'client_id', 'assigned_user_id', 'title', 'task_type', 'due_at']);
+    }
+
+    private function eventRelations(): array
+    {
+        return [
+            'owner:id,name',
+            'creator:id,name',
+            'client:id,name',
+            'legalCase:id,client_id,title,process_number',
+            'legalTask:id,title',
+        ];
     }
 }

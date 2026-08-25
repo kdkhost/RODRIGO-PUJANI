@@ -182,6 +182,31 @@
         </section>
     </div>
 
+    @if($sharedCalendarEvents->isNotEmpty())
+        <div class="portal-section portal-section-spaced">
+            <div class="portal-section-heading">
+                <h3>Agenda compartilhada</h3>
+            </div>
+            <div class="portal-timeline portal-timeline-dense">
+                @foreach($sharedCalendarEvents as $event)
+                    <article class="portal-timeline-item">
+                        <div class="portal-timeline-dot"></div>
+                        <div>
+                            <div class="portal-timeline-header">
+                                <strong>{{ $event->title }}</strong>
+                                <small>{{ $event->all_day ? $event->start_at?->format('d/m/Y') : $event->start_at?->format('d/m/Y H:i') }}</small>
+                            </div>
+                            <div class="portal-timeline-body">
+                                <strong>{{ $event->legalCase?->title ?: ($event->category ?: 'Compromisso') }}</strong>
+                                <span>{{ $event->location ?: 'Detalhes disponíveis com a equipe responsável.' }}</span>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="portal-section portal-section-spaced">
         <div class="portal-section-heading">
             <h3>Processos em acompanhamento</h3>
@@ -239,6 +264,9 @@
                     <div>
                         <strong>{{ $update->title }}</strong>
                         <span>{{ $update->legalCase?->title ?: 'Processo' }} • {{ $update->occurred_at?->format('d/m/Y H:i') }}</span>
+                        @if($update->publishedSummary)
+                            <small>{{ str($update->publishedSummary->summary_text)->squish()->limit(160) }}</small>
+                        @endif
                     </div>
                 </article>
             @empty

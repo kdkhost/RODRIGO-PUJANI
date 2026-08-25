@@ -101,6 +101,26 @@ class Client extends Model
         return $this->hasMany(LegalDocument::class);
     }
 
+    public function calendarEvents(): HasMany
+    {
+        return $this->hasMany(CalendarEvent::class);
+    }
+
+    public function financialEntries(): HasMany
+    {
+        return $this->hasMany(FinancialEntry::class);
+    }
+
+    public function hearingTranscriptions(): HasMany
+    {
+        return $this->hasMany(HearingTranscription::class);
+    }
+
+    public function legalDocumentGenerations(): HasMany
+    {
+        return $this->hasMany(LegalDocumentGeneration::class);
+    }
+
     public function legalCaseUpdates(): HasMany
     {
         return $this->hasMany(LegalCaseUpdate::class);

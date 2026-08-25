@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Client;
+use App\Models\LegalDeadlinePreference;
 use App\Models\LegalCase;
 use App\Models\LegalTask;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class LegalTaskController extends AdminCrudController
@@ -25,9 +28,87 @@ class LegalTaskController extends AdminCrudController
 
     protected function indexQuery(Request $request): Builder
     {
-        return LegalTask::query()
+        $query = LegalTask::query()
             ->visibleTo($request->user())
-            ->with(['legalCase:id,title', 'client:id,name', 'assignedUser:id,name']);
+            ->with([
+                'legalCase:id,client_id,title,process_number',
+                'client:id,name',
+                'assignedUser:id,name',
+                'calendarEvent:id,legal_task_id,start_at,end_at,status',
+            ]);
+
+        foreach (['assigned_user_id', 'legal_case_id', 'client_id', 'status', 'task_type'] as $field) {
+            if (filled($request->input($field))) {
+                $query->where($field, $request->input($field));
+            }
+        }
+
+        $timezone = $request->user()?->timezone ?: config('app.timezone');
+        $today = Carbon::now($timezone)->startOfDay();
+
+        match ($request->string('due_scope')->toString()) {
+            'today' => $query->whereBetween('due_at', [$today, $today->copy()->endOfDay()]),
+            'tomorrow' => $query->whereBetween('due_at', [
+                $today->copy()->addDay(),
+                $today->copy()->addDay()->endOfDay(),
+            ]),
+            'week' => $query->whereBetween('due_at', [$today, $today->copy()->endOfWeek()]),
+            'overdue' => $query
+                ->where('due_at', '<', $today)
+                ->whereNotIn('status', ['done', 'canceled']),
+            default => null,
+        };
+
+        return $query;
+    }
+
+    protected function indexData(Request $request): array
+    {
+        $baseQuery = LegalTask::query()->visibleTo($request->user());
+        $timezone = $request->user()?->timezone ?: config('app.timezone');
+        $today = Carbon::now($timezone)->startOfDay();
+        $preference = LegalDeadlinePreference::query()
+            ->where('user_id', $request->user()?->id)
+            ->first() ?: new LegalDeadlinePreference([
+                'user_id' => $request->user()?->id,
+                'deadline_reminders_enabled' => true,
+                'daily_summary_enabled' => true,
+                'daily_summary_time' => '07:00',
+                'daily_summary_days_ahead' => 7,
+                'timezone' => $timezone,
+                'email' => $request->user()?->email,
+            ]);
+
+        return [
+            'filterClients' => Client::query()
+                ->visibleTo($request->user())
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'filterCases' => LegalCase::query()
+                ->visibleTo($request->user())
+                ->where('is_active', true)
+                ->orderBy('title')
+                ->get(['id', 'client_id', 'title', 'process_number']),
+            'filterUsers' => User::query()
+                ->visibleTo($request->user())
+                ->where('is_active', true)
+                ->when(
+                    ! $request->user()?->canViewAllLegalOperations(),
+                    fn (Builder $query) => $query->whereKey($request->user()?->id)
+                )
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'taskTypeLabels' => $this->taskTypes(),
+            'statusLabels' => $this->statuses(),
+            'deadlinePreference' => $preference,
+            'deadlineStats' => [
+                'today' => (clone $baseQuery)->whereBetween('due_at', [$today, $today->copy()->endOfDay()])->count(),
+                'tomorrow' => (clone $baseQuery)->whereBetween('due_at', [$today->copy()->addDay(), $today->copy()->addDay()->endOfDay()])->count(),
+                'week' => (clone $baseQuery)->whereBetween('due_at', [$today, $today->copy()->endOfWeek()])->count(),
+                'overdue' => (clone $baseQuery)->where('due_at', '<', $today)->whereNotIn('status', ['done', 'canceled'])->count(),
+            ],
+        ];
     }
 
     protected function formData(?Model $record = null): array
@@ -58,28 +139,14 @@ class LegalTaskController extends AdminCrudController
             'clients' => $clients,
             'cases' => $cases,
             'users' => $users,
-            'taskTypes' => [
-                'deadline' => 'Prazo',
-                'hearing' => 'Audiência',
-                'meeting' => 'Reunião',
-                'filing' => 'Protocolo',
-                'follow_up' => 'Follow-up',
-                'review' => 'Revisão',
-                'internal' => 'Interna',
-            ],
+            'taskTypes' => $this->taskTypes(),
             'priorities' => [
                 'low' => 'Baixa',
                 'medium' => 'Média',
                 'high' => 'Alta',
                 'urgent' => 'Urgente',
             ],
-            'statuses' => [
-                'pending' => 'Pendente',
-                'in_progress' => 'Em andamento',
-                'waiting' => 'Aguardando retorno',
-                'done' => 'Concluída',
-                'canceled' => 'Cancelada',
-            ],
+            'statuses' => $this->statuses(),
         ];
     }
 
@@ -110,7 +177,25 @@ class LegalTaskController extends AdminCrudController
 
         return [
             'legal_case_id' => ['nullable', 'integer', $caseRule],
-            'client_id' => ['nullable', 'integer', $clientRule],
+            'client_id' => [
+                'nullable',
+                'integer',
+                $clientRule,
+                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
+                    if (blank($value) || blank($request->input('legal_case_id'))) {
+                        return;
+                    }
+
+                    $caseClientId = LegalCase::query()
+                        ->visibleTo($request->user())
+                        ->whereKey($request->input('legal_case_id'))
+                        ->value('client_id');
+
+                    if ((int) $caseClientId !== (int) $value) {
+                        $fail('O cliente informado não pertence ao processo selecionado.');
+                    }
+                },
+            ],
             'assigned_user_id' => ['nullable', 'integer', $assignedUserRule],
             'title' => ['required', 'string', 'max:255'],
             'task_type' => ['required', 'in:deadline,hearing,meeting,filing,follow_up,review,internal'],
@@ -134,7 +219,7 @@ class LegalTaskController extends AdminCrudController
             $validated['assigned_user_id'] = $request->user()->id;
         }
 
-        if (filled($validated['legal_case_id'] ?? null) && blank($validated['client_id'] ?? null)) {
+        if (filled($validated['legal_case_id'] ?? null)) {
             $validated['client_id'] = LegalCase::query()
                 ->whereKey($validated['legal_case_id'])
                 ->value('client_id');
@@ -154,8 +239,59 @@ class LegalTaskController extends AdminCrudController
     protected function resolveRecord(string $record): Model
     {
         return LegalTask::query()
-            ->with(['legalCase:id,title', 'client:id,name', 'assignedUser:id,name'])
+            ->with([
+                'legalCase:id,client_id,title,process_number',
+                'client:id,name',
+                'assignedUser:id,name',
+                'calendarEvent:id,legal_task_id,start_at,end_at,status',
+            ])
             ->visibleTo(auth()->user())
             ->findOrFail($record);
+    }
+
+    public function history(string $record): JsonResponse
+    {
+        $task = $this->resolveRecord($record);
+        $history = $task->histories()
+            ->with('user:id,name')
+            ->latest('id')
+            ->paginate(20);
+
+        return response()->json([
+            'title' => 'Histórico do prazo',
+            'html' => view('admin.legal-tasks._history', [
+                'record' => $task,
+                'history' => $history,
+            ])->render(),
+        ]);
+    }
+
+    protected function indexView(): string
+    {
+        return 'admin.legal-tasks.index';
+    }
+
+    private function taskTypes(): array
+    {
+        return [
+            'deadline' => 'Prazo',
+            'hearing' => 'Audiência',
+            'meeting' => 'Reunião',
+            'filing' => 'Protocolo',
+            'follow_up' => 'Follow-up',
+            'review' => 'Revisão',
+            'internal' => 'Interna',
+        ];
+    }
+
+    private function statuses(): array
+    {
+        return [
+            'pending' => 'Pendente',
+            'in_progress' => 'Em andamento',
+            'waiting' => 'Aguardando retorno',
+            'done' => 'Concluída',
+            'canceled' => 'Cancelada',
+        ];
     }
 }

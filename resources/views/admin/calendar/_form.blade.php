@@ -18,6 +18,16 @@
         'background' => 'Marcação de fundo',
         'inverse-background' => 'Bloqueio invertido',
     ];
+    $eventTypeLabels = [
+        'appointment' => 'Compromisso',
+        'deadline' => 'Prazo',
+        'hearing' => 'Audiência',
+        'meeting' => 'Reunião',
+        'filing' => 'Protocolo',
+        'follow_up' => 'Follow-up',
+        'review' => 'Revisão',
+        'internal' => 'Interno',
+    ];
 @endphp
 
 <form action="{{ $isEdit ? route('admin.calendar.update', $record) : route('admin.calendar.store') }}" method="POST" data-ajax-form>
@@ -32,6 +42,35 @@
         <div class="col-md-4">
             <label class="form-label">Categoria</label>
             <input type="text" name="category" class="form-control" value="{{ old('category', $record->category ?: 'Atendimento') }}" required>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Cliente</label>
+            <select name="client_id" class="form-select">
+                <option value="">Sem cliente</option>
+                @foreach($clients as $client)
+                    <option value="{{ $client->id }}" @selected((string) old('client_id', $record->client_id) === (string) $client->id)>{{ $client->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Processo</label>
+            <select name="legal_case_id" class="form-select">
+                <option value="">Sem processo</option>
+                @foreach($cases as $case)
+                    <option value="{{ $case->id }}" @selected((string) old('legal_case_id', $record->legal_case_id) === (string) $case->id)>{{ $case->title }}{{ $case->process_number ? ' · '.$case->process_number : '' }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Prazo vinculado</label>
+            <select name="legal_task_id" class="form-select">
+                <option value="">Evento independente</option>
+                @foreach($tasks as $task)
+                    <option value="{{ $task->id }}" @selected((string) old('legal_task_id', $record->legal_task_id) === (string) $task->id)>{{ $task->title }}{{ $task->due_at ? ' · '.$task->due_at->format('d/m/Y H:i') : '' }}</option>
+                @endforeach
+            </select>
+            <div class="form-text">Um prazo pode ter somente um evento canônico na agenda.</div>
         </div>
 
         <div class="col-md-4">
@@ -61,6 +100,19 @@
             @if(! $canChooseOwner)
                 <input type="hidden" name="owner_id" value="{{ old('owner_id', $record->owner_id ?: auth()->id()) }}">
             @endif
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Tipo jurídico</label>
+            <select name="event_type" class="form-select" required>
+                @foreach($eventTypes as $eventType)
+                    <option value="{{ $eventType }}" @selected(old('event_type', $record->event_type ?: 'appointment') === $eventType)>{{ $eventTypeLabels[$eventType] ?? str($eventType)->headline() }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Lembrete (minutos)</label>
+            <input type="number" name="reminder_minutes" class="form-control" min="0" max="40320" value="{{ old('reminder_minutes', $record->reminder_minutes) }}">
         </div>
 
         <div class="col-md-6">
@@ -110,6 +162,14 @@
             <input type="checkbox" class="form-check-input" id="calendar_overlap" name="overlap" value="1" @checked(old('overlap', $record->overlap ?? true))>
             <label class="form-check-label" for="calendar_overlap">Permitir sobreposição</label>
         </div>
+        <div class="col-md-4 form-check ps-5">
+            <input type="checkbox" class="form-check-input" id="calendar_shared_with_client" name="shared_with_client" value="1" @checked(old('shared_with_client', $record->shared_with_client))>
+            <label class="form-check-label" for="calendar_shared_with_client">Compartilhar no portal do cliente</label>
+        </div>
+        <div class="col-md-4 form-check ps-5">
+            <input type="checkbox" class="form-check-input" id="calendar_google_sync_enabled" name="google_sync_enabled" value="1" @checked(old('google_sync_enabled', $record->google_sync_enabled))>
+            <label class="form-check-label" for="calendar_google_sync_enabled">Sincronizar com Google Calendar</label>
+        </div>
 
         <div class="col-12">
             <label class="form-label">Descrição</label>
@@ -131,9 +191,11 @@
                             <i class="bi bi-box-arrow-up-right me-1"></i>Abrir link
                         </a>
                     @endif
-                    <button type="button" class="btn btn-outline-danger" data-delete-url="{{ route('admin.calendar.destroy', $record) }}" data-calendar-target="#admin-calendar" data-table-target="#admin-calendar-events-table" data-confirm-text="O evento será removido permanentemente da agenda.">
-                        <i class="bi bi-trash me-1"></i>Excluir
-                    </button>
+                    @if(!$record->legal_task_id)
+                        <button type="button" class="btn btn-outline-danger" data-delete-url="{{ route('admin.calendar.destroy', $record) }}" data-calendar-target="#admin-calendar" data-table-target="#admin-calendar-events-table" data-confirm-text="O evento será removido permanentemente da agenda.">
+                            <i class="bi bi-trash me-1"></i>Excluir
+                        </button>
+                    @endif
                 </div>
             @endif
         </div>

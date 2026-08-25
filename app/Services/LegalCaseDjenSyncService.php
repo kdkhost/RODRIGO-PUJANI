@@ -2,70 +2,56 @@
 
 namespace App\Services;
 
+use App\Models\DjenMonitor;
+use App\Models\DjenSyncRun;
 use App\Models\LegalCase;
-use App\Models\LegalCaseUpdate;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class LegalCaseDjenSyncService
 {
-    public function __construct(private readonly DjenClient $djenClient)
-    {
-    }
+    public function __construct(private readonly DjenPublicationSyncService $syncService) {}
 
     public function sync(LegalCase $legalCase, ?int $userId = null): array
     {
-        if (blank($legalCase->process_number)) {
-            throw new RuntimeException('Preencha o número CNJ do processo antes de consultar o DJEN.');
+        $processNumber = DjenMonitor::normalizeProcessNumber($legalCase->process_number);
+
+        if (strlen($processNumber) !== 20) {
+            throw new RuntimeException('Preencha um número CNJ válido, com 20 dígitos, antes de consultar o DJEN.');
         }
 
-        $communications = collect($this->djenClient->searchCommunications($legalCase->process_number))
-            ->filter(fn ($item): bool => is_array($item) && filled(data_get($item, 'data_disponibilizacao', data_get($item, 'datadisponibilizacao'))))
-            ->sortBy(fn ($item) => data_get($item, 'data_disponibilizacao', data_get($item, 'datadisponibilizacao')))
-            ->values();
+        $fingerprint = DjenMonitor::fingerprintFor(DjenMonitor::TYPE_PROCESS, $processNumber);
+        $monitor = DjenMonitor::query()->firstOrCreate(
+            ['fingerprint' => $fingerprint],
+            [
+                'legal_case_id' => $legalCase->id,
+                'created_by' => $userId,
+                'type' => DjenMonitor::TYPE_PROCESS,
+                'label' => 'Processo '.$legalCase->title,
+                'process_number_normalized' => $processNumber,
+                'enabled' => true,
+                'sync_interval_minutes' => 60,
+                'lookback_days' => 30,
+                'overlap_days' => 2,
+                'starts_at' => now()->subDays(30)->toDateString(),
+            ],
+        );
 
-        $created = 0;
-        $updated = 0;
+        if (! $monitor->legal_case_id) {
+            $monitor->forceFill(['legal_case_id' => $legalCase->id])->save();
+        }
 
-        DB::transaction(function () use ($legalCase, $communications, $userId, &$created, &$updated): void {
-            foreach ($communications as $communication) {
-                $externalId = 'djen:'.($communication['hash'] ?? $communication['numeroComunicacao'] ?? $communication['numero_comunicacao'] ?? sha1(json_encode($communication)));
-                $update = LegalCaseUpdate::query()->firstOrNew([
-                    'legal_case_id' => $legalCase->id,
-                    'external_id' => $externalId,
-                ]);
-                $wasExisting = $update->exists;
-                $text = trim((string) data_get($communication, 'texto', ''));
-                $type = trim((string) data_get($communication, 'tipoComunicacao', 'Comunicação processual'));
-                $date = (string) data_get($communication, 'data_disponibilizacao', data_get($communication, 'datadisponibilizacao'));
+        $run = $this->syncService->syncMonitor($monitor, $userId, 'manual');
 
-                $update->fill([
-                    'client_id' => $legalCase->client_id,
-                    'created_by' => $update->created_by ?: $userId,
-                    'source' => 'djen',
-                    'update_type' => 'comunicacao',
-                    'title' => $type !== '' ? 'DJEN: '.$type : 'DJEN: Comunicação processual',
-                    'body' => $text !== '' ? '<p>'.nl2br(e($text), false).'</p>' : '<p>Comunicação importada do DJEN/CNJ.</p>',
-                    'occurred_at' => Carbon::parse($date)->startOfDay(),
-                    'is_visible_to_client' => true,
-                    'metadata' => [
-                        'communication_number' => data_get($communication, 'numeroComunicacao', data_get($communication, 'numero_comunicacao')),
-                        'tribunal' => data_get($communication, 'siglaTribunal'),
-                        'court_body' => data_get($communication, 'nomeOrgao'),
-                        'document_type' => data_get($communication, 'tipoDocumento'),
-                        'link' => data_get($communication, 'link'),
-                        'hash' => data_get($communication, 'hash'),
-                    ],
-                ]);
+        if (! in_array($run->status, [DjenSyncRun::STATUS_SUCCEEDED], true)) {
+            throw new RuntimeException($run->error_summary ?: 'A sincronização do DJEN não foi concluída.');
+        }
 
-                if ($update->isDirty() || ! $wasExisting) {
-                    $update->save();
-                    $wasExisting ? $updated++ : $created++;
-                }
-            }
-        });
-
-        return ['created' => $created, 'updated' => $updated, 'communications' => $communications->count()];
+        return [
+            'created' => $run->items_created,
+            'updated' => $run->items_updated,
+            'communications' => $run->items_fetched,
+            'pending_review' => $run->items_created,
+            'sync_run_id' => $run->id,
+        ];
     }
 }

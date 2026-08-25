@@ -39,6 +39,9 @@
                     </td>
                     <td class="text-end">
                         <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                            @can('legal-workspace.view')
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.legal-cases.workspace', $item) }}">Dossiê</a>
+                            @endcan
                             @if($item->process_number && $item->tribunal_alias)
                                 <form action="{{ route('admin.legal-cases.sync-datajud', $item->id) }}" method="POST" data-ajax-form class="d-inline">
                                     @csrf

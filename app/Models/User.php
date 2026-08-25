@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -190,6 +191,21 @@ class User extends Authenticatable
     public function legalCaseUpdates(): HasMany
     {
         return $this->hasMany(LegalCaseUpdate::class, 'created_by');
+    }
+
+    public function calendarEvents(): HasMany
+    {
+        return $this->hasMany(CalendarEvent::class, 'owner_id');
+    }
+
+    public function legalDeadlinePreference(): HasOne
+    {
+        return $this->hasOne(LegalDeadlinePreference::class);
+    }
+
+    public function googleCalendarConnection(): HasOne
+    {
+        return $this->hasOne(GoogleCalendarConnection::class);
     }
 
     public function sendPasswordResetNotification($token): void

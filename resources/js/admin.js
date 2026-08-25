@@ -1048,6 +1048,11 @@ const AdminUI = {
                 return;
             }
 
+            if (response.data.reload) {
+                window.location.reload();
+                return;
+            }
+
             if (response.data.tableTarget) {
                 const table = document.querySelector(response.data.tableTarget);
                 this.refreshTable(table);
