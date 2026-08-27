@@ -54,6 +54,9 @@ class ProductionHardeningTest extends TestCase
 
         $this->assertSame(2, substr_count($layout, 'src="{{ $branding[\'logo_url\'] }}"'));
         $this->assertSame(2, substr_count($layout, "@if(\$branding['logo_url'])"));
+        $this->assertStringContainsString('>PUJANI</div>', $layout);
+        $this->assertStringContainsString('>PUJANI ADVOGADOS</div>', $layout);
+        $this->assertSame(2, substr_count($layout, 'Símbolo {{ $branding[\'brand_name\'] }}'));
     }
 
     public function test_documentation_is_integrated_and_legacy_public_url_is_canonicalized(): void

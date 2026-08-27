@@ -408,16 +408,16 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <a href="{{ $homeUrl }}" class="flex items-center gap-3 group" aria-label="{{ $branding['brand_name'] }}">
                 @if($branding['logo_url'])
-                    <img src="{{ $branding['logo_url'] }}" alt="{{ $branding['brand_name'] }}" class="block h-10 w-auto max-w-[220px] object-contain object-left">
+                    <img src="{{ $branding['logo_url'] }}" alt="Símbolo {{ $branding['brand_name'] }}" class="block h-10 w-10 object-contain object-center flex-shrink-0">
                 @else
                     <div class="w-8 h-8 border border-gold/40 flex items-center justify-center group-hover:border-gold/80 transition-colors duration-300">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"/></svg>
                     </div>
-                    <div>
-                        <div class="font-title text-sm tracking-widest text-cream/90 leading-none">PUJANI</div>
-                        <div class="text-[0.55rem] tracking-[0.35em] text-gold/70 uppercase leading-none mt-0.5">Advogados</div>
-                    </div>
                 @endif
+                <div>
+                    <div class="font-title text-sm tracking-widest text-cream/90 leading-none">PUJANI</div>
+                    <div class="text-[0.55rem] tracking-[0.35em] text-gold/70 uppercase leading-none mt-0.5">Advogados</div>
+                </div>
             </a>
             <div class="hidden lg:flex items-center gap-10">
                 @foreach($menuPages as $menuPage)
@@ -457,16 +457,16 @@
                 <div class="lg:col-span-2">
                     <a href="{{ $homeUrl }}" class="inline-flex items-center gap-3 mb-5" aria-label="{{ $branding['brand_name'] }}">
                         @if($branding['logo_url'])
-                            <img src="{{ $branding['logo_url'] }}" alt="{{ $branding['brand_name'] }}" class="block h-12 w-auto max-w-[280px] object-contain object-left">
+                            <img src="{{ $branding['logo_url'] }}" alt="Símbolo {{ $branding['brand_name'] }}" class="block h-12 w-12 object-contain object-center flex-shrink-0">
                         @else
                             <div class="w-8 h-8 border border-gold/40 flex items-center justify-center">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"/></svg>
                             </div>
-                            <div>
-                                <div class="font-title text-sm tracking-widest text-cream/90">PUJANI ADVOGADOS</div>
-                                <div class="text-[0.55rem] tracking-[0.3em] text-gold/50 uppercase">Advocacia de Excelência</div>
-                            </div>
                         @endif
+                        <div>
+                            <div class="font-title text-sm tracking-widest text-cream/90">PUJANI ADVOGADOS</div>
+                            <div class="text-[0.55rem] tracking-[0.3em] text-gold/50 uppercase">Advocacia de Excelência</div>
+                        </div>
                     </a>
                     <p class="text-cream/35 text-sm leading-relaxed max-w-sm">{{ $page->excerpt ?: 'Mais de duas décadas defendendo direitos e construindo resultados com ética, precisão e compromisso.' }}</p>
                     <div class="flex gap-3 mt-6">
