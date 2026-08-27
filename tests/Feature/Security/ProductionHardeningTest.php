@@ -63,11 +63,14 @@ class ProductionHardeningTest extends TestCase
             ->assertRedirect('/admin/documentation#changelog');
 
         $rootHtaccess = file_get_contents(base_path('.htaccess'));
+        $frontController = file_get_contents(public_path('index.php'));
         $documentation = file_get_contents(resource_path('views/admin/documentation/index.blade.php'));
 
         $this->assertStringContainsString('^public/docs\\.php$', $rootHtaccess);
         $this->assertStringContainsString('^public/?$ / [R=301,L]', $rootHtaccess);
         $this->assertStringContainsString('^public/?(.*)$ /$1', $rootHtaccess);
+        $this->assertStringContainsString("str_starts_with(\$requestPath, '/public/')", $frontController);
+        $this->assertStringContainsString("'/admin/documentation#changelog'", $frontController);
         $this->assertStringContainsString("@extends('admin.layouts.app')", $documentation);
         $this->assertStringContainsString('id="changelog"', $documentation);
         $this->assertStringNotContainsString('@tailwindcss/browser', $documentation);

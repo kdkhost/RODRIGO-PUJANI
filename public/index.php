@@ -3,6 +3,20 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
+$requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+$requestPath = (string) (parse_url($requestUri, PHP_URL_PATH) ?: '/');
+
+if ($requestPath === '/public' || str_starts_with($requestPath, '/public/')) {
+    $canonicalPath = substr($requestPath, strlen('/public')) ?: '/';
+    $query = (string) (parse_url($requestUri, PHP_URL_QUERY) ?: '');
+    $location = $canonicalPath === '/docs.php'
+        ? '/admin/documentation#changelog'
+        : $canonicalPath.($query !== '' ? '?'.$query : '');
+
+    header('Location: '.$location, true, 301);
+    exit;
+}
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...
