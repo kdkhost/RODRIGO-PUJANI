@@ -22,6 +22,9 @@
                     <div class="col-md-4"><label class="form-label">WhatsApp</label><input type="text" name="whatsapp" data-mask="phone" class="form-control" value="{{ old('whatsapp', $record->whatsapp) }}" placeholder="(11) 90000-0000"></div>
                     <div class="col-md-4"><label class="form-label">Telefone alternativo</label><input type="text" name="alternate_phone" data-mask="phone" class="form-control" value="{{ old('alternate_phone', $record->alternate_phone) }}" placeholder="(11) 3000-0000"></div>
                     <div class="col-md-4"><label class="form-label">CPF ou CNPJ</label><input type="text" name="document_number" data-mask="cpf-cnpj" class="form-control" value="{{ old('document_number', $record->document_number) }}" placeholder="000.000.000-00"></div>
+                    <div class="col-md-4"><label class="form-label">Cargo ou função</label><input type="text" name="professional_title" class="form-control" value="{{ old('professional_title', $record->professional_title) }}" placeholder="Advogado responsável"></div>
+                    <div class="col-md-2"><label class="form-label">OAB</label><input type="text" name="oab_number" class="form-control" value="{{ old('oab_number', $record->oab_number) }}" placeholder="123456"></div>
+                    <div class="col-md-2"><label class="form-label">UF da OAB</label><input type="text" name="oab_state" class="form-control text-uppercase" value="{{ old('oab_state', $record->oab_state) }}" maxlength="2" placeholder="SP"></div>
                     <div class="col-md-4"><label class="form-label">Data de nascimento</label><input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $record->birth_date?->format('Y-m-d')) }}"></div>
                     <div class="col-md-4">
                         <label class="form-label">Fuso horário</label>

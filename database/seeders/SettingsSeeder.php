@@ -10,12 +10,23 @@ class SettingsSeeder extends Seeder
     public function run(): void
     {
         $settings = [
+            ['group' => 'site', 'key' => 'site.company_legal_name', 'label' => 'Razão social', 'type' => 'text', 'value' => 'Pujani Advogados', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.company_trade_name', 'label' => 'Nome do escritório', 'type' => 'text', 'value' => 'Pujani Advogados', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.company_document', 'label' => 'CNPJ', 'type' => 'text', 'value' => '', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.company_oab_registration', 'label' => 'Registro da sociedade na OAB', 'type' => 'text', 'value' => '', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.company_phone', 'label' => 'Telefone', 'type' => 'text', 'value' => '(11) 3456-7890', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.company_whatsapp', 'label' => 'WhatsApp', 'type' => 'text', 'value' => '(11) 99876-5432', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.company_email', 'label' => 'E-mail principal', 'type' => 'text', 'value' => 'contato@pujani.adv.br', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.company_secondary_email', 'label' => 'E-mail secundario', 'type' => 'text', 'value' => 'consultoria@pujani.adv.br', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.company_address', 'label' => 'Endereco', 'type' => 'text', 'value' => 'Av. Paulista, 1842 · Conj. 2101 · Bela Vista · Sao Paulo/SP', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.company_cep', 'label' => 'CEP', 'type' => 'text', 'value' => '01310-200', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.address_zip', 'label' => 'CEP estruturado', 'type' => 'text', 'value' => '01310-200', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.address_street', 'label' => 'Logradouro', 'type' => 'text', 'value' => 'Av. Paulista', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.address_number', 'label' => 'Número', 'type' => 'text', 'value' => '1842', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.address_complement', 'label' => 'Complemento', 'type' => 'text', 'value' => 'Conj. 2101', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.address_district', 'label' => 'Bairro', 'type' => 'text', 'value' => 'Bela Vista', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.address_city', 'label' => 'Cidade', 'type' => 'text', 'value' => 'São Paulo', 'is_public' => true],
+            ['group' => 'site', 'key' => 'site.address_state', 'label' => 'UF', 'type' => 'text', 'value' => 'SP', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.business_hours', 'label' => 'Horario de atendimento', 'type' => 'text', 'value' => 'Seg. a sex.: 08h as 18h', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.social_linkedin', 'label' => 'LinkedIn', 'type' => 'text', 'value' => 'https://www.linkedin.com/', 'is_public' => true],
             ['group' => 'site', 'key' => 'site.social_instagram', 'label' => 'Instagram', 'type' => 'text', 'value' => 'https://www.instagram.com/', 'is_public' => true],

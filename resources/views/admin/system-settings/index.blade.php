@@ -76,6 +76,7 @@
                             </div>
                         </div>
                         <div class="card-body p-4 d-grid gap-3">
+                            <a href="{{ route('admin.office-setup.edit') }}" class="btn btn-primary"><i class="bi bi-check2-square me-1"></i>Configuração inicial</a>
                             <a href="{{ route('admin.system-settings.show', 'mail') }}" class="btn btn-outline-primary">Configurar SMTP e e-mails</a>
                             <a href="{{ route('admin.system-settings.show', 'pwa') }}" class="btn btn-outline-primary">Configurar PWA</a>
                             <form action="{{ route('admin.system-settings.seed-demo-data') }}" method="POST" data-ajax-form>

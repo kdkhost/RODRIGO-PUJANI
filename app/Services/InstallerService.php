@@ -72,6 +72,8 @@ class InstallerService
             'APP_ADMIN_NAME' => $data['admin_name'],
             'APP_ADMIN_EMAIL' => $data['admin_email'],
             'APP_ADMIN_PASSWORD' => $data['admin_password'],
+            'ELECTRONIC_SIGNATURE_ENABLED' => 'true',
+            'ELECTRONIC_SIGNATURE_PROVIDER' => 'internal',
             'APP_INSTALLED' => 'false',
         ];
 

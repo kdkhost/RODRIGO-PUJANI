@@ -1716,11 +1716,12 @@ const AdminUI = {
                     }
 
                     const form = input.closest('form');
+                    const prefix = input.dataset.cepPrefix || '';
                     const map = {
-                        logradouro: form?.querySelector('[name="address_street"]'),
-                        bairro: form?.querySelector('[name="address_district"]'),
-                        localidade: form?.querySelector('[name="address_city"]'),
-                        uf: form?.querySelector('[name="address_state"]'),
+                        logradouro: form?.querySelector(`[name="${prefix}address_street"]`),
+                        bairro: form?.querySelector(`[name="${prefix}address_district"]`),
+                        localidade: form?.querySelector(`[name="${prefix}address_city"]`),
+                        uf: form?.querySelector(`[name="${prefix}address_state"]`),
                     };
 
                     Object.entries(map).forEach(([key, field]) => {

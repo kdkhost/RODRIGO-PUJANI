@@ -12,6 +12,7 @@
         <div class="card-body"><nav class="nav nav-pills flex-column gap-2" aria-label="Seções da documentação">
             <a class="nav-link" href="#geral"><i class="bi bi-grid-1x2 me-2"></i>Primeiros passos</a>
             @if($isSuperAdmin || $isAdministrator)
+                <a class="nav-link" href="#configuracao-inicial"><i class="bi bi-check2-square me-2"></i>Configuração inicial</a>
                 <a class="nav-link" href="#marca"><i class="bi bi-brush me-2"></i>Marca e PWA</a>
                 <a class="nav-link" href="#google-calendar"><i class="bi bi-google me-2"></i>Google Calendar</a>
                 <a class="nav-link" href="#ia-juridica"><i class="bi bi-stars me-2"></i>IA jurídica</a>
@@ -40,6 +41,17 @@
         </section>
 
         @if($isSuperAdmin || $isAdministrator)
+        <section id="configuracao-inicial" class="card admin-table-card admin-docs-section">
+            <div class="card-header"><div><div class="admin-card-kicker">Primeiro acesso</div><h2 class="card-title">Dados necessários para começar</h2></div></div>
+            <div class="card-body admin-card-flow"><ol class="admin-docs-steps">
+                <li>Acesse <strong>Operação &gt; Configuração inicial</strong>.</li>
+                <li>Preencha razão social, nome do escritório, CNPJ, contatos, horário e endereço. O CEP completa logradouro, bairro, cidade e UF pelo ViaCEP.</li>
+                <li>Preencha o advogado ou gestor responsável, incluindo CPF, telefone, cargo, OAB e fuso horário.</li>
+                <li>Salve. Nome da marca, dados públicos do site, endereço e perfil responsável são atualizados em conjunto.</li>
+                <li>Use o quadro de prontidão para abrir apenas as integrações opcionais que ainda precisam de credenciais externas.</li>
+            </ol><div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>A assinatura eletrônica interna já fica habilitada em instalações novas. Google, SMTP e IA exigem credenciais fornecidas pelos respectivos serviços.</div></div>
+        </section>
+
         <section id="marca" class="card admin-table-card admin-docs-section">
             <div class="card-header"><div><div class="admin-card-kicker">Configuração administrativa</div><h2 class="card-title">Identidade visual e aplicativo PWA</h2></div></div>
             <div class="card-body admin-card-flow"><ol class="admin-docs-steps">

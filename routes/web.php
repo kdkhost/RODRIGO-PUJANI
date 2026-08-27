@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\LegalUpdateSummaryController;
 use App\Http\Controllers\Admin\LegalWorkspaceController;
 use App\Http\Controllers\Admin\SignatureRequestController;
 use App\Http\Controllers\Admin\MediaAssetController;
+use App\Http\Controllers\Admin\OfficeSetupController;
 use App\Http\Controllers\Admin\MailTemplateController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PageSectionController;
@@ -149,6 +150,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->group(function (): void {
             Route::get('/', [PreloaderController::class, 'index'])->name('index');
             Route::put('/', [PreloaderController::class, 'update'])->name('update');
+        });
+
+    Route::middleware('permission:settings.manage')
+        ->prefix('office-setup')
+        ->name('office-setup.')
+        ->group(function (): void {
+            Route::get('/', [OfficeSetupController::class, 'edit'])->name('edit');
+            Route::put('/', [OfficeSetupController::class, 'update'])->name('update');
         });
 
     Route::middleware('permission:settings.manage')

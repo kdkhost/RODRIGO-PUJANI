@@ -4,6 +4,16 @@ use App\Services\InstallerService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\File;
+
+Schedule::call(function (): void {
+    $path = storage_path('app/system/scheduler-heartbeat.json');
+    File::ensureDirectoryExists(dirname($path));
+    File::put($path, json_encode([
+        'executed_at' => now()->toIso8601String(),
+        'timezone' => config('app.timezone'),
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+})->everyMinute()->name('system-scheduler-heartbeat')->withoutOverlapping(2);
 
 Schedule::command('signatures:expire')->hourly()->withoutOverlapping();
 Schedule::command('djen:dispatch-due')

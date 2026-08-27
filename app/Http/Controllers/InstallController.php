@@ -65,8 +65,8 @@ class InstallController extends Controller
             $request->session()->regenerate();
 
             return redirect()
-                ->route('admin.dashboard')
-                ->with('status', 'Sistema instalado com sucesso.');
+                ->route('admin.office-setup.edit')
+                ->with('status', 'Sistema instalado. Complete agora os dados do escritório e do responsável.');
         } catch (Throwable $exception) {
             report($exception);
 

@@ -29,6 +29,7 @@
             ['label' => 'SEO global', 'route' => 'admin.seo-metas.index', 'active' => 'admin.seo-metas.*', 'icon' => 'bi-globe', 'permission' => 'seo-metas.manage'],
         ],
         'Operação' => [
+            ['label' => 'Configuração inicial', 'route' => 'admin.office-setup.edit', 'active' => 'admin.office-setup.*', 'icon' => 'bi-check2-square', 'permission' => 'settings.manage'],
             ['label' => 'Mensagens', 'route' => 'admin.contact-messages.index', 'active' => 'admin.contact-messages.*', 'icon' => 'bi-envelope', 'permission' => 'contact-messages.manage'],
             ['label' => 'Templates de e-mail', 'route' => 'admin.mail-templates.index', 'active' => 'admin.mail-templates.*', 'icon' => 'bi-envelope-paper', 'permission' => 'mail-templates.manage'],
             ['label' => 'Portal do cliente', 'route' => 'admin.client-portal.index', 'active' => 'admin.client-portal.*', 'icon' => 'bi-phone', 'permission' => 'client-portal.manage'],

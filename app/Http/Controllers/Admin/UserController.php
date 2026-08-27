@@ -18,7 +18,7 @@ class UserController extends AdminCrudController
     protected string $singularLabel = 'Usuário';
     protected string $pluralLabel = 'Usuários';
     protected string $routeBase = 'admin.users';
-    protected array $searchable = ['name', 'email', 'phone', 'document_number', 'address_city', 'address_state'];
+    protected array $searchable = ['name', 'email', 'phone', 'document_number', 'professional_title', 'oab_number', 'address_city', 'address_state'];
     protected string $defaultSort = 'name';
     protected string $defaultDirection = 'asc';
 
@@ -63,6 +63,9 @@ class UserController extends AdminCrudController
             'email' => ['required', 'email', 'max:255', $this->uniqueRule('users', 'email', $record)],
             'phone' => ['nullable', 'string', 'max:30'],
             'document_number' => ['nullable', 'string', 'max:32'],
+            'professional_title' => ['nullable', 'string', 'max:120'],
+            'oab_number' => ['nullable', 'string', 'max:30'],
+            'oab_state' => ['nullable', 'string', 'size:2'],
             'whatsapp' => ['nullable', 'string', 'max:30'],
             'alternate_phone' => ['nullable', 'string', 'max:30'],
             'birth_date' => ['nullable', 'date'],
@@ -94,6 +97,9 @@ class UserController extends AdminCrudController
 
         $validated['address_state'] = filled($validated['address_state'] ?? null)
             ? strtoupper((string) $validated['address_state'])
+            : null;
+        $validated['oab_state'] = filled($validated['oab_state'] ?? null)
+            ? strtoupper((string) $validated['oab_state'])
             : null;
         $validated['avatar_path'] = $this->storeMediaFile($request, 'avatar', 'avatars', $record?->avatar_path);
 

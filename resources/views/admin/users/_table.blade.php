@@ -49,7 +49,17 @@
                     <div class="admin-entity-title">{{ $item->email }}</div>
                     <div class="admin-entity-meta">{{ $item->phone ?: ($item->whatsapp ?: 'Sem telefone cadastrado') }}</div>
                 </td>
-                <td><span class="admin-role-pill">{{ $roleName }}</span></td>
+                <td>
+                    <span class="admin-role-pill">{{ $roleName }}</span>
+                    @if($item->professional_title || $item->oab_number)
+                        <div class="admin-entity-meta mt-1">
+                            {{ $item->professional_title }}
+                            @if($item->oab_number)
+                                {{ $item->professional_title ? '·' : '' }} OAB {{ $item->oab_state }}/{{ $item->oab_number }}
+                            @endif
+                        </div>
+                    @endif
+                </td>
                 <td>
                     @if($canToggleStatus)
                         <button
