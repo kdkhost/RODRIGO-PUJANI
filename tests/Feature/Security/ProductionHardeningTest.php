@@ -56,6 +56,34 @@ class ProductionHardeningTest extends TestCase
         $this->assertSame(2, substr_count($layout, "@if(\$branding['logo_url'])"));
     }
 
+    public function test_documentation_is_integrated_and_legacy_public_url_is_canonicalized(): void
+    {
+        $this->get('/docs.php')
+            ->assertStatus(301)
+            ->assertRedirect('/admin/documentation#changelog');
+
+        $rootHtaccess = file_get_contents(base_path('.htaccess'));
+        $documentation = file_get_contents(resource_path('views/admin/documentation/index.blade.php'));
+
+        $this->assertStringContainsString('^public/docs\\.php$', $rootHtaccess);
+        $this->assertStringContainsString('^public/?(.*)$ /$1', $rootHtaccess);
+        $this->assertStringContainsString("@extends('admin.layouts.app')", $documentation);
+        $this->assertStringContainsString('id="changelog"', $documentation);
+        $this->assertStringNotContainsString('@tailwindcss/browser', $documentation);
+        $this->assertStringNotContainsString('min-h-screen', $documentation);
+
+        $this->seed(PermissionsSeeder::class);
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('Administrador');
+
+        $this->actingAs($admin)
+            ->get(route('admin.documentation.index'))
+            ->assertOk()
+            ->assertSee('Centro de conhecimento')
+            ->assertSee('id="changelog"', false)
+            ->assertSee('admin-docs-navigation', false);
+    }
+
     public function test_admin_sidebar_uses_only_the_native_adminlte_treeview_controller(): void
     {
         $this->seed(PermissionsSeeder::class);

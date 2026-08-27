@@ -62,6 +62,7 @@ $crud = function (string $uri, string $name, string $controller, string $permiss
 
 Route::get('/instalar', [InstallController::class, 'index'])->name('install.index');
 Route::post('/instalar', [InstallController::class, 'store'])->name('install.store');
+Route::redirect('/docs.php', '/admin/documentation#changelog', 301)->name('documentation.legacy');
 
 Route::middleware(['check.maintenance', 'signature.enabled', 'throttle:30,1'])->prefix('assinatura')->name('signatures.public.')->group(function (): void {
     Route::get('/resultado', [SignatureController::class, 'result'])->name('result');

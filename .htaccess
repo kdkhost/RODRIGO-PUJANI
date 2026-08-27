@@ -7,10 +7,17 @@ AddDefaultCharset UTF-8
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+    # Canonicaliza acessos antigos sem expor o diretorio publico na URL.
+    RewriteCond %{THE_REQUEST} \s/+public/docs\.php(?:[?\s]) [NC]
+    RewriteRule ^public/docs\.php$ /admin/documentation#changelog [R=301,L,NE]
+
+    RewriteCond %{THE_REQUEST} \s/+public(?:[/\s?]) [NC]
+    RewriteRule ^public/?(.*)$ /$1 [R=301,L,NE]
+
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
 <IfModule !mod_rewrite.c>
-    RedirectMatch 302 ^/$ /public/
+    RedirectMatch 302 ^/public/docs\.php$ /admin/documentation#changelog
 </IfModule>
