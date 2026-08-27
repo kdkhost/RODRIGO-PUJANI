@@ -48,6 +48,14 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringNotContainsString('.testimonial-card::before', $layout);
     }
 
+    public function test_public_header_and_footer_use_the_dynamic_branding_logo(): void
+    {
+        $layout = file_get_contents(resource_path('views/site/layouts/app.blade.php'));
+
+        $this->assertSame(2, substr_count($layout, 'src="{{ $branding[\'logo_url\'] }}"'));
+        $this->assertSame(2, substr_count($layout, "@if(\$branding['logo_url'])"));
+    }
+
     public function test_admin_sidebar_uses_only_the_native_adminlte_treeview_controller(): void
     {
         $this->seed(PermissionsSeeder::class);

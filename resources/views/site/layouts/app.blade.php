@@ -406,14 +406,18 @@
 
     <nav id="navbar" class="px-6 lg:px-16 py-5">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <a href="{{ $homeUrl }}" class="flex items-center gap-3 group">
-                <div class="w-8 h-8 border border-gold/40 flex items-center justify-center group-hover:border-gold/80 transition-colors duration-300">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"/></svg>
-                </div>
-                <div>
-                    <div class="font-title text-sm tracking-widest text-cream/90 leading-none">PUJANI</div>
-                    <div class="text-[0.55rem] tracking-[0.35em] text-gold/70 uppercase leading-none mt-0.5">Advogados</div>
-                </div>
+            <a href="{{ $homeUrl }}" class="flex items-center gap-3 group" aria-label="{{ $branding['brand_name'] }}">
+                @if($branding['logo_url'])
+                    <img src="{{ $branding['logo_url'] }}" alt="{{ $branding['brand_name'] }}" class="block h-10 w-auto max-w-[220px] object-contain object-left">
+                @else
+                    <div class="w-8 h-8 border border-gold/40 flex items-center justify-center group-hover:border-gold/80 transition-colors duration-300">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-title text-sm tracking-widest text-cream/90 leading-none">PUJANI</div>
+                        <div class="text-[0.55rem] tracking-[0.35em] text-gold/70 uppercase leading-none mt-0.5">Advogados</div>
+                    </div>
+                @endif
             </a>
             <div class="hidden lg:flex items-center gap-10">
                 @foreach($menuPages as $menuPage)
@@ -451,15 +455,19 @@
         <div class="max-w-7xl mx-auto px-6 lg:px-16 py-16">
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
                 <div class="lg:col-span-2">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-8 h-8 border border-gold/40 flex items-center justify-center">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"/></svg>
-                        </div>
-                        <div>
-                            <div class="font-title text-sm tracking-widest text-cream/90">PUJANI ADVOGADOS</div>
-                            <div class="text-[0.55rem] tracking-[0.3em] text-gold/50 uppercase">Advocacia de Excelência</div>
-                        </div>
-                    </div>
+                    <a href="{{ $homeUrl }}" class="inline-flex items-center gap-3 mb-5" aria-label="{{ $branding['brand_name'] }}">
+                        @if($branding['logo_url'])
+                            <img src="{{ $branding['logo_url'] }}" alt="{{ $branding['brand_name'] }}" class="block h-12 w-auto max-w-[280px] object-contain object-left">
+                        @else
+                            <div class="w-8 h-8 border border-gold/40 flex items-center justify-center">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C49A3C" stroke-width="1.5"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"/></svg>
+                            </div>
+                            <div>
+                                <div class="font-title text-sm tracking-widest text-cream/90">PUJANI ADVOGADOS</div>
+                                <div class="text-[0.55rem] tracking-[0.3em] text-gold/50 uppercase">Advocacia de Excelência</div>
+                            </div>
+                        @endif
+                    </a>
                     <p class="text-cream/35 text-sm leading-relaxed max-w-sm">{{ $page->excerpt ?: 'Mais de duas décadas defendendo direitos e construindo resultados com ética, precisão e compromisso.' }}</p>
                     <div class="flex gap-3 mt-6">
                         <a href="{{ setting('site.social_linkedin', '#') }}" target="_blank" rel="noopener" class="w-9 h-9 border border-gold/20 flex items-center justify-center text-gold/50 hover:border-gold/50 hover:text-gold/80 transition-all duration-300" aria-label="LinkedIn">
