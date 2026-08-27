@@ -66,6 +66,7 @@ class ProductionHardeningTest extends TestCase
         $documentation = file_get_contents(resource_path('views/admin/documentation/index.blade.php'));
 
         $this->assertStringContainsString('^public/docs\\.php$', $rootHtaccess);
+        $this->assertStringContainsString('^public/?$ / [R=301,L]', $rootHtaccess);
         $this->assertStringContainsString('^public/?(.*)$ /$1', $rootHtaccess);
         $this->assertStringContainsString("@extends('admin.layouts.app')", $documentation);
         $this->assertStringContainsString('id="changelog"', $documentation);

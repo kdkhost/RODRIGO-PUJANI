@@ -11,6 +11,9 @@ AddDefaultCharset UTF-8
     RewriteCond %{THE_REQUEST} \s/+public/docs\.php(?:[?\s]) [NC]
     RewriteRule ^public/docs\.php$ /admin/documentation#changelog [R=301,L,NE]
 
+    RewriteCond %{THE_REQUEST} \s/+public/?(?:[?\s]) [NC]
+    RewriteRule ^public/?$ / [R=301,L]
+
     RewriteCond %{THE_REQUEST} \s/+public(?:[/\s?]) [NC]
     RewriteRule ^public/?(.*)$ /$1 [R=301,L,NE]
 
