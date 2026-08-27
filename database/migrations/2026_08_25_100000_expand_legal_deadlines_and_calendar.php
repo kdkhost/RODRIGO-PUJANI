@@ -69,8 +69,8 @@ return new class extends Migration
         Schema::dropIfExists('legal_task_histories');
 
         Schema::table('calendar_events', function (Blueprint $table): void {
-            $table->dropUnique('calendar_events_legal_task_id_unique');
             $table->dropConstrainedForeignId('legal_task_id');
+            $table->dropUnique('calendar_events_legal_task_id_unique');
             $table->dropConstrainedForeignId('legal_case_id');
             $table->dropConstrainedForeignId('client_id');
             $table->dropColumn([

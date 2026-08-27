@@ -23,8 +23,10 @@ return new class extends Migration
 
         Schema::create('legal_document_template_versions', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('legal_document_template_id')
-                ->constrained('legal_document_templates')
+            $table->foreignId('legal_document_template_id');
+            $table->foreign('legal_document_template_id', 'legal_doc_version_template_foreign')
+                ->references('id')
+                ->on('legal_document_templates')
                 ->restrictOnDelete();
             $table->unsignedInteger('version');
             $table->string('title_template');
@@ -39,11 +41,15 @@ return new class extends Migration
 
         Schema::create('legal_document_generations', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('legal_document_template_id')
-                ->constrained('legal_document_templates')
+            $table->foreignId('legal_document_template_id');
+            $table->foreign('legal_document_template_id', 'legal_doc_generation_template_foreign')
+                ->references('id')
+                ->on('legal_document_templates')
                 ->restrictOnDelete();
-            $table->foreignId('legal_document_template_version_id')
-                ->constrained('legal_document_template_versions')
+            $table->foreignId('legal_document_template_version_id');
+            $table->foreign('legal_document_template_version_id', 'legal_doc_generation_version_foreign')
+                ->references('id')
+                ->on('legal_document_template_versions')
                 ->restrictOnDelete();
             $table->foreignId('legal_document_id')->nullable()->constrained('legal_documents')->nullOnDelete();
             $table->foreignId('client_id')->nullable()->constrained('clients')->nullOnDelete();

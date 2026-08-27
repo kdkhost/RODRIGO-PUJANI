@@ -30,7 +30,11 @@ return new class extends Migration
 
         Schema::create('google_calendar_event_mappings', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('google_calendar_connection_id')->constrained('google_calendar_connections')->cascadeOnDelete();
+            $table->foreignId('google_calendar_connection_id');
+            $table->foreign('google_calendar_connection_id', 'gcal_event_connection_foreign')
+                ->references('id')
+                ->on('google_calendar_connections')
+                ->cascadeOnDelete();
             $table->foreignId('calendar_event_id')->nullable()->constrained('calendar_events')->nullOnDelete();
             $table->string('google_event_id');
             $table->string('google_ical_uid')->nullable()->index();
