@@ -12,6 +12,10 @@ use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use setasign\Fpdi\Fpdi;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class ElectronicSignatureTest extends TestCase
@@ -38,7 +42,7 @@ class ElectronicSignatureTest extends TestCase
         $signatureRequest = SignatureRequest::query()->with(['document', 'signers'])->firstOrFail();
         $response->assertRedirect(route('admin.signature-requests.show', $signatureRequest));
         $this->assertSame('pending', $signatureRequest->status);
-        $this->assertSame(hash('sha256', 'conteudo-imutavel'), $signatureRequest->document->sha256);
+        $this->assertSame($document->sha256, $signatureRequest->document->sha256);
         Storage::disk('legal_documents')->assertExists($signatureRequest->document->immutable_path);
         $this->assertSame(64, strlen((string) $signatureRequest->signers->first()->token_hash));
         $this->assertStringNotContainsString('Cliente Assinante', (string) $signatureRequest->signers->first()->token_hash);
@@ -60,10 +64,18 @@ class ElectronicSignatureTest extends TestCase
         $signatureRequest->refresh()->load('document');
         $this->assertSame('completed', $signatureRequest->status);
         $this->assertTrue($service->verifyEvidence($signatureRequest));
+        $completedPdf = Storage::disk('legal_documents')->get($signatureRequest->document->completed_path);
+        $this->assertStringStartsWith('%PDF-', $completedPdf);
+        $this->assertNotSame(Storage::disk('legal_documents')->get($signatureRequest->document->immutable_path), $completedPdf);
+        $completedPath = Storage::disk('legal_documents')->path($signatureRequest->document->completed_path);
+        $this->assertSame(2, (new Fpdi)->setSourceFile($completedPath));
         $this->assertDatabaseHas('signature_events', ['signature_request_id' => $signatureRequest->id, 'type' => 'viewed']);
         $this->assertDatabaseHas('signature_events', ['signature_request_id' => $signatureRequest->id, 'type' => 'signed']);
         $this->assertDatabaseHas('signature_events', ['signature_request_id' => $signatureRequest->id, 'type' => 'completed']);
         $this->get(route('signatures.public.show', $token))->assertNotFound();
+
+        Storage::disk('legal_documents')->put($signatureRequest->document->completed_path, 'adulterado');
+        $this->assertFalse($service->verifyEvidence($signatureRequest->fresh()->load('document')));
     }
 
     public function test_tampered_document_is_rejected_without_signing(): void
@@ -116,7 +128,9 @@ class ElectronicSignatureTest extends TestCase
         $signer->update(['status' => 'sent', 'token_hash' => hash('sha256', 'portal-token'), 'token_expires_at' => now()->addHour()]);
         $service->sign($signer, ['ip_address' => '127.0.0.1', 'user_agent' => 'PHPUnit']);
         $this->withSession(['portal_client_id' => $client->id])->get(route('portal.signatures.index'))->assertOk()->assertSee('Contrato de teste');
+        $this->withSession(['portal_client_id' => $client->id])->get(route('portal.signatures.document', $request))->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
         $this->withSession(['portal_client_id' => $client->id])->get(route('portal.signatures.evidence', $request))->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->withSession(['portal_client_id' => $other->id])->get(route('portal.signatures.document', $request))->assertNotFound();
         $this->withSession(['portal_client_id' => $other->id])->get(route('portal.signatures.evidence', $request))->assertNotFound();
     }
 
@@ -145,13 +159,36 @@ class ElectronicSignatureTest extends TestCase
         $this->actingAs($user)->get(route('admin.signature-requests.index'))->assertForbidden();
     }
 
+    public function test_permission_repair_migration_restores_signature_access_without_general_seeding(): void
+    {
+        $names = [
+            'signature-requests.view', 'signature-requests.create', 'signature-requests.manage',
+            'signature-requests.cancel', 'signature-requests.download', 'signature-requests.audit',
+        ];
+        Permission::query()->whereIn('name', $names)->delete();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $migration = require database_path('migrations/2026_08_27_000000_restore_electronic_signature_permissions.php');
+        $migration->up();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertSame(6, Permission::query()->whereIn('name', $names)->count());
+        $this->assertTrue(Role::findByName('Super Admin')->hasAllPermissions($names));
+        $this->assertTrue(Role::findByName('Administrador')->hasAllPermissions($names));
+    }
+
     private function fixture(): array
     {
         $admin = User::factory()->create(['is_active' => true]);
         $admin->assignRole('Administrador');
         $client = Client::query()->create(['person_type' => 'individual', 'name' => 'Cliente', 'is_active' => true, 'portal_enabled' => true]);
-        Storage::disk('legal_documents')->put('originais/contrato.pdf', 'conteudo-imutavel');
-        $document = LegalDocument::query()->create(['client_id' => $client->id, 'uploaded_by' => $admin->id, 'title' => 'Contrato', 'original_name' => 'contrato.pdf', 'file_name' => 'contrato.pdf', 'path' => 'originais/contrato.pdf', 'disk' => 'legal_documents', 'mime_type' => 'application/pdf', 'extension' => 'pdf', 'size' => 17, 'sha256' => hash('sha256', 'conteudo-imutavel'), 'storage_status' => 'private', 'is_sensitive' => true]);
+        $pdf = new \FPDF;
+        $pdf->AddPage();
+        $pdf->SetFont('Helvetica', '', 12);
+        $pdf->Cell(0, 10, 'Conteudo imutavel do contrato');
+        $contents = $pdf->Output('S');
+        Storage::disk('legal_documents')->put('originais/contrato.pdf', $contents);
+        $document = LegalDocument::query()->create(['client_id' => $client->id, 'uploaded_by' => $admin->id, 'title' => 'Contrato', 'original_name' => 'contrato.pdf', 'file_name' => 'contrato.pdf', 'path' => 'originais/contrato.pdf', 'disk' => 'legal_documents', 'mime_type' => 'application/pdf', 'extension' => 'pdf', 'size' => strlen($contents), 'sha256' => hash('sha256', $contents), 'storage_status' => 'private', 'is_sensitive' => true]);
 
         return [$admin, $document, $client];
     }

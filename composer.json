@@ -11,6 +11,8 @@
         "james-heinrich/getid3": "1.9.25",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
+        "setasign/fpdf": "1.8.6",
+        "setasign/fpdi": "2.6.8",
         "spatie/laravel-permission": "7.3",
         "symfony/html-sanitizer": "8.1"
     },

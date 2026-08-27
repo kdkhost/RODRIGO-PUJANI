@@ -91,6 +91,7 @@ Route::middleware(['check.maintenance', 'track.visit'])->group(function () {
             Route::get('/documentos', [PortalClientPortalController::class, 'documents'])->name('documents.index');
             Route::middleware('signature.enabled')->group(function (): void {
                 Route::get('/assinaturas', [PortalClientPortalController::class, 'signatures'])->name('signatures.index');
+                Route::get('/assinaturas/{signatureRequest}/documento-assinado', [PortalClientPortalController::class, 'signatureDocument'])->name('signatures.document');
                 Route::get('/assinaturas/{signatureRequest}/comprovante', [PortalClientPortalController::class, 'signatureEvidence'])->name('signatures.evidence');
             });
             Route::get('/mensagens', [PortalClientPortalController::class, 'messages'])->name('messages.index');

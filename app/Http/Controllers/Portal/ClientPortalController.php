@@ -525,6 +525,22 @@ class ClientPortalController extends Controller
         return \Illuminate\Support\Facades\Storage::disk($signatureRequest->document->disk)->download($signatureRequest->document->evidence_path, 'comprovante-'.$signatureRequest->public_uuid.'.json', ['X-Content-Type-Options'=>'nosniff']);
     }
 
+    public function signatureDocument(Request $request, SignatureRequest $signatureRequest, ElectronicSignatureService $service): StreamedResponse
+    {
+        $client = $this->portalClient($request);
+        abort_unless((int) $signatureRequest->client_id === (int) $client->id && $signatureRequest->status === 'completed', 404);
+        $signatureRequest->load('document');
+        abort_unless($service->verifyEvidence($signatureRequest), 409, 'Documento assinado inválido.');
+        $document = $signatureRequest->document;
+        abort_unless(\Illuminate\Support\Facades\Storage::disk($document->disk)->exists($document->completed_path), 404);
+
+        return \Illuminate\Support\Facades\Storage::disk($document->disk)->download(
+            $document->completed_path,
+            'assinado-'.$document->original_name,
+            ['X-Content-Type-Options' => 'nosniff'],
+        );
+    }
+
     public function downloadDocument(Request $request, string $document, LegalDocumentStorage $storage): BinaryFileResponse
     {
         $client = $this->portalClient($request);

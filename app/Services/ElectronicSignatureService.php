@@ -22,6 +22,10 @@ class ElectronicSignatureService
         'application/pdf' => ['pdf'],
     ];
 
+    public function __construct(private readonly SignedPdfGenerator $signedPdfGenerator)
+    {
+    }
+
     public static function supports(LegalDocument $document): bool
     {
         $mime = Str::lower((string) $document->mime_type);
@@ -198,12 +202,19 @@ class ElectronicSignatureService
         $this->ensureEnabled();
 
         $document = $request->document;
-        if (! $document?->evidence_path || ! Storage::disk($document->disk)->exists($document->evidence_path)) {
+        if (! $document?->evidence_path || ! $document->completed_path) {
             return false;
         }
-        $contents = Storage::disk($document->disk)->get($document->evidence_path);
+        $disk = Storage::disk($document->disk);
+        if (! $disk->exists($document->evidence_path) || ! $disk->exists($document->completed_path)) {
+            return false;
+        }
+        $contents = $disk->get($document->evidence_path);
+        $completed = $disk->get($document->completed_path);
 
-        return hash_equals((string) $document->evidence_sha256, hash('sha256', $contents)) && $this->documentIsIntact($document);
+        return hash_equals((string) $document->evidence_sha256, hash('sha256', $contents))
+            && hash_equals((string) $document->completed_sha256, hash('sha256', $completed))
+            && $this->documentIsIntact($document);
     }
 
     private function issueInvitation(SignatureRequest $request, SignatureSigner $signer): void
@@ -220,10 +231,14 @@ class ElectronicSignatureService
         $document = $request->document;
         $disk = Storage::disk($document->disk);
         $completedPath = 'signatures/'.$request->public_uuid.'/completed.'.pathinfo($document->immutable_path, PATHINFO_EXTENSION);
-        $disk->copy($document->immutable_path, $completedPath);
+        $completedAt = now();
+        $request->forceFill(['completed_at' => $completedAt]);
+        $completedPdf = $this->signedPdfGenerator->generate($disk->path($document->immutable_path), $request);
+        $disk->put($completedPath, $completedPdf);
+        $completedSha256 = hash('sha256', $completedPdf);
         $evidence = json_encode([
             'request_uuid' => $request->public_uuid, 'document_sha256' => $document->sha256,
-            'completed_at' => now()->toIso8601String(),
+            'completed_document_sha256' => $completedSha256, 'completed_at' => $completedAt->toIso8601String(),
             'signers' => $request->signers->map(fn ($s) => ['uuid' => $s->public_uuid, 'name' => $s->name, 'email' => $s->email, 'signed_at' => $s->signed_at?->toIso8601String(), 'ip' => $s->ip_address, 'terms_hash' => $s->terms_hash])->all(),
             'events' => $request->events->map(fn ($e) => ['type' => $e->type, 'at' => $e->occurred_at?->toIso8601String(), 'document_hash' => $e->document_hash])->all(),
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -232,8 +247,8 @@ class ElectronicSignatureService
         }
         $evidencePath = 'signatures/'.$request->public_uuid.'/evidence.json';
         $disk->put($evidencePath, $evidence);
-        $document->update(['completed_path' => $completedPath, 'completed_sha256' => hash('sha256', $disk->get($completedPath)), 'evidence_path' => $evidencePath, 'evidence_sha256' => hash('sha256', $evidence)]);
-        $request->update(['status' => SignatureRequest::STATUS_COMPLETED, 'completed_at' => now()]);
+        $document->update(['completed_path' => $completedPath, 'completed_sha256' => $completedSha256, 'evidence_path' => $evidencePath, 'evidence_sha256' => hash('sha256', $evidence)]);
+        $request->update(['status' => SignatureRequest::STATUS_COMPLETED, 'completed_at' => $completedAt]);
         $this->event($request, null, 'completed');
         $this->notifyStatus($request, 'completed');
     }
