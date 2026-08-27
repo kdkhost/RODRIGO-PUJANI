@@ -978,6 +978,7 @@ const AdminUI = {
 
     async submitForm(form) {
         const formData = new FormData(form);
+        this.appendFilePondFiles(form, formData);
         const method = (form.dataset.method || form.method || 'POST').toUpperCase();
         const url = form.action;
         const submitButton = form.querySelector('[type="submit"]');
@@ -1291,8 +1292,33 @@ const AdminUI = {
     selectedUploadFiles(form) {
         return Array.from(form?.querySelectorAll?.('[data-filepond]') || [])
             .flatMap((input) => input._adminFilePond?.getFiles?.() || [])
+            .filter((item) => !this.isCurrentFilePondItem(item))
             .map((item) => item.file)
             .filter(Boolean);
+    },
+
+    isCurrentFilePondItem(item) {
+        return item?.origin === FilePond.FileOrigin.LOCAL;
+    },
+
+    appendFilePondFiles(form, formData) {
+        form.querySelectorAll('[data-filepond]').forEach((input) => {
+            if (!input.name || !input._adminFilePond) {
+                return;
+            }
+
+            const files = input._adminFilePond.getFiles()
+                .filter((item) => !this.isCurrentFilePondItem(item))
+                .map((item) => item.file)
+                .filter((file) => file instanceof Blob);
+
+            if (files.length === 0) {
+                return;
+            }
+
+            formData.delete(input.name);
+            files.forEach((file) => formData.append(input.name, file, file.name));
+        });
     },
 
     revokeUploadPreviewUrls(input) {
@@ -1341,18 +1367,27 @@ const AdminUI = {
 
         this.revokeUploadPreviewUrls(input);
 
-        const files = fileItems
-            .map((item) => item.file)
-            .filter(Boolean)
-            .map((file) => ({
-                current: false,
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                url: this.uploadPreviewSource(input, file),
-            }));
-        const current = files.length === 0 ? this.currentUploadInfo(input) : null;
-        const items = current ? [current] : files;
+        const items = fileItems
+            .filter((item) => item.file)
+            .map((item) => {
+                const current = this.isCurrentFilePondItem(item);
+                const explicit = current ? this.currentUploadInfo(input) : null;
+
+                return {
+                    current,
+                    name: explicit?.name || item.file.name,
+                    type: explicit?.type || item.file.type,
+                    size: explicit?.size || item.file.size,
+                    url: explicit?.url || this.uploadPreviewSource(input, item.file),
+                };
+            });
+
+        if (items.length === 0) {
+            const current = this.currentUploadInfo(input);
+            if (current) {
+                items.push(current);
+            }
+        }
 
         if (items.length === 0) {
             panel.dataset.state = 'empty';
@@ -1368,7 +1403,7 @@ const AdminUI = {
             return;
         }
 
-        panel.dataset.state = current ? 'current' : 'ready';
+        panel.dataset.state = items.every((item) => item.current) ? 'current' : 'ready';
         panel.innerHTML = items.map((item) => {
             const extension = this.fileExtension(item.name, item.type);
             const kind = this.mediaKind(item.type, extension);
@@ -1569,11 +1604,60 @@ const AdminUI = {
             }
 
             try {
+                const current = this.currentUploadInfo(input);
                 const pond = FilePond.create(input, {
                     allowMultiple: input.hasAttribute('multiple'),
                     credits: false,
                     storeAsFile: true,
                     acceptedFileTypes: input.dataset.accepted ? input.dataset.accepted.split(',') : null,
+                    files: current ? [{
+                        source: current.url,
+                        options: {
+                            type: 'local',
+                            file: {
+                                name: current.name,
+                                size: current.size,
+                                type: current.type,
+                            },
+                            metadata: {
+                                poster: current.url,
+                            },
+                        },
+                    }] : [],
+                    server: current ? {
+                        load: (source, load, error, progress, abort) => {
+                            const controller = new AbortController();
+
+                            fetch(source, {
+                                credentials: 'same-origin',
+                                signal: controller.signal,
+                            })
+                                .then((response) => {
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP ${response.status}`);
+                                    }
+
+                                    const total = Number(response.headers.get('content-length') || 0);
+                                    return response.blob().then((blob) => ({ blob, total }));
+                                })
+                                .then(({ blob, total }) => {
+                                    progress(true, total || blob.size, total || blob.size);
+                                    load(blob);
+                                })
+                                .catch((loadError) => {
+                                    if (loadError.name !== 'AbortError') {
+                                        error('Não foi possível carregar o arquivo atual.');
+                                    }
+                                });
+
+                            return {
+                                abort: () => {
+                                    controller.abort();
+                                    abort();
+                                },
+                            };
+                        },
+                    } : undefined,
                     labelIdle: 'Arraste e solte ou <span class="filepond--label-action">selecione arquivos</span>',
                     labelFileTypeNotAllowed: 'Tipo de arquivo não permitido',
                     fileValidateTypeLabelExpectedTypes: 'Tipos aceitos: {allTypes}',

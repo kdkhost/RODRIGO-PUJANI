@@ -429,10 +429,12 @@ if (! function_exists('site_asset_url')) {
         $normalized = ltrim($path, '/');
 
         if (file_exists(public_path($normalized))) {
-            return asset($normalized);
+            return asset($normalized).'?v='.filemtime(public_path($normalized));
         }
 
-        return asset('storage/'.$normalized);
+        $storagePath = public_path('storage/'.$normalized);
+
+        return asset('storage/'.$normalized).(file_exists($storagePath) ? '?v='.filemtime($storagePath) : '');
     }
 }
 

@@ -200,6 +200,37 @@ class AdminAuthorizationTest extends TestCase
         $this->assertFileExists(public_path($pwaIcon192Setting));
         $this->assertFileExists(public_path($pwaIcon512Setting));
 
+        $branding = branding_config();
+        $this->assertStringContainsString($logoSetting.'?v=', $branding['logo_url']);
+        $this->assertStringContainsString($faviconSetting.'?v=', $branding['favicon_url']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.system-settings.show', 'branding'))
+            ->assertOk()
+            ->assertSee('data-current-url="'.e($branding['logo_url']).'"', false)
+            ->assertSee('data-current-name="'.basename($logoSetting).'"', false);
+
+        $replacementLogo = $this->fakePngUpload('logo-nova.png');
+        $replacementResponse = $this->actingAs($admin)->put(route('admin.system-settings.update', 'branding'), [
+            'brand_name' => 'Pujani Premium',
+            'brand_short_name' => 'PP',
+            'admin_subtitle' => 'Operacao juridica',
+            'admin_footer_text' => 'Rodape premium',
+            'admin_footer_meta' => 'Laravel 13 | Painel premium',
+            'logo' => $replacementLogo,
+        ], [
+            'X-Requested-With' => 'XMLHttpRequest',
+            'Accept' => 'application/json',
+        ]);
+
+        $replacementResponse->assertOk();
+
+        $replacementLogoSetting = Setting::query()->where('key', 'branding.logo_path')->value('value');
+        $this->assertNotSame($logoSetting, $replacementLogoSetting);
+        $this->assertFileDoesNotExist(public_path($logoSetting));
+        $this->assertFileExists(public_path($replacementLogoSetting));
+        $logoSetting = $replacementLogoSetting;
+
         $this->assertDatabaseHas('settings', [
             'key' => 'pwa.popup_title',
             'value' => 'Instale o app',
