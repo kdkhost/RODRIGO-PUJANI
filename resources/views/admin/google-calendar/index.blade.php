@@ -29,13 +29,13 @@
                                 <h3 class="card-title">{{ $connection ? 'Integração conectada' : 'Conectar calendário' }}</h3>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body admin-card-flow">
                             @unless($integrationConfigured)
                                 <div class="alert alert-warning mb-4">Configure o cliente OAuth e o segredo no ambiente antes de conectar uma conta.</div>
                             @endunless
 
                             @if(!$connection)
-                                <p>A autorização usa somente os escopos necessários para identificar a conta, listar calendários e sincronizar eventos.</p>
+                                <p class="text-muted">A autorização usa somente os escopos necessários para identificar a conta, listar calendários e sincronizar eventos.</p>
                                 @if(Route::has('admin.google-calendar.connect'))
                                     <a class="btn btn-primary" href="{{ route('admin.google-calendar.connect') }}" @disabled(!$integrationConfigured)>
                                         <i class="bi bi-google me-1"></i>Conectar com Google
@@ -94,11 +94,11 @@
                 <div class="col-lg-5">
                     <div class="card admin-table-card h-100">
                         <div class="card-header"><h3 class="card-title">Configuração OAuth</h3></div>
-                        <div class="card-body">
+                        <div class="card-body admin-card-flow">
                             <p class="text-muted">Cadastre exatamente este URI de redirecionamento no Google Cloud Console:</p>
                             <code class="d-block text-break p-3 rounded bg-body-tertiary">{{ $redirectUri }}</code>
-                            <hr>
-                            <ul class="mb-0">
+                            <hr class="my-0">
+                            <ul>
                                 <li>Tokens são criptografados no banco.</li>
                                 <li>O refresh ocorre automaticamente antes da expiração.</li>
                                 <li>Mapeamentos impedem duplicidade de eventos.</li>

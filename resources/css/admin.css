@@ -811,6 +811,8 @@ img.admin-avatar {
 
 .card-body {
     padding: var(--admin-card-padding);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .card-footer {
@@ -908,8 +910,41 @@ img.admin-avatar {
     --bs-btn-active-border-color: var(--admin-primary-dark);
 }
 
+.card-body > :first-child {
+    margin-top: 0;
+}
+
+.card-body > :last-child {
+    margin-bottom: 0;
+}
+
+.admin-card-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-card-flow > * {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.admin-card-flow ul,
+.admin-card-flow ol {
+    padding-left: 1.25rem;
+}
+
+/*
+ * O nome desta classe identifica o padrão visual das listagens, não significa
+ * que todo conteúdo deva encostar nas bordas. Somente corpos marcados com p-0
+ * permanecem deliberadamente sem respiro (tabelas e mídias responsivas).
+ */
 .admin-table-card .card-body {
-    padding: 0;
+    padding: var(--admin-card-padding);
+}
+
+.admin-table-card > .card-body.p-0 {
+    padding: 0 !important;
 }
 
 .table {

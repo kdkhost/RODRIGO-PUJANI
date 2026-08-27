@@ -76,6 +76,10 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString("'/admin/documentation#changelog'", $frontController);
         $this->assertStringContainsString("@extends('admin.layouts.app')", $documentation);
         $this->assertStringContainsString('id="changelog"', $documentation);
+        $this->assertStringContainsString('id="google-calendar"', $documentation);
+        $this->assertStringContainsString('GOOGLE_CALENDAR_CLIENT_ID', $documentation);
+        $this->assertStringContainsString('ELECTRONIC_SIGNATURE_ENABLED=true', $documentation);
+        $this->assertStringContainsString('artisan schedule:run', $documentation);
         $this->assertStringNotContainsString('@tailwindcss/browser', $documentation);
         $this->assertStringNotContainsString('min-h-screen', $documentation);
 
@@ -154,6 +158,17 @@ class ProductionHardeningTest extends TestCase
 
         $this->assertStringContainsString('.admin-premium-shell .app-content > .container-fluid', $stylesheet);
         $this->assertStringNotContainsString('max-width: 1680px', $stylesheet);
+    }
+
+    public function test_admin_cards_keep_internal_spacing_unless_explicitly_flush(): void
+    {
+        $stylesheet = file_get_contents(resource_path('css/admin.css'));
+
+        $this->assertStringContainsString('.admin-table-card .card-body', $stylesheet);
+        $this->assertStringContainsString('padding: var(--admin-card-padding);', $stylesheet);
+        $this->assertStringContainsString('.admin-table-card > .card-body.p-0', $stylesheet);
+        $this->assertStringContainsString('padding: 0 !important;', $stylesheet);
+        $this->assertStringContainsString('.admin-card-flow', $stylesheet);
     }
 
     public function test_service_worker_refreshes_server_rendered_content_without_http_cache(): void
