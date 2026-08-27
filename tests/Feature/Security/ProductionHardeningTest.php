@@ -145,6 +145,14 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString('collapsed.lte.treeview', $treeviewStateSynchronizer);
     }
 
+    public function test_admin_content_uses_the_full_available_width(): void
+    {
+        $stylesheet = file_get_contents(resource_path('css/admin.css'));
+
+        $this->assertStringContainsString('.admin-premium-shell .app-content > .container-fluid', $stylesheet);
+        $this->assertStringNotContainsString('max-width: 1680px', $stylesheet);
+    }
+
     public function test_service_worker_refreshes_server_rendered_content_without_http_cache(): void
     {
         $response = $this->get('/sw.js');

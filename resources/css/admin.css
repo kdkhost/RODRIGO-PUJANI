@@ -62,8 +62,6 @@ body {
 .admin-premium-shell .app-content-header > .container-fluid,
 .admin-premium-shell .app-content > .container-fluid {
     width: 100%;
-    max-width: 1680px;
-    margin-inline: auto;
     padding-inline: var(--admin-page-gutter);
 }
 
