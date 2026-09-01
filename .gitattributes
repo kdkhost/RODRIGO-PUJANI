@@ -5,6 +5,7 @@
 *.html diff=html
 *.md diff=markdown
 *.php diff=php
+database/migrations/2026_05_04_150000_create_modulos_table.php whitespace=-blank-at-eof
 
 /.github export-ignore
 CHANGELOG.md export-ignore
