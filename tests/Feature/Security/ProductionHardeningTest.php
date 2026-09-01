@@ -171,13 +171,14 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString('.admin-card-flow', $stylesheet);
     }
 
-    public function test_new_installations_enable_internal_signatures_and_open_the_setup_assistant(): void
+    public function test_new_installations_keep_internal_signatures_disabled_and_open_the_setup_assistant(): void
     {
         $environment = file_get_contents(base_path('.env.example'));
         $installer = file_get_contents(app_path('Services/InstallerService.php'));
         $controller = file_get_contents(app_path('Http/Controllers/InstallController.php'));
 
-        $this->assertStringContainsString('ELECTRONIC_SIGNATURE_ENABLED=true', $environment);
+        $this->assertStringContainsString('ELECTRONIC_SIGNATURE_ENABLED=false', $environment);
+        $this->assertStringContainsString("'ELECTRONIC_SIGNATURE_ENABLED' => 'false'", $installer);
         $this->assertStringContainsString("'ELECTRONIC_SIGNATURE_PROVIDER' => 'internal'", $installer);
         $this->assertStringContainsString("route('admin.office-setup.edit')", $controller);
     }
