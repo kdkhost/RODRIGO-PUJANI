@@ -135,8 +135,16 @@ class MigrateLegalDocumentsToPrivateStorage extends Command
             throw new RuntimeException('Arquivo legado inexistente.');
         }
 
-        $rootPrefix = rtrim(strtolower($publicUploadsRoot), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
-        if (! str_starts_with(strtolower($source), $rootPrefix)) {
+        $normalizedRoot = rtrim($publicUploadsRoot, DIRECTORY_SEPARATOR);
+        $normalizedSource = $source;
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $normalizedRoot = mb_strtolower($normalizedRoot, 'UTF-8');
+            $normalizedSource = mb_strtolower($normalizedSource, 'UTF-8');
+        }
+
+        $rootPrefix = $normalizedRoot.DIRECTORY_SEPARATOR;
+        if (! str_starts_with($normalizedSource, $rootPrefix)) {
             throw new RuntimeException('Caminho legado fora de public/uploads.');
         }
 

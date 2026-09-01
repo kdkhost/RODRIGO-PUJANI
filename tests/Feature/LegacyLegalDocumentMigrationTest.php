@@ -21,17 +21,21 @@ class LegacyLegalDocumentMigrationTest extends TestCase
 
     private string $testDirectory;
 
+    private string $caseVariantDirectory;
+
     protected function setUp(): void
     {
         parent::setUp();
         Storage::fake('legal_documents');
         $this->testDirectory = 'uploads/legacy-migration-tests-'.bin2hex(random_bytes(5));
+        $this->caseVariantDirectory = 'UPLOADS/legacy-migration-case-tests-'.bin2hex(random_bytes(5));
         File::ensureDirectoryExists(public_path($this->testDirectory));
     }
 
     protected function tearDown(): void
     {
         File::deleteDirectory(public_path($this->testDirectory));
+        File::deleteDirectory(public_path($this->caseVariantDirectory));
         File::delete(public_path('legacy-migration-outside.txt'));
         parent::tearDown();
     }
@@ -91,6 +95,25 @@ class LegacyLegalDocumentMigrationTest extends TestCase
 
         $this->assertFileExists(public_path('legacy-migration-outside.txt'));
         $this->assertSame('legacy_public', $document->fresh()->disk);
+    }
+
+    public function test_case_variant_uploads_directory_is_rejected_on_linux(): void
+    {
+        if (PHP_OS_FAMILY !== 'Linux') {
+            $this->markTestSkipped('A distinção entre uploads e UPLOADS deve ser validada em Linux.');
+        }
+
+        File::ensureDirectoryExists(public_path($this->caseVariantDirectory));
+        $path = $this->caseVariantDirectory.'/fora.txt';
+        File::put(public_path($path), 'fora da raiz autorizada');
+        $document = $this->legacyDocumentRecord($path);
+
+        $this->artisan('legal-documents:migrate-private', ['--document' => $document->id])
+            ->assertFailed();
+
+        $this->assertFileExists(public_path($path));
+        $this->assertSame('legacy_public', $document->fresh()->disk);
+        Storage::disk('legal_documents')->assertDirectoryEmpty('/');
     }
 
     public function test_path_traversal_is_rejected_even_when_it_resolves_inside_uploads(): void
