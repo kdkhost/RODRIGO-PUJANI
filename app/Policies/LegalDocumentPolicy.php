@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\LegalDocument;
 use App\Models\User;
+use App\Services\ElectronicSignatureService;
 
 class LegalDocumentPolicy
 {
@@ -42,6 +43,7 @@ class LegalDocumentPolicy
     {
         return config('signatures.enabled', false)
             && $user->can('signature-requests.create')
+            && ElectronicSignatureService::supports($document)
             && $this->view($user, $document);
     }
 

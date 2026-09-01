@@ -15,6 +15,7 @@ use ZipArchive;
 class LegalDocumentStorage
 {
     public const DISK = 'legal_documents';
+    public const LEGACY_PRIVATE_STATUS = 'legacy_private';
 
     private const MIME_EXTENSIONS = [
         'application/pdf' => ['pdf'],
@@ -82,6 +83,95 @@ class LegalDocumentStorage
             'size' => $file->getSize(),
             'sha256' => hash_file('sha256', $path),
         ];
+    }
+
+    public function validateLegacy(string $source, LegalDocument $document): array
+    {
+        $extension = Str::lower(pathinfo((string) ($document->original_name ?: $source), PATHINFO_EXTENSION));
+        $mime = Str::lower((string) File::mimeType($source));
+
+        if (! is_file($source) || is_link($source) || ! in_array($document->storage_status, [null, 'legacy'], true)) {
+            throw ValidationException::withMessages(['file' => 'O arquivo não possui metadados válidos de documento legado.']);
+        }
+
+        $uploadedFile = new UploadedFile(
+            $source,
+            $document->original_name ?: basename($source),
+            null,
+            UPLOAD_ERR_OK,
+            true
+        );
+
+        if (! $this->scanner->scan($uploadedFile)) {
+            throw ValidationException::withMessages(['file' => 'O arquivo legado não foi aprovado pela verificação de segurança.']);
+        }
+
+        if ($extension !== 'txt') {
+            return $this->validate($uploadedFile);
+        }
+
+        if ($mime !== 'text/plain') {
+            throw ValidationException::withMessages(['file' => 'O arquivo legado TXT não pôde ser validado.']);
+        }
+
+        return [
+            'original_name' => $this->safeDownloadName($document->original_name ?: basename($source)),
+            'extension' => $extension,
+            'mime_type' => $mime,
+            'size' => filesize($source),
+            'sha256' => hash_file('sha256', $source),
+        ];
+    }
+
+    public function storeLegacy(string $source, LegalDocument $document): array
+    {
+        $metadata = $this->validateLegacy($source, $document);
+        $path = 'legacy/'.now()->format('Y/m').'/'.Str::uuid().'.'.$metadata['extension'];
+        $stream = fopen($source, 'rb');
+
+        if (! is_resource($stream)) {
+            throw new RuntimeException('Não foi possível abrir o arquivo legado para cópia.');
+        }
+
+        try {
+            Storage::disk(self::DISK)->writeStream($path, $stream);
+        } finally {
+            fclose($stream);
+        }
+
+        if (! Storage::disk(self::DISK)->exists($path)) {
+            throw new RuntimeException('Não foi possível confirmar o armazenamento privado do documento legado.');
+        }
+
+        return $metadata + [
+            'disk' => self::DISK,
+            'path' => $path,
+            'file_name' => basename($path),
+            'storage_status' => self::LEGACY_PRIVATE_STATUS,
+            'scanned_at' => now(),
+            'is_sensitive' => true,
+        ];
+    }
+
+    public function isPrivateCopyReadable(LegalDocument $document): bool
+    {
+        if ($document->disk !== self::DISK || blank($document->path)) {
+            return false;
+        }
+
+        $disk = Storage::disk(self::DISK);
+        if (! $disk->exists($document->path)) {
+            return false;
+        }
+
+        $stream = $disk->readStream($document->path);
+        if (! is_resource($stream)) {
+            return false;
+        }
+
+        fclose($stream);
+
+        return true;
     }
 
     public function absolutePath(LegalDocument $document): ?string

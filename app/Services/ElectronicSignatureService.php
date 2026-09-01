@@ -18,12 +18,27 @@ use RuntimeException;
 
 class ElectronicSignatureService
 {
+    private const SUPPORTED_DOCUMENT_FORMATS = [
+        'application/pdf' => ['pdf'],
+    ];
+
+    public static function supports(LegalDocument $document): bool
+    {
+        $mime = Str::lower((string) $document->mime_type);
+        $extension = Str::lower((string) $document->extension);
+
+        return $document->disk === LegalDocumentStorage::DISK
+            && $document->storage_status === 'private'
+            && filled($document->sha256)
+            && in_array($extension, self::SUPPORTED_DOCUMENT_FORMATS[$mime] ?? [], true);
+    }
+
     public function create(LegalDocument $legalDocument, array $data, int $creatorId): SignatureRequest
     {
         $this->ensureEnabled();
 
         return DB::transaction(function () use ($legalDocument, $data, $creatorId): SignatureRequest {
-            abort_unless($legalDocument->disk === 'legal_documents' && filled($legalDocument->path), 422, 'Documento privado inválido.');
+            abort_unless(self::supports($legalDocument) && filled($legalDocument->path), 422, 'Formato de documento inelegível para assinatura eletrônica.');
             $disk = Storage::disk('legal_documents');
             abort_unless($disk->exists($legalDocument->path), 422, 'Arquivo original não localizado.');
             $contents = $disk->get($legalDocument->path);
