@@ -16,6 +16,7 @@ use App\Models\MailTemplate;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\PublicUpload;
+use App\Support\SmtpSecret;
 use Database\Seeders\DemoOfficeSeeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -112,7 +113,7 @@ class SystemSettingsController extends Controller
         'mail.port' => ['label' => 'Porta SMTP', 'type' => 'text', 'public' => false, 'sort' => 573],
         'mail.encryption' => ['label' => 'Criptografia SMTP', 'type' => 'text', 'public' => false, 'sort' => 574],
         'mail.username' => ['label' => 'Usuario SMTP', 'type' => 'text', 'public' => false, 'sort' => 575],
-        'mail.password' => ['label' => 'Senha SMTP', 'type' => 'text', 'public' => false, 'sort' => 576],
+        'mail.password' => ['label' => 'Senha SMTP criptografada', 'type' => 'password', 'public' => false, 'sort' => 576],
         'mail.from_address' => ['label' => 'E-mail remetente', 'type' => 'text', 'public' => false, 'sort' => 577],
         'mail.from_name' => ['label' => 'Nome remetente', 'type' => 'text', 'public' => false, 'sort' => 578],
         'mail.template_header' => ['label' => 'Cabecalho template de e-mail', 'type' => 'textarea', 'public' => false, 'sort' => 579],
@@ -291,7 +292,9 @@ class SystemSettingsController extends Controller
 
         $this->clearCaches();
 
-        activity_log('system-settings', 'updated', null, $payload, 'Configuracoes do sistema atualizadas.');
+        activity_log('system-settings', 'updated', null, collect($payload)
+            ->except(['mail.password', 'security.recaptcha_secret_key'])
+            ->all(), 'Configuracoes do sistema atualizadas.');
 
         return response()->json([
             'message' => 'Configuracoes atualizadas com sucesso.',
@@ -411,14 +414,16 @@ class SystemSettingsController extends Controller
                 'security.recaptcha_secret_key' => trim((string) ($validated['recaptcha_secret_key'] ?? '')),
                 'security.recaptcha_min_score' => number_format((float) ($validated['recaptcha_min_score'] ?? 0.5), 1, '.', ''),
             ],
-            'mail' => [
+            'mail' => array_filter([
                 'mail.enabled' => $request->boolean('mail_enabled') ? '1' : '0',
                 'mail.mailer' => trim((string) ($validated['mail_mailer'] ?? $mailConfig['mailer'] ?? 'smtp')),
                 'mail.host' => trim((string) ($validated['mail_host'] ?? $mailConfig['host'] ?? '')),
                 'mail.port' => (string) ($validated['mail_port'] ?? $mailConfig['port'] ?? 587),
                 'mail.encryption' => trim((string) ($validated['mail_encryption'] ?? $mailConfig['encryption'] ?? 'tls')),
                 'mail.username' => trim((string) ($validated['mail_username'] ?? $mailConfig['username'] ?? '')),
-                'mail.password' => trim((string) ($validated['mail_password'] ?? $mailConfig['password'] ?? '')),
+                'mail.password' => filled($validated['mail_password'] ?? null)
+                    ? SmtpSecret::encrypt($validated['mail_password'])
+                    : null,
                 'mail.from_address' => trim((string) ($validated['mail_from_address'] ?? $mailConfig['from_address'] ?? '')),
                 'mail.from_name' => trim((string) ($validated['mail_from_name'] ?? $mailConfig['from_name'] ?? '')),
                 'mail.template_header' => app(HtmlContentSanitizer::class)->richText($validated['mail_template_header'] ?? $mailConfig['template_header'] ?? ''),
@@ -440,7 +445,7 @@ class SystemSettingsController extends Controller
                 'mail.template_button_background_color' => strtoupper((string) ($validated['mail_template_button_background_color'] ?? $mailTheme['button_background_color'] ?? '#c49a3c')),
                 'mail.template_button_text_color' => strtoupper((string) ($validated['mail_template_button_text_color'] ?? $mailTheme['button_text_color'] ?? '#10131a')),
                 'mail.template_custom_css' => app(CssContentSanitizer::class)->sanitize($validated['mail_template_custom_css'] ?? $mailTheme['custom_css'] ?? ''),
-            ],
+            ], fn ($value, $key): bool => $key !== 'mail.password' || $value !== null, ARRAY_FILTER_USE_BOTH),
             'support' => [
                 'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',
                 'site.whatsapp_selection_title' => trim((string) ($validated['whatsapp_selection_title'] ?? 'Escolha um especialista')),
@@ -601,7 +606,9 @@ class SystemSettingsController extends Controller
             'port' => (int) ($validated['port'] ?? 587),
             'encryption' => (string) ($validated['encryption'] ?? 'tls'),
             'username' => (string) ($validated['username'] ?? ''),
-            'password' => (string) ($validated['password'] ?? ''),
+            'password' => filled($validated['password'] ?? null)
+                ? (string) $validated['password']
+                : smtp_runtime_config()['password'],
             'from_address' => (string) $validated['from_address'],
             'from_name' => (string) $validated['from_name'],
         ];
@@ -654,8 +661,10 @@ class SystemSettingsController extends Controller
                     ->from($config['from_address'], $config['from_name']);
             });
         } catch (\Throwable $exception) {
+            report(new \RuntimeException('Falha sanitizada no teste SMTP.', (int) $exception->getCode()));
+
             return response()->json([
-                'message' => 'Falha no envio de teste SMTP: '.$exception->getMessage(),
+                'message' => 'Falha no envio de teste SMTP. Verifique a configuração e os logs sanitizados.',
             ], 422);
         }
 
@@ -698,6 +707,7 @@ class SystemSettingsController extends Controller
             'pwa.config.v1',
             'recaptcha.config.v1',
             'mail.config.v1',
+            'mail.config.v2',
             'preloader.settings.v1',
             'mail.theme.v1',
             'site_pages.menu.v2',

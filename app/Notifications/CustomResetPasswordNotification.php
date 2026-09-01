@@ -24,7 +24,7 @@ class CustomResetPasswordNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $config = smtp_config();
+        $config = smtp_runtime_config();
         $url = url(route('password.reset', [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),

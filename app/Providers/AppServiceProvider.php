@@ -38,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('pagination::premium');
         Paginator::defaultSimpleView('pagination::simple-bootstrap-5');
 
-        $smtp = smtp_config();
+        $smtp = smtp_runtime_config();
         if (($smtp['enabled'] ?? false) === true) {
             Config::set('mail.default', $smtp['mailer'] ?: 'smtp');
             Config::set('mail.mailers.smtp.host', $smtp['host']);
