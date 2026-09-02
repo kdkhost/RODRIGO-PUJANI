@@ -14,7 +14,7 @@ A nova varredura usa pontos de código Unicode e procura apenas sequências comp
 
 ## Revisão prioritária
 
-Foram priorizados código PHP, Blade, JavaScript, validações, notificações, convites, consentimento, comprovantes, evidências e painel SMTP. A validação desta release deve ser executada novamente após a montagem cumulativa.
+Foram priorizados código PHP, Blade, JavaScript, validações, notificações, convites, consentimento, comprovantes, evidências e painel SMTP. Após a montagem cumulativa, a varredura examinou 524 arquivos versionados: 502 textos e 22 binários. O resultado foi zero arquivo UTF-8 inválido, zero BOM e um único candidato, a sequência técnica legítima do detector em `.githooks/pre-commit`.
 
 O painel SMTP continha palavras portuguesas sem acentuação. Elas eram texto ASCII válido, e não mojibake. Os rótulos e instruções foram corrigidos individualmente para português brasileiro, sem substituição global. A proteção do segredo foi preservada: o valor armazenado não retorna ao HTML e o campo vazio mantém a credencial existente.
 
@@ -29,3 +29,15 @@ O painel SMTP continha palavras portuguesas sem acentuação. Elas eram texto AS
 | Falso positivo da varredura anterior | 143 arquivos |
 
 Não existiam registros de texto incorreto, texto correto e origem provável para mojibake real porque nenhuma ocorrência real havia sido confirmada. As correções ortográficas do painel SMTP e os textos críticos da assinatura são protegidos por `SignatureContentEncodingTest`.
+
+## Evidências da validação cumulativa
+
+- Suíte PHP completa no Windows: 172 testes aprovados e 1.235 asserções; dois testes condicionais foram ignorados, um exclusivo de Linux e outro porque o Windows não autorizou a criação de link simbólico.
+- Casos críticos de storage repetidos em Linux real, sobre `overlayfs`, com PHP 8.4.25: 6 testes aprovados e 20 asserções, sem teste ignorado.
+- PHP lint: 456 arquivos PHP aprovados.
+- `composer audit`, `npm audit` e `npm audit --omit=dev`: nenhuma vulnerabilidade conhecida.
+- Build Vite: concluído com sucesso.
+- `git diff --check`: aprovado.
+- Inventário reconciliado: 55 migrations únicas, todas correspondentes ao manifesto forense do banco de produção; nenhuma migration duplicada, ausente ou adicional.
+
+A checagem das migrations foi documental e comparativa, usando o manifesto forense previamente congelado. Nenhuma migration foi executada nesta etapa e nenhum acesso ao banco de produção foi realizado.
