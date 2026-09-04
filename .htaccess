@@ -1,8 +1,32 @@
 Options -Indexes
 AddDefaultCharset UTF-8
 
+# BEGIN CENTRAL-JURIDICA-SENSITIVE-FILES
+<IfModule mod_authz_core.c>
+    <FilesMatch "(?i)^(?:\.env.*|\.git(?:ignore|attributes|modules)?|\.phpunit\.result\.cache|phpunit\.xml(?:\.dist)?|error_log(?:[.-].*)?|testc\.php|puppeteer_test\.cjs|sync_server\.ps1|.+\.(?:env|log|sqlite3?|sql)(?:[.-].*)?|.+\.(?:bak|backup|zip|rar|7z|tar|tgz|gz|bz2|xz|zst)(?:[.-].*)?)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    <IfModule mod_authz_host.c>
+        <FilesMatch "(?i)^(?:\.env.*|\.git(?:ignore|attributes|modules)?|\.phpunit\.result\.cache|phpunit\.xml(?:\.dist)?|error_log(?:[.-].*)?|testc\.php|puppeteer_test\.cjs|sync_server\.ps1|.+\.(?:env|log|sqlite3?|sql)(?:[.-].*)?|.+\.(?:bak|backup|zip|rar|7z|tar|tgz|gz|bz2|xz|zst)(?:[.-].*)?)$">
+            Order Allow,Deny
+            Deny from all
+        </FilesMatch>
+    </IfModule>
+</IfModule>
+# END CENTRAL-JURIDICA-SENSITIVE-FILES
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # BEGIN CENTRAL-JURIDICA-SENSITIVE-PATHS
+    RewriteRule ^(?:public/)?(?:tests|database|bootstrap/cache|storage/(?:app|logs)|\.githooks|tools)(?:/|$) - [F,L,NC]
+    RewriteRule (^|/)(?:\.env[^/]*|\.git(?:ignore|attributes|modules)?|\.phpunit\.result\.cache|phpunit\.xml(?:\.dist)?|error_log(?:[.-][^/]*)?|testc\.php|puppeteer_test\.cjs|sync_server\.ps1)(?:/|$) - [F,L,NC]
+    RewriteRule (^|/)[^/]+\.(?:env|log|sqlite3?|sql)(?:[.-][^/]*)?(?:/|$) - [F,L,NC]
+    RewriteRule (^|/)[^/]+\.(?:bak|backup|zip|rar|7z|tar|tgz|gz|bz2|xz|zst)(?:[.-][^/]*)?(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:public/)?(?:uploads|storage)/.*\.(?:php(?:[0-9]+)?|phtml|pht|phar|phps)(?:\.[^/]+)*(?:/|$) - [F,L,NC]
+    # END CENTRAL-JURIDICA-SENSITIVE-PATHS
 
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

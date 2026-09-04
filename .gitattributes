@@ -7,8 +7,61 @@
 *.php diff=php
 database/migrations/2026_05_04_150000_create_modulos_table.php whitespace=-blank-at-eof
 
+# Metadados e ferramentas somente de desenvolvimento
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
 /.github export-ignore
-CHANGELOG.md export-ignore
-.styleci.yml export-ignore
-/database/database.sqlite export-ignore
+/.githooks export-ignore
+/.styleci.yml export-ignore
+/phpunit.xml export-ignore
+/tests export-ignore
+/tools export-ignore
+/scripts export-ignore
+/node_modules export-ignore
+/vendor export-ignore
+
+# Documentação Markdown não utilizada em runtime
+/CHANGELOG.md export-ignore
+/DOCUMENTATION.md export-ignore
+/README.md export-ignore
+/docs export-ignore
+
+# Ambiente, caches e artefatos locais ou sensíveis
+/.env export-ignore
+/.env.* export-ignore
+/.env.example -export-ignore
+/.phpunit.cache export-ignore
+/.phpunit.result.cache export-ignore
+error_log export-ignore
+*.log export-ignore
+*.sqlite export-ignore
+*.sqlite-* export-ignore
+*.sql export-ignore
+*.dump export-ignore
+*.bak export-ignore
+*.backup export-ignore
+*.zip export-ignore
+*.rar export-ignore
+*.7z export-ignore
+*.tar export-ignore
+*.tgz export-ignore
+*.gz export-ignore
+*.bz2 export-ignore
+*.xz export-ignore
+*.zst export-ignore
+*.tmp export-ignore
+*.temp export-ignore
+*.orig export-ignore
+*.rej export-ignore
+*.swp export-ignore
+*~ export-ignore
+/storage/app/system-file-backups export-ignore
 /public/uploads export-ignore
+/public/storage export-ignore
+
+# Scripts que jamais devem ser publicados
+/testc.php export-ignore
+/test*.php export-ignore
+/puppeteer_test.cjs export-ignore
+/sync_server.ps1 export-ignore
