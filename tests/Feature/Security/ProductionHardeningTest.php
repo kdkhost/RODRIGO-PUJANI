@@ -210,4 +210,14 @@ class ProductionHardeningTest extends TestCase
 
         app(SystemFileManagerService::class)->describe('env');
     }
+
+    public function test_application_log_can_be_kept_outside_the_document_root(): void
+    {
+        $environment = file_get_contents(base_path('.env.example'));
+        $logging = file_get_contents(config_path('logging.php'));
+
+        $this->assertStringContainsString('LOG_PATH=', $environment);
+        $this->assertStringContainsString("\$configuredLogPath = env('LOG_PATH');", $logging);
+        $this->assertSame(3, substr_count($logging, "'path' => \$applicationLogPath"));
+    }
 }

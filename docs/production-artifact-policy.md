@@ -25,3 +25,5 @@ O deploy deve preservar `.env`, uploads e dados existentes no servidor. Nenhum c
 ## Contenção no servidor
 
 Artefatos legados devem ser copiados, conferidos por SHA-256 e movidos para uma quarentena fora do document root. A quarentena usa modo `0700`, arquivos sensíveis usam `0600` e a retenção mínima é de 30 dias. O rollback repõe somente caminhos explícitos após conferir proprietário, modo e hash; uma credencial revogada nunca deve ser restaurada.
+
+Defina `LOG_PATH` com um caminho absoluto gravável fora do document root antes de retirar o log Laravel existente. O canal `single`, o canal `daily` e o fallback de emergência usam esse mesmo destino. Se `LOG_PATH` estiver vazio, o comportamento padrão em `storage/logs/laravel.log` é preservado.
