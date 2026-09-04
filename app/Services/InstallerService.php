@@ -96,7 +96,11 @@ class InstallerService
 
         $user = $this->syncAdminUser($data);
 
-        $this->writeEnvironment(['APP_INSTALLED' => 'true']);
+        $this->writeEnvironment([
+            'APP_ADMIN_PASSWORD' => '',
+            'APP_INSTALLED' => 'true',
+        ]);
+        $this->setEnvironmentValue('APP_ADMIN_PASSWORD', '');
         $this->setEnvironmentValue('APP_INSTALLED', 'true');
         $this->writeInstallationMarker();
 

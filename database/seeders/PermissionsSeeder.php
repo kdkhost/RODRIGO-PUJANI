@@ -160,10 +160,6 @@ class PermissionsSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        if (filled($configuredPassword)) {
-            $admin->password = Hash::make((string) $configuredPassword);
-        }
-
         $admin->save();
 
         $admin->syncRoles([$superAdmin->name]);

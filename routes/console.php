@@ -38,6 +38,14 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Artisan::command('system:install {--fresh : Recria o banco do zero antes de popular os dados}', function () {
+    $adminPassword = env('APP_ADMIN_PASSWORD');
+
+    if (blank($adminPassword)) {
+        $this->error('Defina APP_ADMIN_PASSWORD com uma senha forte antes de executar a instalação.');
+
+        return 1;
+    }
+
     app(InstallerService::class)->install([
         'app_name' => env('APP_NAME', 'Pujani Advogados'),
         'app_url' => env('APP_URL', 'http://localhost'),
@@ -49,8 +57,10 @@ Artisan::command('system:install {--fresh : Recria o banco do zero antes de popu
         'db_password' => env('DB_PASSWORD', ''),
         'admin_name' => env('APP_ADMIN_NAME', 'Administrador'),
         'admin_email' => env('APP_ADMIN_EMAIL', 'admin@pujani.adv.br'),
-        'admin_password' => env('APP_ADMIN_PASSWORD', 'Admin@12345'),
+        'admin_password' => (string) $adminPassword,
     ], $this->option('fresh'));
 
     $this->info('Instalação concluída.');
+
+    return 0;
 })->purpose('Instala e prepara o sistema para uso em hospedagem compartilhada');
