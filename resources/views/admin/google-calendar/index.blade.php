@@ -34,6 +34,30 @@
                                 <div class="alert alert-warning mb-4">Configure e salve o OAuth no painel antes de conectar uma conta.</div>
                             @endunless
 
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-database-lock me-2"></i>
+                                As credenciais devem ser configuradas somente por este painel. Não edite o <code>.env</code> para Google Calendar.
+                            </div>
+
+                            <div>
+                                <div class="admin-card-kicker">Passo a passo</div>
+                                <h4 class="h6 mb-2">Como pegar as credenciais no Google</h4>
+                                <ol class="mb-0 ps-3">
+                                    <li>Acesse o <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> e crie ou selecione o projeto do escritório.</li>
+                                    <li>Na biblioteca de APIs, ative a <strong>Google Calendar API</strong> para esse projeto.</li>
+                                    <li>Em <strong>Google Auth Platform</strong>, configure a tela de consentimento com nome do aplicativo, e-mail de suporte e domínio autorizado.</li>
+                                    <li>Em <strong>Clientes</strong>, crie um cliente OAuth do tipo <strong>Aplicativo da Web</strong>.</li>
+                                    <li>Em <strong>URIs de redirecionamento autorizados</strong>, cole exatamente a URI exibida no card <strong>Configuração OAuth</strong>.</li>
+                                    <li>Copie o <strong>Client ID</strong> e o <strong>Client Secret</strong>, cole no card de configuração, marque <strong>Ativar integração</strong> e clique em <strong>Salvar OAuth</strong>.</li>
+                                    <li>Depois de salvar, clique em <strong>Conectar com Google</strong>, autorize a conta do escritório e selecione o calendário de destino.</li>
+                                </ol>
+                            </div>
+
+                            <div class="alert alert-warning mb-0">
+                                <i class="bi bi-shield-exclamation me-2"></i>
+                                Não cole o Client Secret em chat, e-mail, chamado, planilha ou arquivo. Após salvar, ele fica criptografado no banco e não aparece novamente no formulário.
+                            </div>
+
                             @if(!$connection)
                                 <p class="text-muted">A autorização usa somente os escopos necessários para identificar a conta, listar calendários e sincronizar eventos.</p>
                                 @if(Route::has('admin.google-calendar.connect'))
@@ -139,30 +163,6 @@
 
                                 <hr class="my-0">
                             @endif
-
-                            <div class="alert alert-info mb-0">
-                                <i class="bi bi-database-lock me-2"></i>
-                                As credenciais devem ser configuradas somente por este painel. Não edite o <code>.env</code> para Google Calendar.
-                            </div>
-
-                            <div>
-                                <div class="admin-card-kicker">Passo a passo</div>
-                                <h4 class="h6 mb-2">Como pegar as credenciais no Google</h4>
-                                <ol class="mb-0 ps-3">
-                                    <li>Acesse o <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> e crie ou selecione o projeto do escritório.</li>
-                                    <li>Na biblioteca de APIs, ative a <strong>Google Calendar API</strong> para esse projeto.</li>
-                                    <li>Em <strong>Google Auth Platform</strong>, configure a tela de consentimento com nome do aplicativo, e-mail de suporte e domínio autorizado.</li>
-                                    <li>Em <strong>Clientes</strong>, crie um cliente OAuth do tipo <strong>Aplicativo da Web</strong>.</li>
-                                    <li>Em <strong>URIs de redirecionamento autorizados</strong>, cole exatamente a URI exibida abaixo.</li>
-                                    <li>Copie o <strong>Client ID</strong> e o <strong>Client Secret</strong>, cole nos campos acima, marque <strong>Ativar integração</strong> e clique em <strong>Salvar OAuth</strong>.</li>
-                                    <li>Depois de salvar, clique em <strong>Conectar com Google</strong>, autorize a conta do escritório e selecione o calendário de destino.</li>
-                                </ol>
-                            </div>
-
-                            <div class="alert alert-warning mb-0">
-                                <i class="bi bi-shield-exclamation me-2"></i>
-                                Não cole o Client Secret em chat, e-mail, chamado, planilha ou arquivo. Após salvar, ele fica criptografado no banco e não aparece novamente no formulário.
-                            </div>
 
                             <p class="text-muted">Cadastre exatamente este URI de redirecionamento no Google Cloud Console:</p>
                             <code class="d-block text-break p-3 rounded bg-body-tertiary">{{ $redirectUri }}</code>

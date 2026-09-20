@@ -50,6 +50,10 @@ class GoogleCalendarOAuthSettingsTest extends TestCase
         $this->assertStringContainsString('Aplicativo da Web', $html);
         $this->assertStringContainsString('Não cole o Client Secret', $html);
         $this->assertStringContainsString('Não edite o <code>.env</code> para Google Calendar', $html);
+        $this->assertLessThan(
+            strpos($html, 'Configuração OAuth'),
+            strpos($html, 'Como pegar as credenciais no Google')
+        );
         $this->assertStringNotContainsString($secret, $html);
         $this->assertStringNotContainsString($stored, $html);
     }
