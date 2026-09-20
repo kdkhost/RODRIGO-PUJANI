@@ -293,6 +293,45 @@ if (! function_exists('smtp_runtime_config')) {
     }
 }
 
+if (! function_exists('electronic_signature_config')) {
+    function electronic_signature_config(): array
+    {
+        try {
+            return Cache::rememberForever('signatures.config.v1', function (): array {
+                $defaultExpirationDays = (int) setting(
+                    'signatures.default_expiration_days',
+                    (string) config('signatures.default_expiration_days', 7),
+                );
+                $tokenExpirationHours = (int) setting(
+                    'signatures.token_expiration_hours',
+                    (string) config('signatures.token_expiration_hours', 72),
+                );
+
+                return [
+                    'enabled' => filter_var(
+                        setting('signatures.enabled', env('ELECTRONIC_SIGNATURE_ENABLED', false) ? '1' : '0'),
+                        FILTER_VALIDATE_BOOLEAN,
+                    ),
+                    'provider' => (string) setting('signatures.provider', config('signatures.provider', 'internal')),
+                    'default_expiration_days' => max(1, min(90, $defaultExpirationDays ?: 7)),
+                    'token_expiration_hours' => max(1, min(720, $tokenExpirationHours ?: 72)),
+                    'terms_version' => (string) config('signatures.terms_version', '1.0'),
+                    'disk' => (string) config('signatures.disk', 'legal_documents'),
+                ];
+            });
+        } catch (Throwable) {
+            return [
+                'enabled' => filter_var(env('ELECTRONIC_SIGNATURE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+                'provider' => (string) env('ELECTRONIC_SIGNATURE_PROVIDER', 'internal'),
+                'default_expiration_days' => (int) env('ELECTRONIC_SIGNATURE_DEFAULT_EXPIRATION_DAYS', 7),
+                'token_expiration_hours' => (int) env('ELECTRONIC_SIGNATURE_TOKEN_EXPIRATION_HOURS', 72),
+                'terms_version' => '1.0',
+                'disk' => 'legal_documents',
+            ];
+        }
+    }
+}
+
 if (! function_exists('google_calendar_config')) {
     function google_calendar_config(): array
     {

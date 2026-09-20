@@ -86,6 +86,11 @@ class SettingsSeeder extends Seeder
             ['group' => 'security', 'key' => 'security.recaptcha_secret_key', 'label' => 'Secret key do reCAPTCHA', 'type' => 'text', 'value' => '', 'is_public' => false],
             ['group' => 'security', 'key' => 'security.recaptcha_min_score', 'label' => 'Score minimo do reCAPTCHA', 'type' => 'text', 'value' => '0.5', 'is_public' => false],
 
+            ['group' => 'signatures', 'key' => 'signatures.enabled', 'label' => 'Ativar assinatura eletrônica', 'type' => 'boolean', 'value' => '0', 'is_public' => false],
+            ['group' => 'signatures', 'key' => 'signatures.provider', 'label' => 'Provedor de assinatura', 'type' => 'text', 'value' => 'internal', 'is_public' => false],
+            ['group' => 'signatures', 'key' => 'signatures.default_expiration_days', 'label' => 'Prazo padrão da solicitação', 'type' => 'text', 'value' => '7', 'is_public' => false],
+            ['group' => 'signatures', 'key' => 'signatures.token_expiration_hours', 'label' => 'Validade do link individual', 'type' => 'text', 'value' => '72', 'is_public' => false],
+
             ['group' => 'preloader', 'key' => 'preloader.enabled', 'label' => 'Ativar preloader', 'type' => 'boolean', 'value' => '0', 'is_public' => true],
             ['group' => 'preloader', 'key' => 'preloader.scope', 'label' => 'Exibicao', 'type' => 'text', 'value' => 'all', 'is_public' => true],
             ['group' => 'preloader', 'key' => 'preloader.style', 'label' => 'Estilo', 'type' => 'text', 'value' => 'spinner', 'is_public' => true],

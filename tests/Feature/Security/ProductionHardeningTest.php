@@ -83,7 +83,9 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString('Client Secret', $documentation);
         $this->assertStringContainsString('não deve ser colocado no <code>.env</code>', $documentation);
         $this->assertStringNotContainsString('GOOGLE_CALENDAR_CLIENT_ID', $documentation);
-        $this->assertStringContainsString('ELECTRONIC_SIGNATURE_ENABLED=true', $documentation);
+        $this->assertStringContainsString('Operação &gt; Sistema &gt; Assinaturas', $documentation);
+        $this->assertStringContainsString('cópia automática do documento assinado', $documentation);
+        $this->assertStringNotContainsString('ELECTRONIC_SIGNATURE_ENABLED=true', $documentation);
         $this->assertStringContainsString('artisan schedule:run', $documentation);
         $this->assertStringNotContainsString('@tailwindcss/browser', $documentation);
         $this->assertStringNotContainsString('min-h-screen', $documentation);

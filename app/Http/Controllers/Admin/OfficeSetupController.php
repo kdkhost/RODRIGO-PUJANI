@@ -51,7 +51,7 @@ class OfficeSetupController extends Controller
                 ['label' => 'SMTP', 'ready' => (bool) ($mail['enabled'] ?? false) && filled($mail['host'] ?? null), 'url' => route('admin.system-settings.show', 'mail')],
                 ['label' => 'Google Calendar', 'ready' => (bool) ($googleCalendar['configured'] ?? false), 'url' => route('admin.google-calendar.index')],
                 ['label' => 'IA e transcrição', 'ready' => (bool) $ai?->enabled && filled($ai?->secret), 'url' => route('admin.legal-ai.index')],
-                ['label' => 'Assinatura eletrônica', 'ready' => (bool) config('signatures.enabled'), 'url' => route('admin.documentation.index').'#assinaturas'],
+                ['label' => 'Assinatura eletrônica', 'ready' => (bool) config('signatures.enabled'), 'url' => route('admin.system-settings.show', 'signatures')],
                 ['label' => 'Agendador e filas', 'ready' => $schedulerReady, 'url' => route('admin.documentation.index').'#infraestrutura'],
             ],
         ]);

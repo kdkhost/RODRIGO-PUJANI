@@ -54,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
             Config::set('mail.from.name', $smtp['from_name']);
         }
 
+        $signatures = electronic_signature_config();
+        Config::set('signatures.enabled', (bool) ($signatures['enabled'] ?? false));
+        Config::set('signatures.provider', (string) ($signatures['provider'] ?? 'internal'));
+        Config::set('signatures.default_expiration_days', (int) ($signatures['default_expiration_days'] ?? 7));
+        Config::set('signatures.token_expiration_hours', (int) ($signatures['token_expiration_hours'] ?? 72));
 
         View::composer('*', function ($view): void {
 

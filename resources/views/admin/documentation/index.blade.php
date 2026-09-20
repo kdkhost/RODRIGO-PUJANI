@@ -3,7 +3,7 @@
 @section('content')
 <div class="app-content-header admin-page-hero"><div class="container-fluid"><div class="admin-page-hero-inner">
     <div><div class="admin-eyebrow">Centro de conhecimento</div><h1>{{ $pageTitle }}</h1><p>Configuração e operação dos módulos, dentro do mesmo padrão visual do painel.</p></div>
-    <div class="admin-hero-stamp"><i class="bi bi-journal-bookmark-fill"></i><div><strong>Documentação oficial</strong><small>Versão 2.5.0</small></div></div>
+    <div class="admin-hero-stamp"><i class="bi bi-journal-bookmark-fill"></i><div><strong>Documentação oficial</strong><small>Versão 2.5.1</small></div></div>
 </div></div></div>
 
 <div class="app-content"><div class="container-fluid"><div class="row g-4">
@@ -49,7 +49,7 @@
                 <li>Preencha o advogado ou gestor responsável, incluindo CPF, telefone, cargo, OAB e fuso horário.</li>
                 <li>Salve. Nome da marca, dados públicos do site, endereço e perfil responsável são atualizados em conjunto.</li>
                 <li>Use o quadro de prontidão para abrir apenas as integrações opcionais que ainda precisam de credenciais externas.</li>
-            </ol><div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>A assinatura eletrônica interna já fica habilitada em instalações novas. Google, SMTP e IA exigem credenciais fornecidas pelos respectivos serviços.</div></div>
+            </ol><div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>A assinatura eletrônica interna fica disponível para ativação assistida pelo painel. Google, SMTP e IA exigem credenciais fornecidas pelos respectivos serviços.</div></div>
         </section>
 
         <section id="marca" class="card admin-table-card admin-docs-section">
@@ -129,10 +129,12 @@
         <section id="assinaturas" class="card admin-table-card admin-docs-section">
             <div class="card-header"><div><div class="admin-card-kicker">Evidência eletrônica</div><h2 class="card-title">Assinatura eletrônica de documentos</h2></div></div>
             <div class="card-body admin-card-flow"><ol class="admin-docs-steps">
-                <li>No <code>.env</code>, habilite <code>ELECTRONIC_SIGNATURE_ENABLED=true</code>; mantenha o provedor <code>internal</code> e ajuste os prazos se necessário.</li>
-                <li>Configure e teste o SMTP para enviar convites individuais aos signatários.</li>
-                <li>Em <strong>Jurídico &gt; Assinaturas</strong>, selecione documento e signatários e defina se a ordem é obrigatória.</li>
-                <li>Após a conclusão, baixe o PDF assinado e confira a validação das evidências.</li>
+                <li>Acesse <strong>Operação &gt; Sistema &gt; Assinaturas</strong>, revise os prazos, mantenha o provedor interno e ative o módulo pelo painel quando o SMTP estiver testado.</li>
+                <li>Configure e teste o SMTP para enviar convites individuais e a cópia automática do documento assinado aos signatários.</li>
+                <li>Em <strong>Jurídico &gt; Assinaturas</strong>, selecione um PDF privado com SHA-256 confirmado, informe os signatários e defina se a ordem é obrigatória.</li>
+                <li>O cliente abre o link individual, lê o PDF original, confirma nome e CPF/CNPJ quando exigido, registra consentimento e assina.</li>
+                <li>Após a conclusão, o PDF assinado fica disponível no sistema e é enviado automaticamente por e-mail ao cliente/signatário.</li>
+                <li>Baixe o comprovante JSON e confirme a validação das evidências antes de arquivar o caso.</li>
             </ol><div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>A evidência eletrônica e o certificado no PDF não equivalem a certificado ICP-Brasil.</div></div>
         </section>
 
@@ -150,8 +152,8 @@
         <section id="changelog" class="card admin-table-card admin-docs-section">
             <div class="card-header"><div><div class="admin-card-kicker">Evolução do sistema</div><h2 class="card-title">Histórico de versões</h2></div><span class="badge text-bg-primary">Atual</span></div>
             <div class="card-body"><div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.0</strong><span class="text-muted small">27/08/2026</span></div>
-                <ul class="text-muted mb-0 ps-3"><li>Contrato único de espaçamento e alinhamento para cards administrativos.</li><li>Guias de configuração dos novos módulos e integrações.</li><li>Modo sem padding preservado somente onde foi explicitamente marcado.</li></ul>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.1</strong><span class="text-muted small">20/09/2026</span></div>
+                <ul class="text-muted mb-0 ps-3"><li>Assinatura eletrônica configurável pelo painel administrativo.</li><li>Leitura do PDF original antes do aceite e assinatura.</li><li>Cópia automática do PDF assinado enviada por e-mail ao concluir a solicitação.</li><li>Relatório operacional e histórico atualizados para refletir o novo fluxo.</li></ul>
             </div></div></div>
         </section>
     </div></div>

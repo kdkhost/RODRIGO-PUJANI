@@ -49,6 +49,12 @@ class SystemSettingsController extends Controller
             'icon' => 'bi-envelope',
             'description' => 'Conexao SMTP, remetente, testes e tema visual dos e-mails do sistema.',
         ],
+        'signatures' => [
+            'label' => 'Assinaturas',
+            'title' => 'Assinatura eletrônica',
+            'icon' => 'bi-pen',
+            'description' => 'Ativação assistida, prazos, convites e cópia automática do documento assinado.',
+        ],
         'security' => [
             'label' => 'Seguranca',
             'title' => 'Seguranca e protecao',
@@ -135,6 +141,10 @@ class SystemSettingsController extends Controller
         'mail.template_button_background_color' => ['label' => 'Cor do botao do template', 'type' => 'text', 'public' => false, 'sort' => 595],
         'mail.template_button_text_color' => ['label' => 'Cor do texto do botao do template', 'type' => 'text', 'public' => false, 'sort' => 596],
         'mail.template_custom_css' => ['label' => 'CSS adicional do template de e-mail', 'type' => 'textarea', 'public' => false, 'sort' => 597],
+        'signatures.enabled' => ['label' => 'Ativar assinatura eletrônica', 'type' => 'boolean', 'public' => false, 'sort' => 598],
+        'signatures.provider' => ['label' => 'Provedor de assinatura', 'type' => 'text', 'public' => false, 'sort' => 599],
+        'signatures.default_expiration_days' => ['label' => 'Prazo padrão da solicitação', 'type' => 'text', 'public' => false, 'sort' => 600],
+        'signatures.token_expiration_hours' => ['label' => 'Validade do link individual', 'type' => 'text', 'public' => false, 'sort' => 601],
         'site.whatsapp_multiple_support' => ['label' => 'Suporte WhatsApp Multinivel', 'type' => 'boolean', 'public' => true, 'sort' => 600],
         'site.whatsapp_selection_title' => ['label' => 'Titulo da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 601],
         'site.whatsapp_selection_subtitle' => ['label' => 'Subtitulo da caixa de suporte', 'type' => 'text', 'public' => true, 'sort' => 602],
@@ -160,6 +170,7 @@ class SystemSettingsController extends Controller
             'recaptcha' => recaptcha_config(),
             'mailConfig' => smtp_config(),
             'mailTheme' => mail_theme_config(),
+            'signatureConfig' => electronic_signature_config(),
             'pwaDisplayOptions' => [
                 'browser' => 'Navegador',
                 'minimal-ui' => 'Minimal UI',
@@ -211,6 +222,7 @@ class SystemSettingsController extends Controller
             'recaptcha' => recaptcha_config(),
             'mailConfig' => smtp_config(),
             'mailTheme' => mail_theme_config(),
+            'signatureConfig' => electronic_signature_config(),
             'pwaDisplayOptions' => [
                 'browser' => 'Navegador',
                 'minimal-ui' => 'Minimal UI',
@@ -267,6 +279,7 @@ class SystemSettingsController extends Controller
                 str_starts_with($key, 'pwa.') => 'pwa',
                 str_starts_with($key, 'security.') => 'security',
                 str_starts_with($key, 'mail.') => 'mail',
+                str_starts_with($key, 'signatures.') => 'signatures',
                 str_starts_with($key, 'site.') => 'site',
                 str_starts_with($key, 'seo.') => 'seo',
                 default => 'system',
@@ -288,6 +301,13 @@ class SystemSettingsController extends Controller
 
         if ($section === 'mail') {
             $this->syncSystemMailTemplatesFromSettings($payload);
+        }
+
+        if ($section === 'signatures') {
+            Config::set('signatures.enabled', filter_var($payload['signatures.enabled'] ?? '0', FILTER_VALIDATE_BOOLEAN));
+            Config::set('signatures.provider', (string) ($payload['signatures.provider'] ?? 'internal'));
+            Config::set('signatures.default_expiration_days', (int) ($payload['signatures.default_expiration_days'] ?? 7));
+            Config::set('signatures.token_expiration_hours', (int) ($payload['signatures.token_expiration_hours'] ?? 72));
         }
 
         $this->clearCaches();
@@ -383,6 +403,12 @@ class SystemSettingsController extends Controller
             'mail_template_button_text_color' => ['nullable', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
             'mail_template_custom_css' => ['nullable', 'string', 'max:12000'],
             ],
+            'signatures' => [
+            'signature_enabled' => ['nullable', 'boolean'],
+            'signature_provider' => ['required', 'in:internal'],
+            'signature_default_expiration_days' => ['required', 'integer', 'min:1', 'max:90'],
+            'signature_token_expiration_hours' => ['required', 'integer', 'min:1', 'max:720'],
+            ],
             'support' => [
             'whatsapp_multiple_support' => ['nullable', 'boolean'],
             'whatsapp_selection_title' => ['nullable', 'string', 'max:120'],
@@ -446,6 +472,12 @@ class SystemSettingsController extends Controller
                 'mail.template_button_text_color' => strtoupper((string) ($validated['mail_template_button_text_color'] ?? $mailTheme['button_text_color'] ?? '#10131a')),
                 'mail.template_custom_css' => app(CssContentSanitizer::class)->sanitize($validated['mail_template_custom_css'] ?? $mailTheme['custom_css'] ?? ''),
             ], fn ($value, $key): bool => $key !== 'mail.password' || $value !== null, ARRAY_FILTER_USE_BOTH),
+            'signatures' => [
+                'signatures.enabled' => $request->boolean('signature_enabled') ? '1' : '0',
+                'signatures.provider' => (string) ($validated['signature_provider'] ?? 'internal'),
+                'signatures.default_expiration_days' => (string) max(1, min(90, (int) ($validated['signature_default_expiration_days'] ?? 7))),
+                'signatures.token_expiration_hours' => (string) max(1, min(720, (int) ($validated['signature_token_expiration_hours'] ?? 72))),
+            ],
             'support' => [
                 'site.whatsapp_multiple_support' => $request->boolean('whatsapp_multiple_support') ? '1' : '0',
                 'site.whatsapp_selection_title' => trim((string) ($validated['whatsapp_selection_title'] ?? 'Escolha um especialista')),
@@ -708,6 +740,7 @@ class SystemSettingsController extends Controller
             'recaptcha.config.v1',
             'mail.config.v1',
             'mail.config.v2',
+            'signatures.config.v1',
             'google_calendar.config.v1',
             'preloader.settings.v1',
             'mail.theme.v1',

@@ -7,6 +7,7 @@ use App\Models\LegalDocument;
 use App\Models\SignatureRequest;
 use App\Models\User;
 use App\Notifications\SignatureInvitationNotification;
+use App\Notifications\SignatureStatusNotification;
 use App\Services\ElectronicSignatureService;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -59,7 +60,14 @@ class ElectronicSignatureTest extends TestCase
         $signatureRequest->update(['status' => 'pending', 'sent_at' => now()]);
         $signer->update(['status' => 'sent', 'token_hash' => hash('sha256', $token), 'token_expires_at' => now()->addHour()]);
 
-        $this->get(route('signatures.public.show', $token))->assertOk()->assertSee('Contrato de teste');
+        $this->get(route('signatures.public.show', $token))
+            ->assertOk()
+            ->assertSee('Contrato de teste')
+            ->assertSee('Abrir PDF original');
+        $documentResponse = $this->get(route('signatures.public.document', $token))
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->assertStringStartsWith('%PDF-', $documentResponse->baseResponse->getFile()->getContent());
         $this->post(route('signatures.public.sign', $token), ['name' => 'Cliente Assinante', 'document' => '123.456.789-09', 'consent' => '1'])->assertRedirect(route('signatures.public.result'));
         $signatureRequest->refresh()->load('document');
         $this->assertSame('completed', $signatureRequest->status);
@@ -76,6 +84,51 @@ class ElectronicSignatureTest extends TestCase
 
         Storage::disk('legal_documents')->put($signatureRequest->document->completed_path, 'adulterado');
         $this->assertFalse($service->verifyEvidence($signatureRequest->fresh()->load('document')));
+    }
+
+    public function test_ordered_request_completes_after_two_signers_and_emails_signed_pdf_copy(): void
+    {
+        [$admin, $document] = $this->fixture();
+        $service = app(ElectronicSignatureService::class);
+        $payload = $this->payload();
+        $payload['ordered'] = true;
+        $payload['signers'][] = ['name' => 'Segundo Signatário', 'email' => 'segundo@example.com', 'document' => null];
+        $signatureRequest = $service->create($document, $payload, $admin->id);
+        $signatureRequest->update(['status' => 'pending', 'sent_at' => now()]);
+
+        $signers = $signatureRequest->signers()->orderBy('signing_order')->get();
+        $firstToken = 'primeiro-token-seguro';
+        $secondToken = 'segundo-token-seguro';
+        $signers[0]->update(['status' => 'sent', 'token_hash' => hash('sha256', $firstToken), 'token_expires_at' => now()->addHour()]);
+
+        $this->post(route('signatures.public.sign', $firstToken), ['name' => 'Cliente Assinante', 'document' => '123.456.789-09', 'consent' => '1'])
+            ->assertRedirect(route('signatures.public.result'));
+
+        $this->assertSame('pending', $signatureRequest->fresh()->status);
+        $this->assertSame('sent', $signers[1]->fresh()->status);
+        $signers[1]->update(['token_hash' => hash('sha256', $secondToken), 'token_expires_at' => now()->addHour()]);
+
+        $this->post(route('signatures.public.sign', $secondToken), ['name' => 'Segundo Signatário', 'consent' => '1'])
+            ->assertRedirect(route('signatures.public.result'));
+
+        $signatureRequest->refresh()->load('document');
+        $this->assertSame('completed', $signatureRequest->status);
+        $this->assertTrue($service->verifyEvidence($signatureRequest));
+        Storage::disk('legal_documents')->assertExists($signatureRequest->document->completed_path);
+
+        Notification::assertSentOnDemand(SignatureStatusNotification::class, function (SignatureStatusNotification $notification) use ($signatureRequest): bool {
+            if ($notification->event !== 'completed' || ! $notification->signatureRequest->is($signatureRequest)) {
+                return false;
+            }
+
+            $mail = $notification->toMail((object) []);
+            $attachment = $mail->attachments[0] ?? null;
+
+            return str_contains(implode(' ', $mail->introLines), 'cópia do documento assinado')
+                && is_array($attachment)
+                && file_exists((string) ($attachment['file'] ?? ''))
+                && (($attachment['options']['as'] ?? '') === 'assinado-contrato.pdf');
+        });
     }
 
     public function test_tampered_document_is_rejected_without_signing(): void

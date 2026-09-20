@@ -6,7 +6,9 @@ use App\Contracts\DocumentSignatureProviderInterface;
 use App\Services\ElectronicSignatureService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SignatureController extends Controller
 {
@@ -16,6 +18,26 @@ class SignatureController extends Controller
         $service->markViewed($signer);
 
         return view('signatures.show', compact('signer', 'token'));
+    }
+
+    public function document(string $token, ElectronicSignatureService $service): BinaryFileResponse
+    {
+        $signer = $service->resolveToken($token);
+        $service->markViewed($signer);
+
+        $document = $signer->signatureRequest->document;
+        $disk = Storage::disk($document->disk);
+
+        abort_unless($disk->exists($document->immutable_path), 404);
+        abort_unless(hash_equals((string) $document->sha256, hash('sha256', $disk->get($document->immutable_path))), 409, 'A integridade do documento original não pôde ser confirmada.');
+
+        $fileName = preg_replace('/[^\pL\pN\.\-_\s]+/u', '-', (string) ($document->original_name ?: 'documento.pdf')) ?: 'documento.pdf';
+
+        return response()->file($disk->path($document->immutable_path), [
+            'Content-Type' => $document->mime_type ?: 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$fileName.'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function sign(Request $request, string $token, ElectronicSignatureService $service, DocumentSignatureProviderInterface $provider): RedirectResponse

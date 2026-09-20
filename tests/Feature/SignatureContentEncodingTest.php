@@ -17,10 +17,13 @@ class SignatureContentEncodingTest extends TestCase
             'Assinatura eletrônica',
             'A solicitação',
             'quando disponível, o comprovante.',
+            'Uma cópia do documento assinado segue anexada',
         ],
         'resources/views/signatures/show.blade.php' => [
             'Signatário:',
+            'Abrir PDF original',
             'Confirme seu CPF/CNPJ',
+            'Li o documento PDF original',
             'concordo em assiná-lo eletronicamente',
         ],
         'resources/views/signatures/result.blade.php' => [
@@ -38,6 +41,12 @@ class SignatureContentEncodingTest extends TestCase
             'Usuário SMTP',
             'Testar configuração SMTP',
             'Senha configurada; deixe vazio para preservar',
+        ],
+        'resources/views/admin/system-settings/sections/signatures.blade.php' => [
+            'Assinatura eletrônica interna',
+            'Ativar módulo de assinatura',
+            'cópia é enviada automaticamente',
+            'não equivale a certificado digital ICP-Brasil',
         ],
     ];
 

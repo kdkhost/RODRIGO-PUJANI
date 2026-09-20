@@ -68,6 +68,7 @@ Route::redirect('/docs.php', '/admin/documentation#changelog', 301)->name('docum
 Route::middleware(['check.maintenance', 'signature.enabled', 'throttle:30,1'])->prefix('assinatura')->name('signatures.public.')->group(function (): void {
     Route::get('/resultado', [SignatureController::class, 'result'])->name('result');
     Route::get('/{token}', [SignatureController::class, 'show'])->name('show');
+    Route::get('/{token}/documento', [SignatureController::class, 'document'])->name('document');
     Route::post('/{token}/assinar', [SignatureController::class, 'sign'])->name('sign');
     Route::post('/{token}/recusar', [SignatureController::class, 'decline'])->name('decline');
 });
