@@ -135,6 +135,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::get('/conectar', [GoogleCalendarController::class, 'connect'])->name('connect');
             Route::get('/callback', [GoogleCalendarController::class, 'callback'])->name('callback');
             Route::get('/status', [GoogleCalendarController::class, 'status'])->name('status');
+            Route::put('/oauth', [GoogleCalendarController::class, 'updateOAuthSettings'])->name('oauth.update');
             Route::put('/', [GoogleCalendarController::class, 'update'])->name('update');
             Route::post('/sincronizar', [GoogleCalendarController::class, 'sync'])->name('sync');
             Route::delete('/', [GoogleCalendarController::class, 'disconnect'])->name('disconnect');

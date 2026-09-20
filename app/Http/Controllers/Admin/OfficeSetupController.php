@@ -35,6 +35,7 @@ class OfficeSetupController extends Controller
 
         $ai = IntegrationCredential::query()->where('service', 'legal_ai')->first();
         $mail = smtp_config();
+        $googleCalendar = google_calendar_config();
         $heartbeatPath = storage_path('app/system/scheduler-heartbeat.json');
         $schedulerReady = File::exists($heartbeatPath)
             && now()->diffInMinutes(Carbon::createFromTimestamp(File::lastModified($heartbeatPath)), true) <= 5;
@@ -48,7 +49,7 @@ class OfficeSetupController extends Controller
                 ['label' => 'Dados do escritório', 'ready' => filled($office['company_legal_name']) && filled($office['company_document']), 'url' => '#office-data'],
                 ['label' => 'Responsável e OAB', 'ready' => filled($user?->oab_number) && filled($user?->oab_state), 'url' => '#responsible-data'],
                 ['label' => 'SMTP', 'ready' => (bool) ($mail['enabled'] ?? false) && filled($mail['host'] ?? null), 'url' => route('admin.system-settings.show', 'mail')],
-                ['label' => 'Google Calendar', 'ready' => (bool) config('google-calendar.enabled') && filled(config('google-calendar.client_id')), 'url' => route('admin.google-calendar.index')],
+                ['label' => 'Google Calendar', 'ready' => (bool) ($googleCalendar['configured'] ?? false), 'url' => route('admin.google-calendar.index')],
                 ['label' => 'IA e transcrição', 'ready' => (bool) $ai?->enabled && filled($ai?->secret), 'url' => route('admin.legal-ai.index')],
                 ['label' => 'Assinatura eletrônica', 'ready' => (bool) config('signatures.enabled'), 'url' => route('admin.documentation.index').'#assinaturas'],
                 ['label' => 'Agendador e filas', 'ready' => $schedulerReady, 'url' => route('admin.documentation.index').'#infraestrutura'],

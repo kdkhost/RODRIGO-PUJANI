@@ -31,7 +31,7 @@
                         </div>
                         <div class="card-body admin-card-flow">
                             @unless($integrationConfigured)
-                                <div class="alert alert-warning mb-4">Configure o cliente OAuth e o segredo no ambiente antes de conectar uma conta.</div>
+                                <div class="alert alert-warning mb-4">Configure e salve o OAuth no painel antes de conectar uma conta.</div>
                             @endunless
 
                             @if(!$connection)
@@ -95,6 +95,51 @@
                     <div class="card admin-table-card h-100">
                         <div class="card-header"><h3 class="card-title">Configuração OAuth</h3></div>
                         <div class="card-body admin-card-flow">
+                            @if(Route::has('admin.google-calendar.oauth.update'))
+                                <form action="{{ route('admin.google-calendar.oauth.update') }}" method="POST" data-ajax-form class="admin-card-flow">
+                                    @csrf
+                                    @method('PUT')
+
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="google_calendar_enabled" name="enabled" value="1" @checked(old('enabled', $oauthConfig['enabled']))>
+                                        <label class="form-check-label" for="google_calendar_enabled">Ativar integração Google Calendar</label>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label" for="google_calendar_client_id">Client ID OAuth</label>
+                                        <input id="google_calendar_client_id" type="text" name="client_id" class="form-control" value="{{ old('client_id', $oauthConfig['client_id']) }}" autocomplete="off" placeholder="000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com">
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label" for="google_calendar_client_secret">Client Secret OAuth</label>
+                                        <input id="google_calendar_client_secret" type="password" name="client_secret" class="form-control" value="" autocomplete="new-password" placeholder="{{ $oauthConfig['client_secret_configured'] ? 'Segredo configurado; deixe vazio para preservar' : 'Cole o segredo OAuth do Google' }}">
+                                        <div class="form-text">O segredo é criptografado no banco e nunca retorna preenchido no formulário.</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label" for="google_calendar_redirect_uri">URI de redirecionamento</label>
+                                        <input id="google_calendar_redirect_uri" type="url" name="redirect_uri" class="form-control" value="{{ old('redirect_uri', $oauthConfig['redirect_uri'] ?: $redirectUri) }}" placeholder="{{ $redirectUri }}">
+                                        <div class="form-text">Cadastre este mesmo endereço no Google Cloud Console.</div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="google_calendar_timeout">Timeout da API</label>
+                                            <input id="google_calendar_timeout" type="number" min="5" max="120" name="timeout" class="form-control" value="{{ old('timeout', $oauthConfig['timeout']) }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="google_calendar_initial_sync_past_days">Importação inicial</label>
+                                            <input id="google_calendar_initial_sync_past_days" type="number" min="1" max="3650" name="initial_sync_past_days" class="form-control" value="{{ old('initial_sync_past_days', $oauthConfig['initial_sync_past_days']) }}">
+                                            <div class="form-text">Dias anteriores importados na primeira sincronização.</div>
+                                        </div>
+                                    </div>
+
+                                    <button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>Salvar OAuth</button>
+                                </form>
+
+                                <hr class="my-0">
+                            @endif
+
                             <p class="text-muted">Cadastre exatamente este URI de redirecionamento no Google Cloud Console:</p>
                             <code class="d-block text-break p-3 rounded bg-body-tertiary">{{ $redirectUri }}</code>
                             <hr class="my-0">

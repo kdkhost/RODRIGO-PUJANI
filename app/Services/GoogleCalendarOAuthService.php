@@ -12,13 +12,14 @@ class GoogleCalendarOAuthService
 {
     public function authorizationUrl(string $state, ?string $loginHint = null): string
     {
-        $this->ensureConfigured();
+        $settings = $this->settings();
+        $this->ensureConfigured($settings);
 
-        return (string) url()->query((string) config('google-calendar.authorization_url'), array_filter([
-            'client_id' => config('google-calendar.client_id'),
+        return (string) url()->query((string) $settings['authorization_url'], array_filter([
+            'client_id' => $settings['client_id'],
             'redirect_uri' => $this->redirectUri(),
             'response_type' => 'code',
-            'scope' => implode(' ', (array) config('google-calendar.scopes', [])),
+            'scope' => implode(' ', (array) $settings['scopes']),
             'access_type' => 'offline',
             'prompt' => 'consent',
             'include_granted_scopes' => 'true',
@@ -29,14 +30,16 @@ class GoogleCalendarOAuthService
 
     public function exchangeAuthorizationCode(string $code): array
     {
-        $this->ensureConfigured();
+        $settings = $this->settings();
+        $this->ensureConfigured($settings);
+
         $response = Http::asForm()
             ->acceptJson()
             ->connectTimeout(5)
-            ->timeout((int) config('google-calendar.timeout', 20))
-            ->post((string) config('google-calendar.token_url'), [
-                'client_id' => config('google-calendar.client_id'),
-                'client_secret' => config('google-calendar.client_secret'),
+            ->timeout((int) $settings['timeout'])
+            ->post((string) $settings['token_url'], [
+                'client_id' => $settings['client_id'],
+                'client_secret' => $settings['client_secret'],
                 'code' => $code,
                 'grant_type' => 'authorization_code',
                 'redirect_uri' => $this->redirectUri(),
@@ -47,6 +50,9 @@ class GoogleCalendarOAuthService
 
     public function accessToken(GoogleCalendarConnection $connection, bool $forceRefresh = false): string
     {
+        $settings = $this->settings();
+        $this->ensureConfigured($settings);
+
         if (! $forceRefresh
             && filled($connection->access_token)
             && $connection->token_expires_at?->greaterThan(now()->addMinutes(2))) {
@@ -60,10 +66,10 @@ class GoogleCalendarOAuthService
         $response = Http::asForm()
             ->acceptJson()
             ->connectTimeout(5)
-            ->timeout((int) config('google-calendar.timeout', 20))
-            ->post((string) config('google-calendar.token_url'), [
-                'client_id' => config('google-calendar.client_id'),
-                'client_secret' => config('google-calendar.client_secret'),
+            ->timeout((int) $settings['timeout'])
+            ->post((string) $settings['token_url'], [
+                'client_id' => $settings['client_id'],
+                'client_secret' => $settings['client_secret'],
                 'refresh_token' => $connection->refresh_token,
                 'grant_type' => 'refresh_token',
             ]);
@@ -98,10 +104,12 @@ class GoogleCalendarOAuthService
 
     public function userInfo(GoogleCalendarConnection $connection): array
     {
+        $settings = $this->settings();
+
         $response = Http::withToken($this->accessToken($connection))
             ->acceptJson()
             ->connectTimeout(5)
-            ->timeout((int) config('google-calendar.timeout', 20))
+            ->timeout((int) $settings['timeout'])
             ->get('https://openidconnect.googleapis.com/v1/userinfo');
 
         if (! $response->successful()) {
@@ -144,6 +152,7 @@ class GoogleCalendarOAuthService
 
     public function revoke(GoogleCalendarConnection $connection): void
     {
+        $settings = $this->settings();
         $token = $connection->refresh_token ?: $connection->access_token;
 
         if (blank($token)) {
@@ -152,13 +161,13 @@ class GoogleCalendarOAuthService
 
         Http::asForm()
             ->connectTimeout(5)
-            ->timeout((int) config('google-calendar.timeout', 20))
-            ->post((string) config('google-calendar.revoke_url'), ['token' => $token]);
+            ->timeout((int) $settings['timeout'])
+            ->post((string) $settings['revoke_url'], ['token' => $token]);
     }
 
     public function redirectUri(): string
     {
-        $configured = trim((string) config('google-calendar.redirect_uri'));
+        $configured = trim((string) google_calendar_config()['redirect_uri']);
 
         if ($configured !== '') {
             return $configured;
@@ -176,12 +185,13 @@ class GoogleCalendarOAuthService
         array $options,
         bool $forceRefresh,
     ): Response {
-        $url = rtrim((string) config('google-calendar.api_url'), '/').'/'.ltrim($path, '/');
+        $settings = $this->settings();
+        $url = rtrim((string) $settings['api_url'], '/').'/'.ltrim($path, '/');
 
         return Http::withToken($this->accessToken($connection, $forceRefresh))
             ->acceptJson()
             ->connectTimeout(5)
-            ->timeout((int) config('google-calendar.timeout', 20))
+            ->timeout((int) $settings['timeout'])
             ->retry(2, 500, throw: false)
             ->send(strtoupper($method), $url, $options);
     }
@@ -201,11 +211,16 @@ class GoogleCalendarOAuthService
         return $payload;
     }
 
-    private function ensureConfigured(): void
+    private function settings(): array
     {
-        if (! config('google-calendar.enabled')
-            || blank(config('google-calendar.client_id'))
-            || blank(config('google-calendar.client_secret'))) {
+        return google_calendar_runtime_config();
+    }
+
+    private function ensureConfigured(array $settings): void
+    {
+        if (! ($settings['enabled'] ?? false)
+            || blank($settings['client_id'] ?? null)
+            || blank($settings['client_secret'] ?? null)) {
             throw new RuntimeException('A integração Google Calendar ainda não foi configurada pelo administrador.');
         }
     }

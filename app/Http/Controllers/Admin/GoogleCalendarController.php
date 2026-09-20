@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GoogleCalendarConnection;
+use App\Models\Setting;
 use App\Services\GoogleCalendarOAuthService;
 use App\Services\GoogleCalendarSyncService;
+use App\Support\SmtpSecret;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use RuntimeException;
@@ -17,11 +20,21 @@ use Throwable;
 
 class GoogleCalendarController extends Controller
 {
+    private const OAUTH_SETTINGS = [
+        'google_calendar.enabled' => ['label' => 'Google Calendar ativo', 'type' => 'boolean', 'sort' => 610],
+        'google_calendar.client_id' => ['label' => 'Client ID OAuth Google Calendar', 'type' => 'text', 'sort' => 611],
+        'google_calendar.client_secret' => ['label' => 'Client Secret OAuth Google Calendar', 'type' => 'password', 'sort' => 612],
+        'google_calendar.redirect_uri' => ['label' => 'URI de redirecionamento OAuth Google Calendar', 'type' => 'text', 'sort' => 613],
+        'google_calendar.timeout' => ['label' => 'Timeout Google Calendar', 'type' => 'text', 'sort' => 614],
+        'google_calendar.initial_sync_past_days' => ['label' => 'Dias de importacao inicial Google Calendar', 'type' => 'text', 'sort' => 615],
+    ];
+
     public function index(GoogleCalendarOAuthService $oauth): View
     {
         $connection = GoogleCalendarConnection::query()->where('user_id', Auth::id())->first();
         $calendars = [];
         $connectionError = null;
+        $oauthConfig = google_calendar_config();
 
         if ($connection) {
             try {
@@ -36,9 +49,8 @@ class GoogleCalendarController extends Controller
             'connection' => $connection,
             'calendars' => $calendars,
             'connectionError' => $connectionError,
-            'integrationConfigured' => (bool) config('google-calendar.enabled')
-                && filled(config('google-calendar.client_id'))
-                && filled(config('google-calendar.client_secret')),
+            'integrationConfigured' => (bool) $oauthConfig['configured'],
+            'oauthConfig' => $oauthConfig,
             'redirectUri' => $oauth->redirectUri(),
         ]);
     }
@@ -82,7 +94,7 @@ class GoogleCalendarController extends Controller
                     'access_token' => $payload['access_token'],
                     'refresh_token' => $payload['refresh_token'],
                     'token_expires_at' => now()->addSeconds(max(60, (int) ($payload['expires_in'] ?? 3600))),
-                    'scopes' => preg_split('/\s+/', trim((string) ($payload['scope'] ?? implode(' ', config('google-calendar.scopes', []))))),
+                    'scopes' => preg_split('/\s+/', trim((string) ($payload['scope'] ?? implode(' ', google_calendar_config()['scopes'])))),
                     'calendar_id' => 'primary',
                     'calendar_name' => 'Principal',
                     'sync_enabled' => true,
@@ -151,6 +163,55 @@ class GoogleCalendarController extends Controller
         return response()->json(['message' => 'Configuração do Google Calendar atualizada.']);
     }
 
+    public function updateOAuthSettings(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'enabled' => ['nullable', 'boolean'],
+            'client_id' => ['nullable', 'string', 'max:255'],
+            'client_secret' => ['nullable', 'string', 'max:2048'],
+            'redirect_uri' => ['nullable', 'url', 'max:2048'],
+            'timeout' => ['nullable', 'integer', 'min:5', 'max:120'],
+            'initial_sync_past_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
+        ]);
+
+        $currentSecret = (string) setting('google_calendar.client_secret', '');
+        $payload = [
+            'google_calendar.enabled' => $request->boolean('enabled') ? '1' : '0',
+            'google_calendar.client_id' => trim((string) ($validated['client_id'] ?? '')),
+            'google_calendar.client_secret' => filled($validated['client_secret'] ?? null)
+                ? SmtpSecret::encrypt((string) $validated['client_secret'])
+                : $currentSecret,
+            'google_calendar.redirect_uri' => trim((string) ($validated['redirect_uri'] ?? '')),
+            'google_calendar.timeout' => (string) ($validated['timeout'] ?? 20),
+            'google_calendar.initial_sync_past_days' => (string) ($validated['initial_sync_past_days'] ?? 365),
+        ];
+
+        foreach ($payload as $key => $value) {
+            $meta = self::OAUTH_SETTINGS[$key];
+            Setting::query()->updateOrCreate(['key' => $key], [
+                'group' => 'google_calendar',
+                'label' => $meta['label'],
+                'type' => $meta['type'],
+                'value' => $value,
+                'json_value' => null,
+                'is_public' => false,
+                'sort_order' => $meta['sort'],
+            ]);
+        }
+
+        $this->clearGoogleCalendarCaches();
+
+        activity_log('google_calendar', 'oauth-settings-updated', null, collect($payload)
+            ->except('google_calendar.client_secret')
+            ->all(), 'Configurações OAuth do Google Calendar atualizadas.');
+
+        return response()->json([
+            'message' => 'Configurações OAuth do Google Calendar atualizadas.',
+            'redirect' => route('admin.google-calendar.index'),
+            'closeModal' => false,
+        ]);
+    }
+
     public function sync(
         Request $request,
         GoogleCalendarSyncService $service,
@@ -193,5 +254,12 @@ class GoogleCalendarController extends Controller
             'message' => 'Conta desconectada. Nenhum evento foi apagado do Google Calendar.',
             'redirect' => route('admin.google-calendar.index'),
         ]);
+    }
+
+    private function clearGoogleCalendarCaches(): void
+    {
+        foreach (['site_settings.map.v2', 'site_settings.all.v2', 'google_calendar.config.v1'] as $key) {
+            Cache::forget($key);
+        }
     }
 }

@@ -77,7 +77,8 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString("@extends('admin.layouts.app')", $documentation);
         $this->assertStringContainsString('id="changelog"', $documentation);
         $this->assertStringContainsString('id="google-calendar"', $documentation);
-        $this->assertStringContainsString('GOOGLE_CALENDAR_CLIENT_ID', $documentation);
+        $this->assertStringContainsString('Jurídico &gt; Google Calendar', $documentation);
+        $this->assertStringNotContainsString('GOOGLE_CALENDAR_CLIENT_ID', $documentation);
         $this->assertStringContainsString('ELECTRONIC_SIGNATURE_ENABLED=true', $documentation);
         $this->assertStringContainsString('artisan schedule:run', $documentation);
         $this->assertStringNotContainsString('@tailwindcss/browser', $documentation);

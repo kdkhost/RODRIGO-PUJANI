@@ -12,14 +12,17 @@ use App\Models\LegalCase;
 use App\Models\LegalDeadlinePreference;
 use App\Models\LegalNotificationDelivery;
 use App\Models\LegalTask;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\GoogleCalendarSyncService;
 use App\Services\GoogleCalendarOAuthService;
 use App\Services\LegalDeadlineNotificationService;
 use App\Services\LegalTaskCalendarService;
+use App\Support\SmtpSecret;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -176,8 +179,7 @@ class LegalDeadlineCalendarIntegrationTest extends TestCase
 
     public function test_google_access_token_is_refreshed_and_persisted_encrypted(): void
     {
-        config()->set('google-calendar.client_id', 'client-id');
-        config()->set('google-calendar.client_secret', 'client-secret');
+        $this->googleCalendarSettings('client-id', 'client-secret');
         $user = User::factory()->create(['is_active' => true]);
         $connection = GoogleCalendarConnection::query()->create([
             'user_id' => $user->id,
@@ -196,6 +198,9 @@ class LegalDeadlineCalendarIntegrationTest extends TestCase
         ]);
 
         $this->assertSame('fresh-access-token', app(GoogleCalendarOAuthService::class)->accessToken($connection));
+        Http::assertSent(fn (ClientRequest $request): bool => $request->url() === 'https://oauth2.googleapis.com/token'
+            && $request['client_id'] === 'client-id'
+            && $request['client_secret'] === 'client-secret');
         $rawToken = GoogleCalendarConnection::query()->getQuery()->where('id', $connection->id)->value('access_token');
         $this->assertNotSame('fresh-access-token', $rawToken);
         $this->assertSame('fresh-access-token', $connection->fresh()->access_token);
@@ -203,6 +208,7 @@ class LegalDeadlineCalendarIntegrationTest extends TestCase
 
     public function test_google_sync_upserts_mapping_without_duplicates(): void
     {
+        $this->googleCalendarSettings('client-id', 'client-secret');
         $user = User::factory()->create(['is_active' => true]);
         $connection = GoogleCalendarConnection::query()->create([
             'user_id' => $user->id,
@@ -312,5 +318,27 @@ class LegalDeadlineCalendarIntegrationTest extends TestCase
             'portal_visible' => true,
             'created_by' => $user->id,
         ]);
+    }
+
+    private function googleCalendarSettings(string $clientId, string $clientSecret): void
+    {
+        foreach ([
+            'google_calendar.enabled' => ['1', 'boolean'],
+            'google_calendar.client_id' => [$clientId, 'text'],
+            'google_calendar.client_secret' => [SmtpSecret::encrypt($clientSecret), 'password'],
+            'google_calendar.redirect_uri' => ['https://rodrigopujaniadvocacia.com.br/admin/google-calendar/callback', 'text'],
+            'google_calendar.timeout' => ['20', 'text'],
+            'google_calendar.initial_sync_past_days' => ['365', 'text'],
+        ] as $key => [$value, $type]) {
+            Setting::query()->updateOrCreate(['key' => $key], [
+                'group' => 'google_calendar',
+                'label' => $key,
+                'type' => $type,
+                'value' => $value,
+                'is_public' => false,
+            ]);
+        }
+
+        Cache::flush();
     }
 }

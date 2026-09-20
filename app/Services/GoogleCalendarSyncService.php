@@ -131,7 +131,7 @@ class GoogleCalendarSyncService
                 $query['syncToken'] = $connection->sync_token;
                 unset($query['singleEvents']);
             } else {
-                $query['timeMin'] = now()->subDays((int) config('google-calendar.initial_sync_past_days', 365))->toRfc3339String();
+                $query['timeMin'] = now()->subDays((int) google_calendar_config()['initial_sync_past_days'])->toRfc3339String();
                 $query['orderBy'] = 'startTime';
             }
 

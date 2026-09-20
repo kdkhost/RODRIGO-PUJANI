@@ -293,6 +293,68 @@ if (! function_exists('smtp_runtime_config')) {
     }
 }
 
+if (! function_exists('google_calendar_config')) {
+    function google_calendar_config(): array
+    {
+        try {
+            return Cache::rememberForever('google_calendar.config.v1', function (): array {
+                $storedSecret = (string) setting('google_calendar.client_secret', '');
+                $timeout = (int) setting('google_calendar.timeout', (string) config('google-calendar.timeout', 20));
+                $initialSyncPastDays = (int) setting(
+                    'google_calendar.initial_sync_past_days',
+                    (string) config('google-calendar.initial_sync_past_days', 365),
+                );
+
+                $clientId = trim((string) setting('google_calendar.client_id', ''));
+                $secretConfigured = filled($storedSecret);
+
+                return [
+                    'enabled' => filter_var(setting('google_calendar.enabled', '0'), FILTER_VALIDATE_BOOLEAN),
+                    'client_id' => $clientId,
+                    'client_secret_configured' => $secretConfigured,
+                    'redirect_uri' => trim((string) setting('google_calendar.redirect_uri', '')),
+                    'timeout' => max(5, min(120, $timeout ?: 20)),
+                    'initial_sync_past_days' => max(1, min(3650, $initialSyncPastDays ?: 365)),
+                    'authorization_url' => (string) config('google-calendar.authorization_url'),
+                    'token_url' => (string) config('google-calendar.token_url'),
+                    'revoke_url' => (string) config('google-calendar.revoke_url'),
+                    'api_url' => (string) config('google-calendar.api_url'),
+                    'scopes' => (array) config('google-calendar.scopes', []),
+                    'configured' => $clientId !== '' && $secretConfigured
+                        && filter_var(setting('google_calendar.enabled', '0'), FILTER_VALIDATE_BOOLEAN),
+                ];
+            });
+        } catch (Throwable) {
+            return [
+                'enabled' => false,
+                'client_id' => '',
+                'client_secret_configured' => false,
+                'redirect_uri' => '',
+                'timeout' => 20,
+                'initial_sync_past_days' => 365,
+                'authorization_url' => (string) config('google-calendar.authorization_url'),
+                'token_url' => (string) config('google-calendar.token_url'),
+                'revoke_url' => (string) config('google-calendar.revoke_url'),
+                'api_url' => (string) config('google-calendar.api_url'),
+                'scopes' => (array) config('google-calendar.scopes', []),
+                'configured' => false,
+            ];
+        }
+    }
+}
+
+if (! function_exists('google_calendar_runtime_config')) {
+    function google_calendar_runtime_config(): array
+    {
+        $config = google_calendar_config();
+        $storedSecret = (string) setting('google_calendar.client_secret', '');
+
+        return $config + [
+            'client_secret' => $storedSecret !== '' ? SmtpSecret::decrypt($storedSecret) : '',
+        ];
+    }
+}
+
 if (! function_exists('mail_theme_config')) {
     function mail_theme_config(): array
     {

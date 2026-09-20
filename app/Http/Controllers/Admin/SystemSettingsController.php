@@ -708,6 +708,7 @@ class SystemSettingsController extends Controller
             'recaptcha.config.v1',
             'mail.config.v1',
             'mail.config.v2',
+            'google_calendar.config.v1',
             'preloader.settings.v1',
             'mail.theme.v1',
             'site_pages.menu.v2',

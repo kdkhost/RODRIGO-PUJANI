@@ -68,8 +68,8 @@
                 <li>No Google Cloud Console, crie ou selecione um projeto e ative a <strong>Google Calendar API</strong>.</li>
                 <li>Configure a tela de consentimento e crie uma credencial OAuth do tipo <strong>Aplicativo da Web</strong>.</li>
                 <li>Cadastre como URI autorizada exatamente <code>{{ route('admin.google-calendar.callback') }}</code>.</li>
-                <li>No <code>.env</code>, defina <code>GOOGLE_CALENDAR_ENABLED=true</code>, <code>GOOGLE_CALENDAR_CLIENT_ID</code>, <code>GOOGLE_CALENDAR_CLIENT_SECRET</code> e <code>GOOGLE_CALENDAR_REDIRECT_URI</code>.</li>
-                <li>Execute <code>php artisan optimize:clear</code>. Em <strong>Jurídico &gt; Google Calendar</strong>, conecte a conta, selecione o calendário e ative a sincronização.</li>
+                <li>Em <strong>Jurídico &gt; Google Calendar</strong>, informe o Client ID, o Client Secret e a URI autorizada no formulário OAuth do painel administrativo.</li>
+                <li>Salve a configuração, conecte a conta Google, selecione o calendário de destino e ative a sincronização.</li>
             </ol><div class="alert alert-warning"><i class="bi bi-shield-exclamation me-2"></i>Nunca exponha o segredo OAuth. Os tokens da conta são criptografados no banco.</div></div>
         </section>
 
