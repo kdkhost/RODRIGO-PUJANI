@@ -65,12 +65,16 @@
         <section id="google-calendar" class="card admin-table-card admin-docs-section">
             <div class="card-header"><div><div class="admin-card-kicker">OAuth 2.0 oficial</div><h2 class="card-title">Como configurar o Google Calendar</h2></div></div>
             <div class="card-body admin-card-flow"><ol class="admin-docs-steps">
-                <li>No Google Cloud Console, crie ou selecione um projeto e ative a <strong>Google Calendar API</strong>.</li>
-                <li>Configure a tela de consentimento e crie uma credencial OAuth do tipo <strong>Aplicativo da Web</strong>.</li>
-                <li>Cadastre como URI autorizada exatamente <code>{{ route('admin.google-calendar.callback') }}</code>.</li>
-                <li>Em <strong>Jurídico &gt; Google Calendar</strong>, informe o Client ID, o Client Secret e a URI autorizada no formulário OAuth do painel administrativo.</li>
-                <li>Salve a configuração, conecte a conta Google, selecione o calendário de destino e ative a sincronização.</li>
-            </ol><div class="alert alert-warning"><i class="bi bi-shield-exclamation me-2"></i>Nunca exponha o segredo OAuth. Os tokens da conta são criptografados no banco.</div></div>
+                <li>Acesse o <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> com a conta que administra o projeto do escritório.</li>
+                <li>Crie ou selecione um projeto e, em <strong>APIs e serviços &gt; Biblioteca</strong>, ative a <strong>Google Calendar API</strong>.</li>
+                <li>Em <strong>Google Auth Platform</strong>, configure a tela de consentimento com nome do aplicativo, e-mail de suporte e domínio autorizado.</li>
+                <li>Se o aplicativo permanecer em modo de teste, adicione a conta Google que será conectada como usuário de teste antes de tentar autorizar.</li>
+                <li>Em <strong>Google Auth Platform &gt; Clientes</strong>, crie uma credencial OAuth do tipo <strong>Aplicativo da Web</strong>.</li>
+                <li>Em <strong>URIs de redirecionamento autorizados</strong>, cadastre exatamente <code>{{ route('admin.google-calendar.callback') }}</code>.</li>
+                <li>Copie o <strong>Client ID</strong> e o <strong>Client Secret</strong> gerados pelo Google.</li>
+                <li>Em <strong>Jurídico &gt; Google Calendar</strong>, cole o Client ID, cole o Client Secret, confirme a URI, marque <strong>Ativar integração Google Calendar</strong> e salve pelo painel.</li>
+                <li>Clique em <strong>Conectar com Google</strong>, autorize os escopos solicitados, selecione o calendário de destino e ative a sincronização.</li>
+            </ol><div class="alert alert-warning"><i class="bi bi-shield-exclamation me-2"></i>Nunca exponha o Client Secret. A configuração deve ser feita pelo painel administrativo; o segredo fica criptografado no banco, não volta preenchido no formulário e não deve ser colocado no <code>.env</code>.</div></div>
         </section>
 
         <section id="ia-juridica" class="card admin-table-card admin-docs-section">

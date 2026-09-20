@@ -45,6 +45,11 @@ class GoogleCalendarOAuthSettingsTest extends TestCase
 
         $html = $this->actingAs($admin)->get(route('admin.google-calendar.index'))->assertOk()->getContent();
         $this->assertStringContainsString('Segredo configurado; deixe vazio para preservar', $html);
+        $this->assertStringContainsString('Como pegar as credenciais no Google', $html);
+        $this->assertStringContainsString('Google Cloud Console', $html);
+        $this->assertStringContainsString('Aplicativo da Web', $html);
+        $this->assertStringContainsString('Não cole o Client Secret', $html);
+        $this->assertStringContainsString('Não edite o <code>.env</code> para Google Calendar', $html);
         $this->assertStringNotContainsString($secret, $html);
         $this->assertStringNotContainsString($stored, $html);
     }

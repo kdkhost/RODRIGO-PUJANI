@@ -78,6 +78,10 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString('id="changelog"', $documentation);
         $this->assertStringContainsString('id="google-calendar"', $documentation);
         $this->assertStringContainsString('Jurídico &gt; Google Calendar', $documentation);
+        $this->assertStringContainsString('Google Cloud Console', $documentation);
+        $this->assertStringContainsString('Aplicativo da Web', $documentation);
+        $this->assertStringContainsString('Client Secret', $documentation);
+        $this->assertStringContainsString('não deve ser colocado no <code>.env</code>', $documentation);
         $this->assertStringNotContainsString('GOOGLE_CALENDAR_CLIENT_ID', $documentation);
         $this->assertStringContainsString('ELECTRONIC_SIGNATURE_ENABLED=true', $documentation);
         $this->assertStringContainsString('artisan schedule:run', $documentation);
