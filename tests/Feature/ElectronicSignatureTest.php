@@ -11,6 +11,7 @@ use App\Notifications\SignatureStatusNotification;
 use App\Services\ElectronicSignatureService;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use setasign\Fpdi\Fpdi;
@@ -36,6 +37,7 @@ class ElectronicSignatureTest extends TestCase
     {
         [$admin, $document] = $this->fixture();
         $response = $this->actingAs($admin)->post(route('admin.signature-requests.store'), [
+            'document_source' => 'existing',
             'legal_document_id' => $document->id, 'title' => 'Contrato de honorários', 'message' => 'Revise o documento.',
             'expires_at' => now()->addDays(5)->format('Y-m-d H:i:s'), 'ordered' => '1',
             'signers' => [['name' => 'Cliente Assinante', 'email' => 'assinante@example.com', 'document' => '123.456.789-09']],
@@ -47,6 +49,60 @@ class ElectronicSignatureTest extends TestCase
         Storage::disk('legal_documents')->assertExists($signatureRequest->document->immutable_path);
         $this->assertSame(64, strlen((string) $signatureRequest->signers->first()->token_hash));
         $this->assertStringNotContainsString('Cliente Assinante', (string) $signatureRequest->signers->first()->token_hash);
+        Notification::assertSentOnDemand(SignatureInvitationNotification::class);
+    }
+
+    public function test_create_page_allows_existing_document_or_direct_pdf_upload(): void
+    {
+        [$admin, $document] = $this->fixture();
+
+        $this->actingAs($admin)
+            ->get(route('admin.signature-requests.create', ['document' => $document->id]))
+            ->assertOk()
+            ->assertSee('Enviar documento para assinatura')
+            ->assertSee('Selecionar documento existente')
+            ->assertSee('Anexar PDF agora')
+            ->assertSee('legal_document_id', false)
+            ->assertSee('upload_file', false)
+            ->assertSee('Contrato');
+    }
+
+    public function test_admin_can_attach_pdf_directly_when_creating_signature_request(): void
+    {
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('Administrador');
+        $client = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente Upload',
+            'is_active' => true,
+            'portal_enabled' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.signature-requests.store'), [
+            'document_source' => 'upload',
+            'upload_client_id' => $client->id,
+            'upload_title' => 'Contrato anexado no envio',
+            'upload_file' => UploadedFile::fake()->createWithContent('contrato-assinatura.pdf', "%PDF-1.7\nconteúdo para assinatura"),
+            'title' => 'Assinatura do contrato anexado',
+            'message' => 'Leia e assine por favor.',
+            'expires_at' => now()->addDays(5)->format('Y-m-d H:i:s'),
+            'ordered' => '0',
+            'signers' => [['name' => 'Cliente Assinante', 'email' => 'assinante-upload@example.com', 'document' => '123.456.789-09']],
+        ]);
+
+        $signatureRequest = SignatureRequest::query()->with(['legalDocument', 'document', 'signers'])->firstOrFail();
+        $uploadedDocument = $signatureRequest->legalDocument;
+
+        $response->assertRedirect(route('admin.signature-requests.show', $signatureRequest));
+        $this->assertSame('Contrato anexado no envio', $uploadedDocument->title);
+        $this->assertSame($client->id, $uploadedDocument->client_id);
+        $this->assertSame('legal_documents', $uploadedDocument->disk);
+        $this->assertSame('private', $uploadedDocument->storage_status);
+        $this->assertSame('application/pdf', $uploadedDocument->mime_type);
+        $this->assertSame('pdf', $uploadedDocument->extension);
+        $this->assertSame(64, strlen((string) $uploadedDocument->sha256));
+        Storage::disk('legal_documents')->assertExists($uploadedDocument->path);
+        Storage::disk('legal_documents')->assertExists($signatureRequest->document->immutable_path);
         Notification::assertSentOnDemand(SignatureInvitationNotification::class);
     }
 

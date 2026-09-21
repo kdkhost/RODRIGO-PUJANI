@@ -32,16 +32,21 @@
                         <div class="d-flex flex-wrap gap-2">
                             <span class="badge {{ $item->is_sensitive ? 'badge-soft-danger' : 'badge-soft-info' }}">{{ $item->is_sensitive ? 'Sensível' : 'Operacional' }}</span>
                             <span class="badge {{ $item->shared_with_client ? 'badge-soft-success' : 'badge-soft-warning' }}">{{ $item->shared_with_client ? 'Compartilhado' : 'Interno' }}</span>
+                            @if(\App\Services\ElectronicSignatureService::supports($item) && $item->client_id)
+                                <span class="badge {{ config('signatures.enabled', false) ? 'badge-soft-success' : 'badge-soft-warning' }}">
+                                    {{ config('signatures.enabled', false) ? 'Pronto para assinatura' : 'Assinatura desativada' }}
+                                </span>
+                            @endif
                         </div>
                     </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
                             @if(config('signatures.enabled', false))
-                            @can('create', App\Models\SignatureRequest::class)
-                                @if($item->path && $item->client_id)
-                                    <a class="btn btn-sm btn-outline-success" href="{{ route('admin.signature-requests.create', ['document'=>$item->id]) }}">Assinar</a>
-                                @endif
-                            @endcan
+                                @can('sendForSignature', $item)
+                                    <a class="btn btn-sm btn-outline-success" href="{{ route('admin.signature-requests.create', ['document' => $item->id]) }}">
+                                        <i class="bi bi-send me-1"></i>Enviar para assinatura
+                                    </a>
+                                @endcan
                             @endif
                             <button class="btn btn-sm btn-outline-primary" data-modal-url="{{ route($routeBase.'.edit', $item->id) }}">Editar</button>
                             <button class="btn btn-sm btn-outline-danger" data-delete-url="{{ route($routeBase.'.destroy', $item->id) }}" data-table-target="#admin-resource-table">Excluir</button>

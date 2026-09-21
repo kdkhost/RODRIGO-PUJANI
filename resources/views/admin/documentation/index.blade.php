@@ -3,7 +3,7 @@
 @section('content')
 <div class="app-content-header admin-page-hero"><div class="container-fluid"><div class="admin-page-hero-inner">
     <div><div class="admin-eyebrow">Centro de conhecimento</div><h1>{{ $pageTitle }}</h1><p>Configuração e operação dos módulos, dentro do mesmo padrão visual do painel.</p></div>
-    <div class="admin-hero-stamp"><i class="bi bi-journal-bookmark-fill"></i><div><strong>Documentação oficial</strong><small>Versão 2.5.1</small></div></div>
+    <div class="admin-hero-stamp"><i class="bi bi-journal-bookmark-fill"></i><div><strong>Documentação oficial</strong><small>Versão 2.5.3</small></div></div>
 </div></div></div>
 
 <div class="app-content"><div class="container-fluid"><div class="row g-4">
@@ -131,7 +131,9 @@
             <div class="card-body admin-card-flow"><ol class="admin-docs-steps">
                 <li>Acesse <strong>Operação &gt; Sistema &gt; Assinaturas</strong>, revise os prazos, mantenha o provedor interno e ative o módulo pelo painel quando o SMTP estiver testado.</li>
                 <li>Configure e teste o SMTP para enviar convites individuais e a cópia automática do documento assinado aos signatários.</li>
-                <li>Em <strong>Jurídico &gt; Assinaturas</strong>, selecione um PDF privado com SHA-256 confirmado, informe os signatários e defina se a ordem é obrigatória.</li>
+                <li>Para usar um arquivo já cadastrado, acesse <strong>Jurídico &gt; Documentos</strong> e clique em <strong>Enviar para assinatura</strong> no PDF elegível.</li>
+                <li>Para anexar no momento do envio, acesse <strong>Jurídico &gt; Assinaturas &gt; Nova solicitação</strong>, escolha <strong>Anexar PDF agora</strong>, selecione cliente/processo e envie o PDF.</li>
+                <li>Na solicitação, informe título, prazo, mensagem, signatários, CPF/CNPJ opcional e se a ordem de assinatura será obrigatória.</li>
                 <li>O cliente abre o link individual, lê o PDF original, confirma nome e CPF/CNPJ quando exigido, registra consentimento e assina.</li>
                 <li>Após a conclusão, o PDF assinado fica disponível no sistema e é enviado automaticamente por e-mail ao cliente/signatário.</li>
                 <li>Baixe o comprovante JSON e confirme a validação das evidências antes de arquivar o caso.</li>
@@ -153,13 +155,18 @@
             <div class="card-header"><div><div class="admin-card-kicker">Evolução do sistema</div><h2 class="card-title">Histórico de versões</h2></div><span class="badge text-bg-primary">Atual</span></div>
             <div class="card-body admin-card-flow">
                 <div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.3</strong><span class="text-muted small">21/09/2026</span></div>
+                    <ul class="text-muted mb-0 ps-3"><li>Fluxo de assinatura eletrônica remodelado para permitir selecionar PDF privado existente ou anexar um novo PDF diretamente na solicitação.</li><li>Documentos elegíveis exibem o botão <strong>Enviar para assinatura</strong> quando o módulo está ativo e o arquivo possui cliente, storage privado, PDF e SHA-256.</li><li>A tela de nova solicitação foi reorganizada em cards, com instruções, seleção de cliente/processo, upload seguro e signatários em ordem opcional.</li></ul>
+                </div></div>
+                <div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.2</strong><span class="text-muted small">21/09/2026</span></div>
                     <ul class="text-muted mb-0 ps-3"><li>Gerador visual de documentos remodelado com upload de papel timbrado mais intuitivo, prévia imediata e ações de limpar, aplicar padrão e salvar como padrão.</li><li>Papel timbrado padrão dos documentos salvo no banco de dados pelo painel administrativo, sem uso de <code>.env</code>, reaplicado automaticamente nos novos templates.</li><li>Editor Summernote incluído nos elementos de texto do documento, com HTML sanitizado, tokens seguros e renderização preservada no PDF A4.</li></ul>
                 </div></div>
                 <div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.1</strong><span class="text-muted small">20/09/2026</span></div>
-                <ul class="text-muted mb-0 ps-3"><li>Assinatura eletrônica configurável pelo painel administrativo.</li><li>Leitura do PDF original antes do aceite e assinatura.</li><li>Cópia automática do PDF assinado enviada por e-mail ao concluir a solicitação.</li><li>Relatório operacional e histórico atualizados para refletir o novo fluxo.</li></ul>
-            </div></div></div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.1</strong><span class="text-muted small">20/09/2026</span></div>
+                    <ul class="text-muted mb-0 ps-3"><li>Assinatura eletrônica configurável pelo painel administrativo.</li><li>Leitura do PDF original antes do aceite e assinatura.</li><li>Cópia automática do PDF assinado enviada por e-mail ao concluir a solicitação.</li><li>Relatório operacional e histórico atualizados para refletir o novo fluxo.</li></ul>
+                </div></div>
+            </div>
         </section>
     </div></div>
 </div></div></div>

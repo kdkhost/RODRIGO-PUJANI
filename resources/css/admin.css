@@ -4407,3 +4407,65 @@ img.admin-avatar {
         grid-template-columns: 1fr;
     }
 }
+
+.signature-request-form .admin-premium-card {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.signature-source-toggle {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.signature-source-option {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    min-height: 100%;
+    padding: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 1rem;
+    background: rgba(15, 23, 42, 0.025);
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.signature-source-option:has(input:checked) {
+    border-color: rgba(196, 154, 60, 0.72);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+}
+
+.signature-source-option input {
+    margin-top: 0.25rem;
+}
+
+.signature-source-option strong,
+.signature-source-option small {
+    display: block;
+}
+
+.signature-source-option small {
+    margin-top: 0.25rem;
+    color: var(--bs-secondary-color);
+}
+
+.signature-source-panel {
+    padding: 1rem;
+    border: 1px dashed rgba(148, 163, 184, 0.28);
+    border-radius: 1rem;
+}
+
+.signature-signers-list .signer-row {
+    padding: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 0.85rem;
+    background: rgba(15, 23, 42, 0.018);
+}
+
+@media (max-width: 767px) {
+    .signature-source-toggle {
+        grid-template-columns: 1fr;
+    }
+}
