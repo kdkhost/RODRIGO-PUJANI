@@ -532,6 +532,52 @@ class LegalDocumentGeneratorTest extends TestCase
             ->assertHeader('X-Content-Type-Options', 'nosniff');
     }
 
+    public function test_generated_pdf_redirects_to_documents_and_can_be_sent_to_signature(): void
+    {
+        config()->set('signatures.enabled', true);
+        Permission::findOrCreate('signature-requests.create', 'web');
+
+        $actor = $this->actor();
+        $actor->givePermissionTo('signature-requests.create');
+        [$client] = $this->legalContext($actor);
+
+        $template = app(LegalDocumentTemplateManager::class)->create(
+            $actor,
+            $this->metadata('contrato-assinatura', LegalDocumentTemplate::CONTEXT_CLIENT, LegalDocumentTemplate::FORMAT_PDF),
+            'Contrato de {{client.name}}',
+            $this->definition('Cliente: {{client.name}}')
+        );
+
+        $response = $this->actingAs($actor)->post(
+            route('admin.legal-document-templates.generate.store', $template),
+            [
+                'legal_document_template_version_id' => $template->versions()->firstOrFail()->id,
+                'client_id' => $client->id,
+                'output_format' => LegalDocumentTemplate::FORMAT_PDF,
+            ]
+        );
+
+        $generation = LegalDocumentGeneration::query()->with('legalDocument')->firstOrFail();
+        $document = $generation->legalDocument;
+
+        $this->assertSame('pdf', $document->extension);
+        $this->assertSame($client->id, $document->client_id);
+        $this->assertSame('legal_documents', $document->disk);
+        Storage::disk('legal_documents')->assertExists($document->path);
+
+        $response
+            ->assertRedirect(route('admin.legal-documents.index', ['highlight_document' => $document->id]))
+            ->assertSessionHas('generated_document_id', $document->id);
+
+        $this->actingAs($actor)
+            ->get(route('admin.legal-documents.index', ['highlight_document' => $document->id]))
+            ->assertOk()
+            ->assertSee('Documento gerado e salvo em Jurídico &gt; Documentos.', false)
+            ->assertSee($document->title)
+            ->assertSee('Enviar para assinatura', false)
+            ->assertSee(route('admin.signature-requests.create', ['document' => $document->id]), false);
+    }
+
     public function test_visual_absolute_template_generates_a4_pdf_and_rejects_docx_reflow(): void
     {
         $actor = $this->actor();

@@ -20,6 +20,10 @@
 
     <div class="app-content">
         <div class="container-fluid">
+            @if(!empty($viewPath))
+                @includeIf('admin.'.$viewPath.'._notice')
+            @endif
+
             <form id="{{ $toolbarId }}" class="admin-table-toolbar mb-3">
                 <div class="admin-search-box">
                     <i class="bi bi-search"></i>

@@ -4457,6 +4457,12 @@ img.admin-avatar {
     border-radius: 1rem;
 }
 
+.admin-generated-document-alert {
+    border: 1px solid rgba(var(--bs-success-rgb), .25);
+    border-radius: 1rem;
+    box-shadow: 0 .75rem 1.75rem rgba(15, 23, 42, .08);
+}
+
 .signature-signers-list .signer-row {
     padding: 0.75rem;
     border: 1px solid rgba(148, 163, 184, 0.14);

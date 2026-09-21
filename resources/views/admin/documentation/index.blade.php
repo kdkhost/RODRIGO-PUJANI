@@ -3,7 +3,7 @@
 @section('content')
 <div class="app-content-header admin-page-hero"><div class="container-fluid"><div class="admin-page-hero-inner">
     <div><div class="admin-eyebrow">Centro de conhecimento</div><h1>{{ $pageTitle }}</h1><p>Configuração e operação dos módulos, dentro do mesmo padrão visual do painel.</p></div>
-    <div class="admin-hero-stamp"><i class="bi bi-journal-bookmark-fill"></i><div><strong>Documentação oficial</strong><small>Versão 2.5.3</small></div></div>
+    <div class="admin-hero-stamp"><i class="bi bi-journal-bookmark-fill"></i><div><strong>Documentação oficial</strong><small>Versão 2.5.4</small></div></div>
 </div></div></div>
 
 <div class="app-content"><div class="container-fluid"><div class="row g-4">
@@ -120,9 +120,10 @@
         <section id="documentos" class="card admin-table-card admin-docs-section">
             <div class="card-header"><div><div class="admin-card-kicker">Produção documental</div><h2 class="card-title">Modelos e gerador de documentos</h2></div></div>
             <div class="card-body admin-card-flow"><ol class="admin-docs-steps">
-                <li>Cadastre o modelo no <strong>Gerador de documentos</strong> e revise o conteúdo no editor.</li>
-                <li>Gere o documento vinculado ao cliente e processo; confira todos os dados antes de finalizar.</li>
-                <li>Use o documento finalizado para criar uma solicitação de assinatura eletrônica.</li>
+                <li>Cadastre o modelo no <strong>Gerador de documentos</strong> e revise o conteúdo no editor. Esse passo salva apenas o modelo reutilizável.</li>
+                <li>Clique em <strong>Gerar documento</strong>, selecione cliente/processo e gere em PDF para criar o arquivo final no storage jurídico privado.</li>
+                <li>Após gerar, o sistema abre <strong>Jurídico &gt; Documentos</strong> com o documento destacado para baixar, editar o cadastro ou enviar para assinatura.</li>
+                <li>Use o botão <strong>Enviar para assinatura</strong> no PDF finalizado quando a assinatura eletrônica estiver ativa.</li>
             </ol></div>
         </section>
 
@@ -154,6 +155,10 @@
         <section id="changelog" class="card admin-table-card admin-docs-section">
             <div class="card-header"><div><div class="admin-card-kicker">Evolução do sistema</div><h2 class="card-title">Histórico de versões</h2></div><span class="badge text-bg-primary">Atual</span></div>
             <div class="card-body admin-card-flow">
+                <div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.4</strong><span class="text-muted small">21/09/2026</span></div>
+                    <ul class="text-muted mb-0 ps-3"><li>Documento gerado pelo Gerador de documentos agora redireciona para <strong>Jurídico &gt; Documentos</strong> com o item recém-criado destacado.</li><li>A listagem de documentos exibe aviso contextual com download, edição do cadastro e envio para assinatura quando o PDF é elegível e o módulo está ativo.</li><li>A página do template ganhou atalhos em <strong>Últimas gerações</strong> para abrir o arquivo em Documentos e iniciar assinatura sem perder o contexto.</li></ul>
+                </div></div>
                 <div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.3</strong><span class="text-muted small">21/09/2026</span></div>
                     <ul class="text-muted mb-0 ps-3"><li>Fluxo de assinatura eletrônica remodelado para permitir selecionar PDF privado existente ou anexar um novo PDF diretamente na solicitação.</li><li>Documentos elegíveis exibem o botão <strong>Enviar para assinatura</strong> quando o módulo está ativo e o arquivo possui cliente, storage privado, PDF e SHA-256.</li><li>A tela de nova solicitação foi reorganizada em cards, com instruções, seleção de cliente/processo, upload seguro e signatários em ordem opcional.</li></ul>

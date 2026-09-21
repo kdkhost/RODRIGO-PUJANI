@@ -56,6 +56,7 @@ abstract class AdminCrudController extends Controller
             'routeBase' => $this->routeBase,
             'singularLabel' => $this->singularLabel,
             'pluralLabel' => $this->pluralLabel,
+            'viewPath' => $this->viewPath,
             'tableView' => $this->tableView(),
         ] + $this->indexData($request);
 

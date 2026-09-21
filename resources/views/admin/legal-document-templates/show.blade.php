@@ -107,7 +107,15 @@
                                     <td><code class="small">{{ Str::limit($generation->rendered_sha256, 16, '…') }}</code></td>
                                     <td class="text-end">
                                         @if($generation->legalDocument)
-                                            <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.legal-documents.download', $generation->legalDocument) }}">Baixar</a>
+                                            <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                                <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.legal-documents.download', $generation->legalDocument) }}">Baixar</a>
+                                                <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.legal-documents.index', ['highlight_document' => $generation->legalDocument->id]) }}">Abrir em documentos</a>
+                                                @if(config('signatures.enabled', false) && \App\Services\ElectronicSignatureService::supports($generation->legalDocument) && $generation->legalDocument->client_id)
+                                                    @can('sendForSignature', $generation->legalDocument)
+                                                        <a class="btn btn-sm btn-success" href="{{ route('admin.signature-requests.create', ['document' => $generation->legalDocument->id]) }}">Enviar para assinatura</a>
+                                                    @endcan
+                                                @endif
+                                            </div>
                                         @endif
                                     </td>
                                 </tr>

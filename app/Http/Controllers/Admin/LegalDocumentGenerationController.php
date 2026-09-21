@@ -98,7 +98,7 @@ class LegalDocumentGenerationController extends Controller
         }
 
         return redirect()
-            ->route('admin.legal-document-templates.show', $legalDocumentTemplate)
+            ->route('admin.legal-documents.index', ['highlight_document' => $generation->legal_document_id])
             ->with('status', 'Documento gerado, versionado e armazenado em área privada.')
             ->with('generated_document_id', $generation->legal_document_id);
     }

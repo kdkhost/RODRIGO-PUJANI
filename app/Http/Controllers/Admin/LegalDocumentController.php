@@ -31,6 +31,20 @@ class LegalDocumentController extends AdminCrudController
             ->with(['legalCase:id,title', 'client:id,name', 'uploader:id,name']);
     }
 
+    protected function indexData(Request $request): array
+    {
+        $highlightId = (int) (session('generated_document_id') ?: $request->integer('highlight_document'));
+
+        return [
+            'generatedDocument' => $highlightId > 0
+                ? LegalDocument::query()
+                    ->visibleTo($request->user())
+                    ->with(['legalCase:id,title', 'client:id,name'])
+                    ->find($highlightId)
+                : null,
+        ];
+    }
+
     protected function formData(?Model $record = null): array
     {
         $clients = Client::query()
