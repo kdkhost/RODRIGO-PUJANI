@@ -140,6 +140,32 @@ class LegalDocumentGeneratorTest extends TestCase
             ->assertSee(route('admin.legal-document-templates.background-upload'), false);
     }
 
+    public function test_template_index_renders_latest_version_without_ambiguous_query(): void
+    {
+        $actor = $this->actor();
+        $manager = app(LegalDocumentTemplateManager::class);
+
+        $template = $manager->create(
+            $actor,
+            $this->metadata('contrato-honorarios', LegalDocumentTemplate::CONTEXT_CLIENT),
+            'Contrato de {{client.name}}',
+            $this->definition('Primeira versão de {{client.name}}.')
+        );
+
+        $manager->createVersion(
+            $actor,
+            $template,
+            'Contrato atualizado de {{client.name}}',
+            $this->definition('Segunda versão de {{client.name}}.')
+        );
+
+        $this->actingAs($actor)
+            ->get(route('admin.legal-document-templates.index'))
+            ->assertOk()
+            ->assertSee('contrato-honorarios')
+            ->assertSee('v2');
+    }
+
     public function test_template_create_page_uses_default_background_setting(): void
     {
         $actor = $this->actor();

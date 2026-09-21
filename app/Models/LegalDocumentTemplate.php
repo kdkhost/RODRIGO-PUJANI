@@ -48,7 +48,9 @@ class LegalDocumentTemplate extends Model
 
     public function latestVersion(): HasOne
     {
-        return $this->hasOne(LegalDocumentTemplateVersion::class)->ofMany('version', 'max');
+        return $this->hasOne(LegalDocumentTemplateVersion::class)
+            ->orderByDesc('version')
+            ->orderByDesc('id');
     }
 
     public function generations(): HasMany
