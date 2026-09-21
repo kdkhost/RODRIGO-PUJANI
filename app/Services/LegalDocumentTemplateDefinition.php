@@ -46,6 +46,7 @@ class LegalDocumentTemplateDefinition
                 'width_mm' => 210,
                 'height_mm' => 297,
             ],
+            'guides' => $this->normalizeGuides($definition['guides'] ?? []),
             'pages' => collect($pages)
                 ->values()
                 ->map(fn (mixed $page, int $index): array => $this->normalizePage($page, $index))
@@ -86,6 +87,29 @@ class LegalDocumentTemplateDefinition
             'image_fit' => in_array(($background['image_fit'] ?? 'cover'), ['contain', 'cover', 'stretch'], true)
                 ? $background['image_fit']
                 : 'cover',
+        ];
+    }
+
+    private function normalizeGuides(mixed $guides): array
+    {
+        $guides = is_array($guides) ? $guides : [];
+        $grid = is_array($guides['grid'] ?? null) ? $guides['grid'] : [];
+        $margins = is_array($guides['margins'] ?? null) ? $guides['margins'] : [];
+
+        return [
+            'grid' => [
+                'visible' => filter_var($grid['visible'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'snap' => filter_var($grid['snap'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'size_mm' => $this->number($grid['size_mm'] ?? 5, 1, 50),
+            ],
+            'margins' => [
+                'enabled' => filter_var($margins['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'free_positioning' => filter_var($margins['free_positioning'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'top_mm' => $this->number($margins['top_mm'] ?? 20, 0, 120),
+                'right_mm' => $this->number($margins['right_mm'] ?? 20, 0, 120),
+                'bottom_mm' => $this->number($margins['bottom_mm'] ?? 20, 0, 120),
+                'left_mm' => $this->number($margins['left_mm'] ?? 20, 0, 120),
+            ],
         ];
     }
 

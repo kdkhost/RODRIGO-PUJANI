@@ -128,7 +128,10 @@ class LegalDocumentGeneratorTest extends TestCase
             ->get(route('admin.legal-document-templates.create'))
             ->assertOk()
             ->assertSee('Editor visual milimétrico')
+            ->assertSee('Grade e margens')
+            ->assertSee('Ajuste livre fora da margem')
             ->assertSee('data-document-designer', false)
+            ->assertSee('data-doc-grid-visible', false)
             ->assertSee(route('admin.legal-document-templates.background-upload'), false);
     }
 
@@ -293,6 +296,17 @@ class LegalDocumentGeneratorTest extends TestCase
             'layout' => 'absolute',
             'unit' => 'mm',
             'paper' => ['size' => 'A4', 'width_mm' => 210, 'height_mm' => 297],
+            'guides' => [
+                'grid' => ['visible' => true, 'snap' => true, 'size_mm' => 5],
+                'margins' => [
+                    'enabled' => true,
+                    'free_positioning' => false,
+                    'top_mm' => 18,
+                    'right_mm' => 16,
+                    'bottom_mm' => 22,
+                    'left_mm' => 16,
+                ],
+            ],
             'pages' => [
                 [
                     'width_mm' => 210,
@@ -386,6 +400,12 @@ class LegalDocumentGeneratorTest extends TestCase
         $version = $template->versions()->firstOrFail();
 
         $this->assertSame('absolute', $version->definition['layout']);
+        $this->assertTrue($version->definition['guides']['grid']['visible']);
+        $this->assertTrue($version->definition['guides']['grid']['snap']);
+        $this->assertEquals(5.0, $version->definition['guides']['grid']['size_mm']);
+        $this->assertTrue($version->definition['guides']['margins']['enabled']);
+        $this->assertFalse($version->definition['guides']['margins']['free_positioning']);
+        $this->assertEquals(16.0, $version->definition['guides']['margins']['left_mm']);
         $this->assertSame('cover', $version->definition['pages'][0]['background']['image_fit']);
         $this->assertSame(2, $version->definition['pages'][1]['elements'][1]['signer_order']);
         $this->assertFalse($version->definition['pages'][1]['elements'][1]['required']);

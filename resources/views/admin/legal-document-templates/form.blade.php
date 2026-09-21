@@ -6,6 +6,10 @@
         'layout' => 'absolute',
         'unit' => 'mm',
         'paper' => ['size' => 'A4', 'width_mm' => 210, 'height_mm' => 297],
+        'guides' => [
+            'grid' => ['visible' => false, 'snap' => false, 'size_mm' => 5],
+            'margins' => ['enabled' => false, 'free_positioning' => false, 'top_mm' => 20, 'right_mm' => 20, 'bottom_mm' => 20, 'left_mm' => 20],
+        ],
         'pages' => [[
             'width_mm' => 210,
             'height_mm' => 297,
@@ -104,75 +108,15 @@
                                         <strong>Editor visual milimétrico</strong>
                                         <small class="d-block text-muted">A4 fiel ao PDF e à impressão. Arraste os itens e ajuste as medidas em milímetros.</small>
                                     </div>
-                                    <div class="btn-group btn-group-sm flex-wrap" role="group">
-                                        <button class="btn btn-outline-primary" type="button" data-doc-add="text"><i class="bi bi-fonts me-1"></i>Texto</button>
-                                        <button class="btn btn-outline-primary" type="button" data-doc-add="signature"><i class="bi bi-pen me-1"></i>Assinatura</button>
-                                        <button class="btn btn-outline-primary" type="button" data-doc-add="line">Linha</button>
-                                        <button class="btn btn-outline-primary" type="button" data-doc-add="rectangle">Caixa</button>
-                                        <button class="btn btn-outline-primary" type="button" data-doc-add="logo" data-logo-path="{{ $brandLogo }}">Logo</button>
-                                        <button class="btn btn-outline-secondary" type="button" data-doc-add-page>Nova página</button>
-                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <label class="form-label" for="title_template">Título do documento</label>
                                     <input class="form-control mb-3" id="title_template" name="title_template" maxlength="255" required value="{{ old('title_template', $defaultTitleTemplate) }}">
 
-                                    <div class="legal-doc-designer" data-document-designer data-brand-logo="{{ $brandLogo }}" data-background-upload-url="{{ route('admin.legal-document-templates.background-upload') }}" data-csrf-token="{{ csrf_token() }}">
-                                        <div class="legal-doc-designer-toolbar">
-                                            <div>
-                                                <label class="form-label mb-1" for="doc-background-path">Papel timbrado / fundo da página</label>
-                                                <input class="form-control form-control-sm" id="doc-background-path" data-doc-bg-path placeholder="Ex.: storage/branding/papel-timbrado.png">
-                                                <div class="legal-doc-bg-drop mt-2" data-doc-bg-drop role="button" tabindex="0">
-                                                    <input type="file" accept="image/png,image/jpeg,image/webp" hidden data-doc-bg-file>
-                                                    <i class="bi bi-cloud-arrow-up"></i>
-                                                    <span>Arraste o papel timbrado aqui ou clique para enviar</span>
-                                                    <small data-doc-bg-status>PNG, JPG ou WEBP até 10 MB. Aplicado na página selecionada.</small>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label class="form-label mb-1" for="doc-background-opacity">Opacidade do fundo</label>
-                                                <input class="form-range" id="doc-background-opacity" type="range" min="0" max="1" step="0.01" data-doc-bg-opacity>
-                                            </div>
-                                            <div>
-                                                <label class="form-label mb-1" for="doc-background-fit">Encaixe no A4</label>
-                                                <select class="form-select form-select-sm" id="doc-background-fit" data-doc-bg-fit>
-                                                    <option value="cover">Ocupar A4 inteiro</option>
-                                                    <option value="contain">Conter sem cortar</option>
-                                                    <option value="stretch">Esticar</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="legal-doc-designer-grid">
-                                            <div class="legal-doc-page-list" data-doc-pages></div>
-                                            <aside class="legal-doc-inspector">
-                                                <h3 class="h6">Item selecionado</h3>
-                                                <p class="small text-muted">Arraste no papel ou ajuste abaixo para posicionamento preciso.</p>
-                                                <div class="row g-2">
-                                                    <div class="col-6"><label class="form-label">X mm</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="x_mm"></div>
-                                                    <div class="col-6"><label class="form-label">Y mm</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="y_mm"></div>
-                                                    <div class="col-6"><label class="form-label">Largura</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="w_mm"></div>
-                                                    <div class="col-6"><label class="form-label">Altura</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="h_mm"></div>
-                                                    <div class="col-6"><label class="form-label">Opacidade</label><input class="form-control form-control-sm" type="number" min="0" max="1" step="0.01" data-doc-field="opacity"></div>
-                                                    <div class="col-6" data-doc-type-field="text"><label class="form-label">Fonte</label><input class="form-control form-control-sm" type="number" step="0.5" data-doc-field="font_size_pt"></div>
-                                                    <div class="col-12" data-doc-type-field="text"><label class="form-label">Texto</label><textarea class="form-control form-control-sm" rows="4" data-doc-field="text"></textarea></div>
-                                                    <div class="col-12" data-doc-type-field="signature"><label class="form-label">Rótulo da assinatura</label><input class="form-control form-control-sm" data-doc-field="label"></div>
-                                                    <div class="col-6" data-doc-type-field="signature"><label class="form-label">Ordem do signatário</label><input class="form-control form-control-sm" type="number" min="1" step="1" data-doc-field="signer_order"></div>
-                                                    <div class="col-6" data-doc-type-field="signature"><label class="form-label">Obrigatório</label><select class="form-select form-select-sm" data-doc-field="required"><option value="true">Sim</option><option value="false">Opcional/testemunha</option></select></div>
-                                                    <div class="col-12" data-doc-type-field="image"><label class="form-label">Caminho da imagem</label><input class="form-control form-control-sm" data-doc-field="image_path"></div>
-                                                    <div class="col-12 d-flex gap-2 mt-2">
-                                                        <button class="btn btn-sm btn-outline-danger" type="button" data-doc-remove>Remover item</button>
-                                                    </div>
-                                                </div>
-                                            </aside>
-                                        </div>
-                                    </div>
-
-                                    <textarea class="form-control font-monospace mt-3" id="definition_json" name="definition_json" rows="10" required hidden>{{ $definitionValue }}</textarea>
-                                    <details class="mt-3">
-                                        <summary>Avançado: ver JSON gerado automaticamente</summary>
-                                        <textarea class="form-control font-monospace mt-2" rows="10" data-doc-json-mirror readonly></textarea>
-                                    </details>
+                                    @include('admin.legal-document-templates.partials.visual-designer', [
+                                        'brandLogo' => $brandLogo,
+                                        'definitionJsonValue' => $definitionValue,
+                                    ])
                                 </div>
                             </div>
                         @endif

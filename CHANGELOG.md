@@ -2,6 +2,24 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.17] - 2026-09-21
+
+### Adicionado
+- Grade opcional no editor visual de documentos jurídicos, com controle do tamanho da malha em milímetros.
+- Encaixe opcional na grade para alinhar itens arrastados com precisão.
+- Controle opcional de margens do A4 com medidas independentes para topo, direita, base e esquerda.
+- Modo de ajuste livre para permitir ou impedir posicionamento fora da área útil das margens.
+
+### Alterado
+- Editor visual reorganizado em cards claros: ações de elementos, guias/margens, papel timbrado, aparência do fundo, página A4 e propriedades do item.
+- Tela de criação e tela de publicação de nova versão agora usam o mesmo componente visual, evitando divergências de layout.
+- Preferências de grade e margens passam a ser salvas no JSON do template e preservadas no banco.
+
+### Validação
+- `php artisan test --filter LegalDocumentGeneratorTest`: aprovado.
+- `php artisan view:cache`: aprovado.
+- `npm run build`: aprovado, mantendo apenas avisos conhecidos de chunk grande e imagem premium resolvida em runtime.
+
 ## [1.0.16] - 2026-09-21
 
 ### Adicionado

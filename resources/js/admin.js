@@ -2496,12 +2496,22 @@ function initLegalDocumentDesigners(scope = document) {
         const bgDrop = designer.querySelector('[data-doc-bg-drop]');
         const bgFile = designer.querySelector('[data-doc-bg-file]');
         const bgStatus = designer.querySelector('[data-doc-bg-status]');
+        const gridVisible = designer.querySelector('[data-doc-grid-visible]');
+        const snapGrid = designer.querySelector('[data-doc-snap-grid]');
+        const gridSize = designer.querySelector('[data-doc-grid-size]');
+        const marginsEnabled = designer.querySelector('[data-doc-margins-enabled]');
+        const freePositioning = designer.querySelector('[data-doc-free-positioning]');
+        const marginFields = Array.from(designer.querySelectorAll('[data-doc-margin]'));
         const uploadUrl = designer.dataset.backgroundUploadUrl || '';
         const csrfToken = designer.dataset.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || '';
         const brandLogo = designer.dataset.brandLogo || '';
         const pageSize = { width: 210, height: 297 };
         let selected = { page: 0, id: null };
         const uniqueId = (type) => `${type}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+        const defaultGuides = () => ({
+            grid: { visible: false, snap: false, size_mm: 5 },
+            margins: { enabled: false, free_positioning: false, top_mm: 20, right_mm: 20, bottom_mm: 20, left_mm: 20 },
+        });
 
         const fallbackDefinition = (legacy = null) => {
             const legacyText = Array.isArray(legacy?.blocks)
@@ -2520,6 +2530,7 @@ function initLegalDocumentDesigners(scope = document) {
             layout: 'absolute',
             unit: 'mm',
             paper: { size: 'A4', width_mm: pageSize.width, height_mm: pageSize.height },
+            guides: defaultGuides(),
             pages: [{
                 width_mm: pageSize.width,
                 height_mm: pageSize.height,
@@ -2543,6 +2554,33 @@ function initLegalDocumentDesigners(scope = document) {
         });
         };
 
+        const normalizeGuides = (guides = {}) => {
+            const defaults = defaultGuides();
+            const grid = guides?.grid || {};
+            const margins = guides?.margins || {};
+            const bounded = (value, min, max) => {
+                const numeric = Number(value);
+
+                return Math.max(min, Math.min(max, Number.isFinite(numeric) ? numeric : min));
+            };
+
+            return {
+                grid: {
+                    visible: Boolean(grid.visible ?? defaults.grid.visible),
+                    snap: Boolean(grid.snap ?? defaults.grid.snap),
+                    size_mm: bounded(grid.size_mm ?? defaults.grid.size_mm, 1, 50),
+                },
+                margins: {
+                    enabled: Boolean(margins.enabled ?? defaults.margins.enabled),
+                    free_positioning: Boolean(margins.free_positioning ?? defaults.margins.free_positioning),
+                    top_mm: bounded(margins.top_mm ?? defaults.margins.top_mm, 0, 120),
+                    right_mm: bounded(margins.right_mm ?? defaults.margins.right_mm, 0, 120),
+                    bottom_mm: bounded(margins.bottom_mm ?? defaults.margins.bottom_mm, 0, 120),
+                    left_mm: bounded(margins.left_mm ?? defaults.margins.left_mm, 0, 120),
+                },
+            };
+        };
+
         const normalizeDefinition = (value) => {
             let parsed = null;
             try {
@@ -2557,6 +2595,7 @@ function initLegalDocumentDesigners(scope = document) {
 
             parsed.unit = 'mm';
             parsed.paper = { size: 'A4', width_mm: pageSize.width, height_mm: pageSize.height };
+            parsed.guides = normalizeGuides(parsed.guides);
             parsed.pages = parsed.pages.length > 0 ? parsed.pages : fallbackDefinition().pages;
             parsed.pages = parsed.pages.map((page) => ({
                 width_mm: pageSize.width,
@@ -2587,6 +2626,49 @@ function initLegalDocumentDesigners(scope = document) {
         };
         const round = (value) => Math.round(Number(value || 0) * 10) / 10;
         const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        const currentGuides = () => {
+            definition.guides = normalizeGuides(definition.guides);
+
+            return definition.guides;
+        };
+        const activeBounds = () => {
+            const margins = currentGuides().margins;
+            if (!margins.enabled || margins.free_positioning) {
+                return { left: 0, top: 0, right: pageSize.width, bottom: pageSize.height };
+            }
+
+            const left = clamp(Number(margins.left_mm || 0), 0, pageSize.width - 1);
+            const top = clamp(Number(margins.top_mm || 0), 0, pageSize.height - 1);
+            const right = clamp(pageSize.width - Number(margins.right_mm || 0), left + 1, pageSize.width);
+            const bottom = clamp(pageSize.height - Number(margins.bottom_mm || 0), top + 1, pageSize.height);
+
+            return { left, top, right, bottom };
+        };
+        const snapMm = (value) => {
+            const grid = currentGuides().grid;
+            if (!grid.snap) {
+                return round(value);
+            }
+
+            const size = clamp(Number(grid.size_mm || 5), 1, 50);
+
+            return round(Math.round(Number(value || 0) / size) * size);
+        };
+        const constrainElement = (element) => {
+            if (!element) {
+                return;
+            }
+
+            const bounds = activeBounds();
+            const maxWidth = Math.max(1, bounds.right - bounds.left);
+            const maxHeight = Math.max(1, bounds.bottom - bounds.top);
+            element.w_mm = round(clamp(Number(element.w_mm || 1), 1, maxWidth));
+            element.h_mm = round(clamp(Number(element.h_mm || 1), 1, maxHeight));
+            const x = snapMm(element.x_mm);
+            const y = snapMm(element.y_mm);
+            element.x_mm = round(clamp(x, bounds.left, Math.max(bounds.left, bounds.right - element.w_mm)));
+            element.y_mm = round(clamp(y, bounds.top, Math.max(bounds.top, bounds.bottom - element.h_mm)));
+        };
         const sync = () => {
             const json = JSON.stringify(definition, null, 2);
             if (textarea) {
@@ -2682,6 +2764,32 @@ function initLegalDocumentDesigners(scope = document) {
             return `<div class="legal-doc-page-bg" style="opacity:${opacity}"><img class="fit-${fit}" src="${AdminUI.escapeHtml(assetUrl(path))}" alt=""></div>`;
         };
 
+        const pageGuideHtml = () => {
+            const margins = currentGuides().margins;
+            if (!margins.enabled) {
+                return '';
+            }
+
+            const left = clamp(Number(margins.left_mm || 0), 0, pageSize.width);
+            const top = clamp(Number(margins.top_mm || 0), 0, pageSize.height);
+            const right = clamp(Number(margins.right_mm || 0), 0, pageSize.width - left);
+            const bottom = clamp(Number(margins.bottom_mm || 0), 0, pageSize.height - top);
+            const width = Math.max(0, pageSize.width - left - right);
+            const height = Math.max(0, pageSize.height - top - bottom);
+
+            return `<div class="legal-doc-margin-guide" style="left:${percent(left, pageSize.width)};top:${percent(top, pageSize.height)};width:${percent(width, pageSize.width)};height:${percent(height, pageSize.height)}"></div>`;
+        };
+
+        const pageStyle = (page) => {
+            const grid = currentGuides().grid;
+
+            return [
+                `background:${AdminUI.escapeHtml(page.background?.color || '#ffffff')}`,
+                `--doc-grid-x:${percent(grid.size_mm || 5, pageSize.width)}`,
+                `--doc-grid-y:${percent(grid.size_mm || 5, pageSize.height)}`,
+            ].join(';');
+        };
+
         const renderElement = (element) => {
             const common = `left:${percent(element.x_mm, pageSize.width)};top:${percent(element.y_mm, pageSize.height)};width:${percent(element.w_mm, pageSize.width)};height:${percent(element.h_mm, pageSize.height)};opacity:${element.opacity ?? 1};`;
             const selectedClass = selected.id === element.id ? ' is-selected' : '';
@@ -2709,14 +2817,23 @@ function initLegalDocumentDesigners(scope = document) {
                 return;
             }
 
+            const guides = currentGuides();
+            const pageClasses = [
+                'legal-doc-page',
+                guides.grid.visible ? 'is-grid-visible' : '',
+                guides.margins.enabled ? 'is-margins-visible' : '',
+                guides.margins.enabled && !guides.margins.free_positioning ? 'is-margin-locked' : '',
+            ].filter(Boolean).join(' ');
+
             pagesRoot.innerHTML = definition.pages.map((page, index) => `
                 <div class="legal-doc-page-shell" data-doc-page-shell="${index}">
                     <div class="legal-doc-page-title">
                         <span>Página ${index + 1}</span>
                         <button class="btn btn-sm btn-outline-danger" type="button" data-doc-remove-page="${index}" ${definition.pages.length === 1 ? 'disabled' : ''}>Remover página</button>
                     </div>
-                    <div class="legal-doc-page" data-doc-page="${index}" style="background:${AdminUI.escapeHtml(page.background?.color || '#ffffff')}">
+                    <div class="${pageClasses}" data-doc-page="${index}" style="${pageStyle(page)}">
                         ${pageBackgroundHtml(page)}
+                        ${pageGuideHtml()}
                         ${(page.elements || []).map(renderElement).join('')}
                     </div>
                 </div>
@@ -2732,9 +2849,34 @@ function initLegalDocumentDesigners(scope = document) {
             render();
         };
 
+        const syncGuideControls = () => {
+            const guides = currentGuides();
+            if (gridVisible) {
+                gridVisible.checked = guides.grid.visible;
+            }
+            if (snapGrid) {
+                snapGrid.checked = guides.grid.snap;
+            }
+            if (gridSize) {
+                gridSize.value = guides.grid.size_mm;
+            }
+            if (marginsEnabled) {
+                marginsEnabled.checked = guides.margins.enabled;
+            }
+            if (freePositioning) {
+                freePositioning.checked = guides.margins.free_positioning;
+            }
+            marginFields.forEach((field) => {
+                const side = field.dataset.docMargin;
+                const key = `${side}_mm`;
+                field.value = guides.margins[key] ?? 0;
+            });
+        };
+
         const syncInspector = () => {
             const page = currentPage();
             const element = currentElement();
+            syncGuideControls();
             if (bgPath && page) {
                 bgPath.value = page.background?.image_path || '';
             }
@@ -2775,6 +2917,10 @@ function initLegalDocumentDesigners(scope = document) {
                 element[key] = value;
             }
 
+            if (['x_mm', 'y_mm', 'w_mm', 'h_mm'].includes(key)) {
+                constrainElement(element);
+            }
+
             render();
         };
 
@@ -2790,6 +2936,7 @@ function initLegalDocumentDesigners(scope = document) {
                 logo: { ...base, type: 'image', w_mm: 36, h_mm: 22, image_path: brandLogo, fit: 'contain' },
             }[type] || { ...base, text: 'Texto', font_size_pt: 11 };
 
+            constrainElement(element);
             page.elements.push(element);
             selectElement(selected.page, id);
         };
@@ -2816,8 +2963,9 @@ function initLegalDocumentDesigners(scope = document) {
                     const move = (moveEvent) => {
                         const dx = (moveEvent.clientX - start.x) * (pageSize.width / rect.width);
                         const dy = (moveEvent.clientY - start.y) * (pageSize.height / rect.height);
-                        element.x_mm = round(clamp(start.xMm + dx, 0, pageSize.width - Number(element.w_mm || 1)));
-                        element.y_mm = round(clamp(start.yMm + dy, 0, pageSize.height - Number(element.h_mm || 1)));
+                        element.x_mm = start.xMm + dx;
+                        element.y_mm = start.yMm + dy;
+                        constrainElement(element);
                         sync();
                         elementEl.style.left = percent(element.x_mm, pageSize.width);
                         elementEl.style.top = percent(element.y_mm, pageSize.height);
@@ -2872,6 +3020,55 @@ function initLegalDocumentDesigners(scope = document) {
         fields.forEach((field) => {
             field.addEventListener('input', () => updateSelected(field.dataset.docField, field.value));
             field.addEventListener('change', () => updateSelected(field.dataset.docField, field.value));
+        });
+
+        const constrainAllElements = () => {
+            definition.pages.forEach((page) => {
+                (page.elements || []).forEach(constrainElement);
+            });
+        };
+        const updateGuides = (callback, shouldConstrain = false) => {
+            const guides = currentGuides();
+            callback(guides);
+            definition.guides = normalizeGuides(guides);
+            if (shouldConstrain) {
+                constrainAllElements();
+            }
+            render();
+        };
+
+        gridVisible?.addEventListener('change', () => {
+            updateGuides((guides) => {
+                guides.grid.visible = gridVisible.checked;
+            });
+        });
+        snapGrid?.addEventListener('change', () => {
+            updateGuides((guides) => {
+                guides.grid.snap = snapGrid.checked;
+            });
+        });
+        gridSize?.addEventListener('input', () => {
+            updateGuides((guides) => {
+                guides.grid.size_mm = Number(gridSize.value || 5);
+            });
+        });
+        marginsEnabled?.addEventListener('change', () => {
+            updateGuides((guides) => {
+                guides.margins.enabled = marginsEnabled.checked;
+            }, true);
+        });
+        freePositioning?.addEventListener('change', () => {
+            updateGuides((guides) => {
+                guides.margins.free_positioning = freePositioning.checked;
+            }, !freePositioning.checked);
+        });
+        marginFields.forEach((field) => {
+            field.addEventListener('input', () => {
+                updateGuides((guides) => {
+                    const side = field.dataset.docMargin;
+                    guides.margins[`${side}_mm`] = Number(field.value || 0);
+                }, currentGuides().margins.enabled && !currentGuides().margins.free_positioning);
+            });
         });
 
         bgPath?.addEventListener('input', () => {
