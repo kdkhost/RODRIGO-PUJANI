@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\HtmlContentSanitizer;
 use Illuminate\Validation\ValidationException;
 
 class LegalDocumentTemplateDefinition
@@ -9,6 +10,10 @@ class LegalDocumentTemplateDefinition
     private const BLOCK_TYPES = ['heading', 'paragraph', 'list', 'page_break', 'spacer'];
 
     private const VISUAL_ELEMENT_TYPES = ['text', 'signature', 'line', 'rectangle', 'image'];
+
+    public function __construct(private readonly HtmlContentSanitizer $htmlSanitizer)
+    {
+    }
 
     public function normalize(array $definition): array
     {
@@ -175,9 +180,17 @@ class LegalDocumentTemplateDefinition
             'opacity' => $this->number($element['opacity'] ?? 1, 0, 1),
         ];
 
+        $richTextHtml = $type === 'text'
+            ? $this->htmlText($element['text_html'] ?? null, 50000)
+            : null;
+        $plainText = $type === 'text'
+            ? $this->text($element['text'] ?? ($richTextHtml ? $this->plainTextFromHtml($richTextHtml) : ''), 20000)
+            : '';
+
         return match ($type) {
             'text' => $base + [
-                'text' => $this->text($element['text'] ?? '', 20000),
+                'text' => $plainText !== '' ? $plainText : $this->plainTextFromHtml((string) $richTextHtml),
+                'text_html' => $richTextHtml,
                 'font_size_pt' => $this->number($element['font_size_pt'] ?? 11, 5, 72),
                 'font_family' => $this->fontFamily($element['font_family'] ?? 'DejaVu Sans'),
                 'font_weight' => in_array((string) ($element['font_weight'] ?? '400'), ['400', '600', '700'], true) ? (string) $element['font_weight'] : '400',
@@ -279,6 +292,32 @@ class LegalDocumentTemplateDefinition
         }
 
         return $text;
+    }
+
+    private function htmlText(mixed $value, int $maxLength): ?string
+    {
+        if (! is_scalar($value) && $value !== null) {
+            return null;
+        }
+
+        $html = trim(str_replace("\0", '', (string) $value));
+        if ($html === '') {
+            return null;
+        }
+
+        if (mb_strlen($html) > $maxLength) {
+            $this->fail("Um conteúdo formatado do template excedeu {$maxLength} caracteres.");
+        }
+
+        return $this->htmlSanitizer->richText($html);
+    }
+
+    private function plainTextFromHtml(string $html): string
+    {
+        $html = preg_replace('/<(br|\/p|\/div|\/li|\/h[1-6])\b[^>]*>/i', ' ', $html) ?? $html;
+        $text = html_entity_decode(trim(strip_tags($html)), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        return preg_replace('/\s+/u', ' ', $text) ?: '';
     }
 
     private function number(mixed $value, float $min, float $max): float

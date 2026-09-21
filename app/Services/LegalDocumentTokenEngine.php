@@ -175,13 +175,33 @@ class LegalDocumentTokenEngine
         }, $template) ?? $template;
     }
 
+    public function renderForHtml(string $template, array $context): string
+    {
+        return preg_replace_callback(self::TOKEN_PATTERN, function (array $matches) use ($context): string {
+            $token = strtolower(trim($matches[1]));
+            if (! array_key_exists($token, self::TOKENS)) {
+                throw ValidationException::withMessages(['template' => "Token não permitido: {$token}."]);
+            }
+            if (! array_key_exists($token, $context)) {
+                throw ValidationException::withMessages(['context' => "O token {$token} não está disponível no contexto selecionado."]);
+            }
+
+            return e((string) $context[$token]);
+        }, $template) ?? $template;
+    }
+
     public function renderDefinition(array $definition, array $context): array
     {
         if (($definition['layout'] ?? null) === 'absolute') {
             $definition['pages'] = collect($definition['pages'] ?? [])->map(function (array $page) use ($context): array {
                 $page['elements'] = collect($page['elements'] ?? [])->map(function (array $element) use ($context): array {
-                    foreach (['text', 'label'] as $key) {
+                    foreach (['text', 'label', 'text_html'] as $key) {
                         if (isset($element[$key])) {
+                            if ($key === 'text_html') {
+                                $element[$key] = $this->renderForHtml((string) $element[$key], $context);
+                                continue;
+                            }
+
                             $element[$key] = $this->render((string) $element[$key], $context);
                         }
                     }

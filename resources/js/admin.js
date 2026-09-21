@@ -2496,6 +2496,13 @@ function initLegalDocumentDesigners(scope = document) {
         const bgDrop = designer.querySelector('[data-doc-bg-drop]');
         const bgFile = designer.querySelector('[data-doc-bg-file]');
         const bgStatus = designer.querySelector('[data-doc-bg-status]');
+        const bgPreview = designer.querySelector('[data-doc-bg-preview]');
+        const bgPreviewImage = designer.querySelector('[data-doc-bg-preview-image]');
+        const bgPreviewTitle = designer.querySelector('[data-doc-bg-preview-title]');
+        const bgPreviewMeta = designer.querySelector('[data-doc-bg-preview-meta]');
+        const bgApplyDefault = designer.querySelector('[data-doc-apply-default-bg]');
+        const bgSaveDefault = designer.querySelector('[data-doc-save-default-bg]');
+        const bgClear = designer.querySelector('[data-doc-clear-bg]');
         const gridVisible = designer.querySelector('[data-doc-grid-visible]');
         const snapGrid = designer.querySelector('[data-doc-snap-grid]');
         const gridSize = designer.querySelector('[data-doc-grid-size]');
@@ -2503,22 +2510,95 @@ function initLegalDocumentDesigners(scope = document) {
         const freePositioning = designer.querySelector('[data-doc-free-positioning]');
         const marginFields = Array.from(designer.querySelectorAll('[data-doc-margin]'));
         const uploadUrl = designer.dataset.backgroundUploadUrl || '';
+        const defaultBackgroundSaveUrl = designer.dataset.defaultBackgroundSaveUrl || '';
         const csrfToken = designer.dataset.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || '';
         const brandLogo = designer.dataset.brandLogo || '';
         const pageSize = { width: 210, height: 297 };
         let selected = { page: 0, id: null };
+        let syncingInspector = false;
         const uniqueId = (type) => `${type}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+        const validBackgroundFit = (value) => ['cover', 'contain', 'stretch'].includes(value) ? value : 'cover';
+        const defaultBackgroundConfig = {
+            path: designer.dataset.defaultBackgroundPath || '',
+            opacity: Math.max(0, Math.min(1, Number(designer.dataset.defaultBackgroundOpacity || 0.08))),
+            fit: validBackgroundFit(designer.dataset.defaultBackgroundFit || 'cover'),
+        };
         const defaultGuides = () => ({
             grid: { visible: false, snap: false, size_mm: 5 },
             margins: { enabled: false, free_positioning: false, top_mm: 20, right_mm: 20, bottom_mm: 20, left_mm: 20 },
         });
-        const defaultBackground = () => ({ color: '#ffffff', image_path: '', image_opacity: 0.08, image_fit: 'cover' });
+        const defaultBackground = () => ({
+            color: '#ffffff',
+            image_path: defaultBackgroundConfig.path,
+            image_opacity: defaultBackgroundConfig.opacity,
+            image_fit: defaultBackgroundConfig.fit,
+        });
         const cloneBackground = (page = null) => ({
             color: page?.background?.color || '#ffffff',
             image_path: page?.background?.image_path || '',
             image_opacity: Number(page?.background?.image_opacity ?? 0.08),
-            image_fit: page?.background?.image_fit || 'cover',
+            image_fit: validBackgroundFit(page?.background?.image_fit || 'cover'),
         });
+        const richTextAllowedTags = new Set([
+            'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'blockquote',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'hr', 'pre', 'code',
+            'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'a',
+        ]);
+        const sanitizeRichText = (html) => {
+            const template = document.createElement('template');
+            template.innerHTML = String(html || '');
+
+            template.content.querySelectorAll('*').forEach((node) => {
+                const tag = node.tagName.toLowerCase();
+                if (!richTextAllowedTags.has(tag)) {
+                    node.replaceWith(document.createTextNode(node.textContent || ''));
+                    return;
+                }
+
+                Array.from(node.attributes).forEach((attribute) => {
+                    const name = attribute.name.toLowerCase();
+                    const value = String(attribute.value || '');
+                    const isSafeLink = tag === 'a'
+                        && ['href', 'title', 'target', 'rel'].includes(name)
+                        && (name !== 'href' || /^(https?:|mailto:|\/|#)/i.test(value));
+                    const isSafeTableSpan = ['td', 'th'].includes(tag) && ['colspan', 'rowspan', 'scope'].includes(name);
+
+                    if (isSafeLink || isSafeTableSpan) {
+                        if (tag === 'a') {
+                            node.setAttribute('rel', 'noopener noreferrer');
+                        }
+                        return;
+                    }
+
+                    node.removeAttribute(attribute.name);
+                });
+            });
+
+            return template.innerHTML;
+        };
+        const plainTextFromHtml = (html) => {
+            const container = document.createElement('div');
+            container.innerHTML = sanitizeRichText(html);
+
+            return (container.textContent || '').trim();
+        };
+        const htmlFromPlainText = (text) => {
+            const escaped = AdminUI.escapeHtml(text || 'Texto do documento').replace(/\n/g, '<br>');
+
+            return `<p>${escaped}</p>`;
+        };
+        const normalizeVisualElement = (element) => {
+            if (!element || typeof element !== 'object') {
+                return element;
+            }
+
+            if (element.type === 'text') {
+                element.text_html = sanitizeRichText(element.text_html || htmlFromPlainText(element.text || 'Texto do documento'));
+                element.text = plainTextFromHtml(element.text_html) || String(element.text || '');
+            }
+
+            return element;
+        };
 
         const fallbackDefinition = (legacy = null) => {
             const legacyText = Array.isArray(legacy?.blocks)
@@ -2550,6 +2630,7 @@ function initLegalDocumentDesigners(scope = document) {
                     w_mm: 162,
                     h_mm: 170,
                     text: legacyText,
+                    text_html: htmlFromPlainText(legacyText),
                     font_size_pt: 11,
                     font_weight: '400',
                     line_height: 1.35,
@@ -2608,7 +2689,7 @@ function initLegalDocumentDesigners(scope = document) {
                 width_mm: pageSize.width,
                 height_mm: pageSize.height,
                 background: cloneBackground(page),
-                elements: Array.isArray(page.elements) ? page.elements : [],
+                elements: Array.isArray(page.elements) ? page.elements.map(normalizeVisualElement) : [],
             }));
 
             return parsed;
@@ -2721,6 +2802,32 @@ function initLegalDocumentDesigners(scope = document) {
             bgStatus.dataset.state = state;
         };
 
+        const syncBackgroundPreview = (page = currentPage()) => {
+            if (!bgPreview) {
+                return;
+            }
+
+            const background = page?.background || {};
+            const path = background.image_path || '';
+            const opacity = Number(background.image_opacity ?? 0.08);
+            const fit = validBackgroundFit(background.image_fit || 'cover');
+
+            bgPreview.dataset.empty = path ? 'false' : 'true';
+            if (bgPreviewImage) {
+                bgPreviewImage.src = path ? assetUrl(path) : '';
+                bgPreviewImage.style.objectFit = fit === 'stretch' ? 'fill' : fit;
+                bgPreviewImage.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+            }
+            if (bgPreviewTitle) {
+                bgPreviewTitle.textContent = path ? path.split('/').pop() : 'Sem fundo nesta página';
+            }
+            if (bgPreviewMeta) {
+                bgPreviewMeta.textContent = path
+                    ? `Opacidade ${(opacity * 100).toFixed(0)}% · ${fit === 'cover' ? 'ocupa A4' : fit === 'contain' ? 'contém sem cortar' : 'esticado'}`
+                    : (defaultBackgroundConfig.path ? 'Há um padrão salvo disponível para aplicar.' : 'Envie uma imagem ou salve um padrão do sistema.');
+            }
+        };
+
         const applyBackgroundPath = (path) => {
             const page = currentPage();
             if (!page || !path) {
@@ -2732,6 +2839,73 @@ function initLegalDocumentDesigners(scope = document) {
                 bgPath.value = path;
             }
             render();
+        };
+
+        const applyBackground = (background) => {
+            const page = currentPage();
+            if (!page) {
+                return;
+            }
+
+            page.background = {
+                color: '#ffffff',
+                image_path: background.path ?? background.image_path ?? '',
+                image_opacity: Math.max(0, Math.min(1, Number(background.opacity ?? background.image_opacity ?? 0.08))),
+                image_fit: validBackgroundFit(background.fit ?? background.image_fit ?? 'cover'),
+            };
+            render();
+        };
+
+        const saveDefaultBackground = async () => {
+            const page = currentPage();
+            const background = page?.background || {};
+            if (!defaultBackgroundSaveUrl) {
+                setBackgroundStatus('A rota para salvar o padrão não está disponível.', 'error');
+                return;
+            }
+
+            if (!background.image_path) {
+                setBackgroundStatus('Aplique ou envie um papel timbrado antes de salvar como padrão.', 'error');
+                return;
+            }
+
+            bgSaveDefault?.setAttribute('disabled', 'disabled');
+            setBackgroundStatus('Salvando papel timbrado como padrão do sistema...', 'loading');
+
+            try {
+                const response = await fetch(defaultBackgroundSaveUrl, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        path: background.image_path,
+                        opacity: Number(background.image_opacity ?? 0.08),
+                        fit: validBackgroundFit(background.image_fit || 'cover'),
+                    }),
+                    credentials: 'same-origin',
+                });
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const message = data.message
+                        || Object.values(data.errors || {}).flat().filter(Boolean).shift()
+                        || 'Não foi possível salvar o papel timbrado padrão.';
+                    throw new Error(message);
+                }
+
+                defaultBackgroundConfig.path = data.background?.path || background.image_path;
+                defaultBackgroundConfig.opacity = Number(data.background?.opacity ?? background.image_opacity ?? 0.08);
+                defaultBackgroundConfig.fit = validBackgroundFit(data.background?.fit || background.image_fit || 'cover');
+                setBackgroundStatus(data.message || 'Papel timbrado padrão salvo.', 'success');
+                syncBackgroundPreview();
+            } catch (error) {
+                setBackgroundStatus(error?.message || 'Falha ao salvar o papel timbrado padrão.', 'error');
+            } finally {
+                bgSaveDefault?.removeAttribute('disabled');
+            }
         };
 
         const uploadBackground = async (file) => {
@@ -2751,6 +2925,21 @@ function initLegalDocumentDesigners(scope = document) {
 
             const payload = new FormData();
             payload.append('background', file);
+            const temporaryPreviewUrl = URL.createObjectURL(file);
+            if (bgPreviewImage) {
+                if (bgPreview) {
+                    bgPreview.dataset.empty = 'false';
+                }
+                bgPreviewImage.src = temporaryPreviewUrl;
+                bgPreviewImage.style.objectFit = 'cover';
+                bgPreviewImage.style.opacity = '0.72';
+            }
+            if (bgPreviewTitle) {
+                bgPreviewTitle.textContent = file.name;
+            }
+            if (bgPreviewMeta) {
+                bgPreviewMeta.textContent = 'Prévia local enquanto o envio é concluído.';
+            }
             bgDrop?.classList.add('is-uploading');
             setBackgroundStatus('Enviando papel timbrado...', 'loading');
 
@@ -2779,6 +2968,7 @@ function initLegalDocumentDesigners(scope = document) {
                 setBackgroundStatus(error?.message || 'Falha ao enviar o plano de fundo.', 'error');
             } finally {
                 bgDrop?.classList.remove('is-uploading');
+                window.setTimeout(() => URL.revokeObjectURL(temporaryPreviewUrl), 1200);
                 if (bgFile) {
                     bgFile.value = '';
                 }
@@ -2842,7 +3032,11 @@ function initLegalDocumentDesigners(scope = document) {
                 return `<div class="legal-doc-element legal-doc-element-image${selectedClass}" ${data} style="${common}">${image}</div>`;
             }
 
-            return `<div class="legal-doc-element legal-doc-element-text${selectedClass}" ${data} style="${common};font-size:${Number(element.font_size_pt || 11) * 1.333}px;font-weight:${element.font_weight || 400};line-height:${element.line_height || 1.35};text-align:${element.align || 'left'};color:${AdminUI.escapeHtml(element.color || '#111827')}">${AdminUI.escapeHtml(element.text || 'Texto')}</div>`;
+            const textHtml = element.text_html
+                ? sanitizeRichText(element.text_html)
+                : AdminUI.escapeHtml(element.text || 'Texto').replace(/\n/g, '<br>');
+
+            return `<div class="legal-doc-element legal-doc-element-text${selectedClass}" ${data} style="${common};font-size:${Number(element.font_size_pt || 11) * 1.333}px;font-weight:${element.font_weight || 400};line-height:${element.line_height || 1.35};text-align:${element.align || 'left'};color:${AdminUI.escapeHtml(element.color || '#111827')}">${textHtml}</div>`;
         };
 
         const render = () => {
@@ -2882,6 +3076,32 @@ function initLegalDocumentDesigners(scope = document) {
             render();
         };
 
+        const setFieldValue = (field, value) => {
+            const normalized = value ?? '';
+            if (field.dataset.editor === 'summernote' && field.dataset.editorReady === 'true' && typeof window.$ === 'function') {
+                if (window.$(field).summernote('code') === normalized) {
+                    return;
+                }
+
+                window.$(field).summernote('code', normalized);
+                return;
+            }
+
+            if (field.value === String(normalized)) {
+                return;
+            }
+
+            field.value = normalized;
+        };
+
+        const getFieldValue = (field) => {
+            if (field.dataset.editor === 'summernote' && field.dataset.editorReady === 'true' && typeof window.$ === 'function') {
+                return window.$(field).summernote('code');
+            }
+
+            return field.value;
+        };
+
         const syncGuideControls = () => {
             const guides = currentGuides();
             if (gridVisible) {
@@ -2909,6 +3129,7 @@ function initLegalDocumentDesigners(scope = document) {
         const syncInspector = () => {
             const page = currentPage();
             const element = currentElement();
+            syncingInspector = true;
             syncGuideControls();
             if (bgPath && page) {
                 bgPath.value = page.background?.image_path || '';
@@ -2919,6 +3140,7 @@ function initLegalDocumentDesigners(scope = document) {
             if (bgFit && page) {
                 bgFit.value = page.background?.image_fit || 'cover';
             }
+            syncBackgroundPreview(page);
             if (inspector) {
                 inspector.dataset.selectedType = element?.type || '';
             }
@@ -2926,12 +3148,16 @@ function initLegalDocumentDesigners(scope = document) {
             fields.forEach((field) => {
                 const key = field.dataset.docField;
                 if (!element || !key) {
-                    field.value = '';
+                    setFieldValue(field, '');
                     return;
                 }
 
-                field.value = typeof element[key] === 'boolean' ? String(element[key]) : (element[key] ?? '');
+                const value = key === 'text_html' && element.type === 'text'
+                    ? (element.text_html || htmlFromPlainText(element.text || ''))
+                    : (typeof element[key] === 'boolean' ? String(element[key]) : (element[key] ?? ''));
+                setFieldValue(field, value);
             });
+            syncingInspector = false;
         };
 
         const updateSelected = (key, value) => {
@@ -2940,12 +3166,18 @@ function initLegalDocumentDesigners(scope = document) {
                 return;
             }
 
-            if (['x_mm', 'y_mm', 'w_mm', 'h_mm', 'opacity', 'font_size_pt', 'line_height'].includes(key)) {
+            if (key === 'text_html') {
+                element.text_html = sanitizeRichText(value);
+                element.text = plainTextFromHtml(element.text_html);
+            } else if (['x_mm', 'y_mm', 'w_mm', 'h_mm', 'opacity', 'font_size_pt', 'line_height'].includes(key)) {
                 element[key] = Number(value);
             } else if (key === 'signer_order') {
                 element[key] = Math.max(1, Number.parseInt(value || '1', 10));
             } else if (key === 'required') {
                 element[key] = value === 'true';
+            } else if (key === 'text') {
+                element.text = value;
+                element.text_html = htmlFromPlainText(value);
             } else {
                 element[key] = value;
             }
@@ -2962,7 +3194,7 @@ function initLegalDocumentDesigners(scope = document) {
             const id = uniqueId(type);
             const base = { id, type, x_mm: 24, y_mm: 36, w_mm: 80, h_mm: 18, opacity: 1 };
             const element = {
-                text: { ...base, text: 'Texto do documento', font_size_pt: 11, font_weight: '400', line_height: 1.35, align: 'left', color: '#111827' },
+                text: { ...base, text: 'Texto do documento', text_html: '<p>Texto do documento</p>', font_size_pt: 11, font_weight: '400', line_height: 1.35, align: 'left', color: '#111827' },
                 signature: { ...base, y_mm: 236, w_mm: 90, h_mm: 24, label: 'Assinatura', signer_order: 1, required: true, border_color: '#111827' },
                 line: { ...base, h_mm: 1, color: '#111827', thickness_mm: 0.25 },
                 rectangle: { ...base, w_mm: 60, h_mm: 30, border_color: '#111827', background_color: 'transparent', border_width_mm: 0.25 },
@@ -3061,8 +3293,16 @@ function initLegalDocumentDesigners(scope = document) {
         });
 
         fields.forEach((field) => {
-            field.addEventListener('input', () => updateSelected(field.dataset.docField, field.value));
-            field.addEventListener('change', () => updateSelected(field.dataset.docField, field.value));
+            const onFieldChange = () => {
+                if (syncingInspector) {
+                    return;
+                }
+
+                updateSelected(field.dataset.docField, getFieldValue(field));
+            };
+
+            field.addEventListener('input', onFieldChange);
+            field.addEventListener('change', onFieldChange);
         });
 
         const constrainAllElements = () => {
@@ -3125,6 +3365,26 @@ function initLegalDocumentDesigners(scope = document) {
         });
         bgFit?.addEventListener('change', () => {
             currentPage().background.image_fit = bgFit.value;
+            render();
+        });
+        bgApplyDefault?.addEventListener('click', () => {
+            if (!defaultBackgroundConfig.path) {
+                setBackgroundStatus('Nenhum papel timbrado padrão foi salvo ainda.', 'error');
+                return;
+            }
+
+            applyBackground(defaultBackgroundConfig);
+            setBackgroundStatus('Papel timbrado padrão aplicado à página selecionada.', 'success');
+        });
+        bgSaveDefault?.addEventListener('click', saveDefaultBackground);
+        bgClear?.addEventListener('click', () => {
+            const page = currentPage();
+            if (!page) {
+                return;
+            }
+
+            page.background = { ...cloneBackground(page), image_path: '' };
+            setBackgroundStatus('Fundo removido apenas da página selecionada.', 'idle');
             render();
         });
 

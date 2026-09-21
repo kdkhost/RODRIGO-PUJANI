@@ -2,13 +2,17 @@
 
 namespace App\Services;
 
+use App\Support\HtmlContentSanitizer;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use RuntimeException;
 
 class LegalDocumentOutputRenderer
 {
-    public function __construct(private readonly DocxDocumentRenderer $docx)
+    public function __construct(
+        private readonly DocxDocumentRenderer $docx,
+        private readonly HtmlContentSanitizer $htmlSanitizer,
+    )
     {
     }
 
@@ -124,7 +128,17 @@ class LegalDocumentOutputRenderer
             .fit-contain { object-fit: contain; }
             .fit-stretch { object-fit: fill; }
             .doc-el { position: absolute; z-index: 1; overflow: hidden; }
-            .doc-text { white-space: pre-wrap; }
+            .doc-text { white-space: normal; }
+            .doc-text-plain { white-space: pre-wrap; }
+            .doc-text p { margin: 0 0 4pt; }
+            .doc-text p:last-child { margin-bottom: 0; }
+            .doc-text h1, .doc-text h2, .doc-text h3, .doc-text h4, .doc-text h5, .doc-text h6 { margin: 0 0 5pt; line-height: 1.18; }
+            .doc-text ul, .doc-text ol { margin: 0 0 4pt 14pt; padding: 0; }
+            .doc-text li { margin: 0 0 2pt; }
+            .doc-text table { width: 100%; border-collapse: collapse; }
+            .doc-text th, .doc-text td { border: 0.2mm solid #d1d5db; padding: 2pt 3pt; vertical-align: top; }
+            .doc-text blockquote { margin: 0 0 4pt 8pt; padding-left: 6pt; border-left: 0.8mm solid #c49a3c; color: #4b5563; }
+            .doc-text * { font-family: inherit; color: inherit; line-height: inherit; }
             .doc-signature { border-bottom-style: solid; background: rgba(255,255,255,0.01); }
             .doc-signature-label { position: absolute; left: 0; right: 0; bottom: 0; transform: translateY(100%); font-size: 8pt; text-align: center; color: #374151; }
         </style></head><body>'.$body.'</body></html>';
@@ -157,14 +171,14 @@ class LegalDocumentOutputRenderer
             .'opacity:'.$this->opacity($element['opacity'] ?? 1).';';
 
         return match ($element['type'] ?? null) {
-            'text' => '<div class="doc-el doc-text" style="'.$style
+            'text' => '<div class="doc-el doc-text '.$this->textClass($element).'" style="'.$style
                 .'font-family:'.$this->fontFamily($element['font_family'] ?? 'DejaVu Sans').';'
                 .'font-size:'.$this->pt($element['font_size_pt'] ?? 11).'pt;'
                 .'font-weight:'.$this->fontWeight($element['font_weight'] ?? '400').';'
                 .'line-height:'.$this->lineHeight($element['line_height'] ?? 1.35).';'
                 .'text-align:'.$this->align($element['align'] ?? 'left').';'
                 .'color:'.$this->cssColor((string) ($element['color'] ?? '#111827')).';">'
-                .$this->escape((string) ($element['text'] ?? '')).'</div>',
+                .$this->textHtml($element).'</div>',
             'signature' => '<div class="doc-el doc-signature" data-signer-order="'.(int) ($element['signer_order'] ?? 1).'" style="'.$style
                 .'border-bottom-width:'.$this->mm(0.35).'mm;'
                 .'border-bottom-color:'.$this->cssColor((string) ($element['border_color'] ?? '#111827')).';">'
@@ -192,6 +206,21 @@ class LegalDocumentOutputRenderer
             : 'contain';
 
         return '<div class="doc-el" style="'.$style.'"><img class="fit-'.$fit.'" src="'.$this->escape($dataUri).'" style="width:100%;height:100%;display:block;" alt=""></div>';
+    }
+
+    private function textClass(array $element): string
+    {
+        return filled($element['text_html'] ?? null) ? 'doc-text-rich' : 'doc-text-plain';
+    }
+
+    private function textHtml(array $element): string
+    {
+        $html = (string) ($element['text_html'] ?? '');
+        if (trim($html) !== '') {
+            return $this->htmlSanitizer->richText($html);
+        }
+
+        return $this->escape((string) ($element['text'] ?? ''));
     }
 
     private function pdfList(array $block): string

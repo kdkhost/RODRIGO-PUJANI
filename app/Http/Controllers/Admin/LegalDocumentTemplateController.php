@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LegalDocumentTemplate;
+use App\Models\Setting;
 use App\Services\LegalDocumentTemplateManager;
 use App\Services\LegalDocumentTokenEngine;
 use App\Support\PublicUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -69,6 +71,62 @@ class LegalDocumentTemplateController extends Controller
             'url' => asset($path),
             'original_name' => $originalName,
             'size' => $size,
+        ]);
+    }
+
+    public function saveDefaultBackground(Request $request): JsonResponse
+    {
+        $this->authorize('create', LegalDocumentTemplate::class);
+
+        $validated = $request->validate([
+            'path' => ['nullable', 'string', 'max:500'],
+            'opacity' => ['required', 'numeric', 'min:0', 'max:1'],
+            'fit' => ['required', Rule::in(['cover', 'contain', 'stretch'])],
+        ]);
+
+        $path = $this->safePublicImagePath($validated['path'] ?? null);
+        if ($path !== '' && ! is_file(public_path($path))) {
+            throw ValidationException::withMessages([
+                'path' => 'O papel timbrado informado não foi encontrado nos arquivos públicos do sistema.',
+            ]);
+        }
+
+        $opacity = number_format((float) $validated['opacity'], 2, '.', '');
+        $fit = (string) $validated['fit'];
+
+        $this->saveLegalDocumentSetting(
+            'legal_documents.default_background_path',
+            'Papel timbrado padrão dos documentos',
+            $path
+        );
+        $this->saveLegalDocumentSetting(
+            'legal_documents.default_background_opacity',
+            'Opacidade padrão do papel timbrado',
+            $opacity
+        );
+        $this->saveLegalDocumentSetting(
+            'legal_documents.default_background_fit',
+            'Encaixe padrão do papel timbrado',
+            $fit
+        );
+        $this->clearSettingsCache();
+
+        activity_log('legal_document_templates', 'default_background_updated', null, [
+            'path_configured' => $path !== '',
+            'fit' => $fit,
+            'opacity' => $opacity,
+        ], 'Papel timbrado padrão dos documentos atualizado pelo painel.');
+
+        return response()->json([
+            'message' => $path === ''
+                ? 'Papel timbrado padrão removido.'
+                : 'Papel timbrado padrão salvo para os próximos documentos.',
+            'background' => [
+                'path' => $path,
+                'url' => $path !== '' ? asset($path) : '',
+                'opacity' => (float) $opacity,
+                'fit' => $fit,
+            ],
         ]);
     }
 
@@ -227,5 +285,47 @@ class LegalDocumentTemplateController extends Controller
         }
 
         return [$validated['title_template'], $definition];
+    }
+
+    private function safePublicImagePath(?string $path): string
+    {
+        $path = trim(str_replace(["\0", '\\'], ['', '/'], (string) $path));
+        if ($path === '') {
+            return '';
+        }
+
+        if (
+            str_contains($path, '..')
+            || str_starts_with($path, '/')
+            || preg_match('/^[a-z][a-z0-9+\-.]*:/i', $path) === 1
+            || preg_match('/\.(jpe?g|png|webp)$/i', $path) !== 1
+        ) {
+            throw ValidationException::withMessages([
+                'path' => 'Informe um caminho relativo de imagem JPG, PNG ou WEBP dentro dos arquivos públicos.',
+            ]);
+        }
+
+        return Str::of($path)->replaceMatches('/\/+/', '/')->trim('/')->toString();
+    }
+
+    private function saveLegalDocumentSetting(string $key, string $label, string $value): void
+    {
+        Setting::query()->updateOrCreate(
+            ['key' => $key],
+            [
+                'group' => 'legal_documents',
+                'label' => $label,
+                'type' => 'text',
+                'value' => $value,
+                'is_public' => false,
+            ]
+        );
+    }
+
+    private function clearSettingsCache(): void
+    {
+        foreach (['site_settings.all', 'site_settings.all.v2', 'site_settings.map', 'site_settings.map.v2'] as $key) {
+            Cache::forget($key);
+        }
     }
 }

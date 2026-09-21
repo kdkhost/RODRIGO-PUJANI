@@ -8,9 +8,11 @@ use App\Models\LegalDocumentGeneration;
 use App\Models\LegalDocumentTemplate;
 use App\Models\LegalDocumentTemplateVersion;
 use App\Models\MediaAsset;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\LegalDocumentGenerationService;
 use App\Services\LegalDocumentTemplateManager;
+use App\Services\LegalDocumentTokenEngine;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -133,7 +135,25 @@ class LegalDocumentGeneratorTest extends TestCase
             ->assertSee('Nova página copia automaticamente o papel timbrado atual')
             ->assertSee('data-document-designer', false)
             ->assertSee('data-doc-grid-visible', false)
+            ->assertSee('data-doc-bg-preview', false)
+            ->assertSee('data-doc-field="text_html"', false)
             ->assertSee(route('admin.legal-document-templates.background-upload'), false);
+    }
+
+    public function test_template_create_page_uses_default_background_setting(): void
+    {
+        $actor = $this->actor();
+        $this->setting('legal_documents.default_background_path', 'uploads/legal-document-backgrounds/padrao.png');
+        $this->setting('legal_documents.default_background_opacity', '0.35');
+        $this->setting('legal_documents.default_background_fit', 'contain');
+
+        $this->actingAs($actor)
+            ->get(route('admin.legal-document-templates.create'))
+            ->assertOk()
+            ->assertSee('data-default-background-path="uploads/legal-document-backgrounds/padrao.png"', false)
+            ->assertSee('data-default-background-opacity="0.35"', false)
+            ->assertSee('data-default-background-fit="contain"', false)
+            ->assertSee('uploads/legal-document-backgrounds/padrao.png');
     }
 
     public function test_template_manager_can_upload_a4_background_without_media_library_permission(): void
@@ -159,6 +179,43 @@ class LegalDocumentGeneratorTest extends TestCase
                 'uploaded_by' => $actor->id,
             ]);
             $this->assertSame(1, MediaAsset::query()->count());
+        } finally {
+            File::deleteDirectory(public_path('uploads/legal-document-backgrounds'));
+        }
+    }
+
+    public function test_template_manager_can_save_default_background_from_panel(): void
+    {
+        $actor = User::factory()->create(['is_active' => true]);
+        $actor->givePermissionTo(['admin.access', 'legal-document-templates.manage']);
+        $directory = public_path('uploads/legal-document-backgrounds');
+        File::ensureDirectoryExists($directory);
+        File::put($directory.'/padrao.png', UploadedFile::fake()->image('padrao.png', 1240, 1754)->getContent());
+
+        try {
+            $this->actingAs($actor)
+                ->postJson(route('admin.legal-document-templates.default-background'), [
+                    'path' => 'uploads/legal-document-backgrounds/padrao.png',
+                    'opacity' => 0.42,
+                    'fit' => 'cover',
+                ])
+                ->assertOk()
+                ->assertJsonPath('background.path', 'uploads/legal-document-backgrounds/padrao.png')
+                ->assertJsonPath('background.opacity', 0.42)
+                ->assertJsonPath('background.fit', 'cover');
+
+            $this->assertDatabaseHas('settings', [
+                'key' => 'legal_documents.default_background_path',
+                'value' => 'uploads/legal-document-backgrounds/padrao.png',
+            ]);
+            $this->assertDatabaseHas('settings', [
+                'key' => 'legal_documents.default_background_opacity',
+                'value' => '0.42',
+            ]);
+            $this->assertDatabaseHas('settings', [
+                'key' => 'legal_documents.default_background_fit',
+                'value' => 'cover',
+            ]);
         } finally {
             File::deleteDirectory(public_path('uploads/legal-document-backgrounds'));
         }
@@ -255,6 +312,73 @@ class LegalDocumentGeneratorTest extends TestCase
         $this->assertSame('testemunha', $storedDefinition['pages'][1]['elements'][1]['id']);
         $this->assertEquals(126.0, $storedDefinition['pages'][1]['elements'][1]['x_mm']);
         $this->assertEquals(232.0, $storedDefinition['pages'][1]['elements'][1]['y_mm']);
+    }
+
+    public function test_visual_template_accepts_summernote_rich_text_and_escapes_token_values_in_html(): void
+    {
+        $actor = $this->actor();
+        $definition = [
+            'layout' => 'absolute',
+            'unit' => 'mm',
+            'paper' => ['size' => 'A4', 'width_mm' => 210, 'height_mm' => 297],
+            'pages' => [[
+                'width_mm' => 210,
+                'height_mm' => 297,
+                'background' => ['color' => '#ffffff', 'image_path' => '', 'image_opacity' => 0.08, 'image_fit' => 'cover'],
+                'elements' => [[
+                    'id' => 'corpo',
+                    'type' => 'text',
+                    'x_mm' => 24,
+                    'y_mm' => 42,
+                    'w_mm' => 160,
+                    'h_mm' => 80,
+                    'text' => 'Cliente: {{client.name}}',
+                    'text_html' => '<p><strong>Cliente:</strong> {{client.name}}</p><script>alert("x")</script>',
+                    'font_size_pt' => 11,
+                    'font_weight' => '400',
+                    'line_height' => 1.35,
+                    'align' => 'justify',
+                    'color' => '#111827',
+                    'opacity' => 1,
+                ]],
+            ]],
+        ];
+
+        $template = app(LegalDocumentTemplateManager::class)->create(
+            $actor,
+            $this->metadata('texto-rico-summernote', LegalDocumentTemplate::CONTEXT_CLIENT, LegalDocumentTemplate::FORMAT_PDF),
+            'Documento de {{client.name}}',
+            $definition
+        );
+
+        $element = $template->latestVersion->definition['pages'][0]['elements'][0];
+        $this->assertStringContainsString('<strong>Cliente:</strong>', $element['text_html']);
+        $this->assertStringNotContainsString('script', $element['text_html']);
+
+        $client = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Cliente <b>Especial</b>',
+            'document_number' => '123.456.789-09',
+            'email' => 'cliente-rich@example.test',
+            'address_zip' => '01310100',
+            'address_street' => 'Avenida Paulista',
+            'address_number' => '1000',
+            'address_city' => 'São Paulo',
+            'address_state' => 'SP',
+            'assigned_lawyer_id' => $actor->id,
+            'created_by' => $actor->id,
+            'is_active' => true,
+        ]);
+
+        $tokens = app(LegalDocumentTokenEngine::class);
+        $rendered = $tokens->renderDefinition(
+            $template->latestVersion->definition,
+            $tokens->context($client, null, $actor, now())
+        );
+
+        $html = $rendered['pages'][0]['elements'][0]['text_html'];
+        $this->assertStringContainsString('Cliente &lt;b&gt;Especial&lt;/b&gt;', $html);
+        $this->assertStringNotContainsString('<b>Especial</b>', $html);
     }
 
     public function test_published_versions_are_immutable_and_a_new_version_preserves_the_original(): void
@@ -766,6 +890,21 @@ class LegalDocumentGeneratorTest extends TestCase
             'default_output_format' => $format,
             'is_active' => true,
         ];
+    }
+
+    private function setting(string $key, string $value, string $type = 'text'): void
+    {
+        Setting::query()->updateOrCreate(['key' => $key], [
+            'group' => str($key)->before('.')->toString(),
+            'label' => $key,
+            'type' => $type,
+            'value' => $value,
+            'is_public' => false,
+        ]);
+
+        foreach (['site_settings.map.v2', 'site_settings.all.v2'] as $cacheKey) {
+            cache()->forget($cacheKey);
+        }
     }
 
     private function definition(string $text): array

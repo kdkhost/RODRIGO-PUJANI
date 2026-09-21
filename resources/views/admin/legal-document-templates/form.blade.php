@@ -2,6 +2,11 @@
 
 @php
     $creating = ! $template->exists;
+    $defaultBackgroundPath = trim((string) setting('legal_documents.default_background_path', ''));
+    $defaultBackgroundOpacity = max(0, min(1, (float) setting('legal_documents.default_background_opacity', '0.08')));
+    $defaultBackgroundFit = (string) setting('legal_documents.default_background_fit', 'cover');
+    $defaultBackgroundFit = in_array($defaultBackgroundFit, ['cover', 'contain', 'stretch'], true) ? $defaultBackgroundFit : 'cover';
+    $defaultBackground = ['color' => '#ffffff', 'image_path' => $defaultBackgroundPath, 'image_opacity' => $defaultBackgroundOpacity, 'image_fit' => $defaultBackgroundFit];
     $defaultDefinition = [
         'layout' => 'absolute',
         'unit' => 'mm',
@@ -13,7 +18,7 @@
         'pages' => [[
             'width_mm' => 210,
             'height_mm' => 297,
-            'background' => ['color' => '#ffffff', 'image_path' => '', 'image_opacity' => 0.08, 'image_fit' => 'cover'],
+            'background' => $defaultBackground,
             'elements' => [
                 ['id' => 'titulo', 'type' => 'text', 'x_mm' => 24, 'y_mm' => 34, 'w_mm' => 162, 'h_mm' => 16, 'text' => 'Documento de {{client.name}}', 'font_size_pt' => 16, 'font_weight' => '700', 'line_height' => 1.2, 'align' => 'center', 'color' => '#111827', 'opacity' => 1],
                 ['id' => 'corpo', 'type' => 'text', 'x_mm' => 24, 'y_mm' => 64, 'w_mm' => 162, 'h_mm' => 120, 'text' => "Cliente: {{client.name}}\nCPF/CNPJ: {{client.document_number}}\nDocumento emitido em {{system.current_date}} por {{generator.name}}.", 'font_size_pt' => 11, 'font_weight' => '400', 'line_height' => 1.45, 'align' => 'justify', 'color' => '#111827', 'opacity' => 1],

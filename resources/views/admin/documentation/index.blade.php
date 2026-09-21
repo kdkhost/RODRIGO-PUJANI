@@ -151,7 +151,12 @@
 
         <section id="changelog" class="card admin-table-card admin-docs-section">
             <div class="card-header"><div><div class="admin-card-kicker">Evolução do sistema</div><h2 class="card-title">Histórico de versões</h2></div><span class="badge text-bg-primary">Atual</span></div>
-            <div class="card-body"><div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
+            <div class="card-body admin-card-flow">
+                <div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.2</strong><span class="text-muted small">21/09/2026</span></div>
+                    <ul class="text-muted mb-0 ps-3"><li>Gerador visual de documentos remodelado com upload de papel timbrado mais intuitivo, prévia imediata e ações de limpar, aplicar padrão e salvar como padrão.</li><li>Papel timbrado padrão dos documentos salvo no banco de dados pelo painel administrativo, sem uso de <code>.env</code>, reaplicado automaticamente nos novos templates.</li><li>Editor Summernote incluído nos elementos de texto do documento, com HTML sanitizado, tokens seguros e renderização preservada no PDF A4.</li></ul>
+                </div></div>
+                <div class="admin-docs-release"><div class="admin-docs-release-marker"></div><div>
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><strong>Versão 2.5.1</strong><span class="text-muted small">20/09/2026</span></div>
                 <ul class="text-muted mb-0 ps-3"><li>Assinatura eletrônica configurável pelo painel administrativo.</li><li>Leitura do PDF original antes do aceite e assinatura.</li><li>Cópia automática do PDF assinado enviada por e-mail ao concluir a solicitação.</li><li>Relatório operacional e histórico atualizados para refletir o novo fluxo.</li></ul>
             </div></div></div>

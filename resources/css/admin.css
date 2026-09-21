@@ -3878,6 +3878,13 @@ img.admin-avatar {
     transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
+.legal-doc-bg-workspace {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.9fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: stretch;
+}
+
 .legal-doc-bg-drop:hover,
 .legal-doc-bg-drop:focus-visible,
 .legal-doc-bg-drop.is-dragging {
@@ -3915,8 +3922,100 @@ img.admin-avatar {
     color: #b42318;
 }
 
+.legal-doc-bg-status {
+    color: var(--admin-muted);
+    font-size: 0.75rem;
+}
+
+.legal-doc-bg-status[data-state="success"] {
+    color: #147d52;
+}
+
+.legal-doc-bg-status[data-state="error"] {
+    color: #b42318;
+}
+
+.legal-doc-bg-status[data-state="loading"] {
+    color: var(--admin-primary);
+}
+
+.legal-doc-bg-preview {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: center;
+    min-width: 0;
+    padding: 0.65rem;
+    border: 1px solid rgba(196, 154, 60, 0.18);
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, rgba(196, 154, 60, 0.08), rgba(15, 23, 42, 0.025));
+}
+
+.legal-doc-bg-preview-frame {
+    position: relative;
+    width: 70px;
+    aspect-ratio: 210 / 297;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(196, 154, 60, 0.22);
+    border-radius: 0.45rem;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.legal-doc-bg-preview-frame img {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.legal-doc-bg-preview-frame i {
+    color: var(--admin-primary);
+    font-size: 1.35rem;
+}
+
+.legal-doc-bg-preview[data-empty="false"] .legal-doc-bg-preview-frame img {
+    display: block;
+}
+
+.legal-doc-bg-preview[data-empty="false"] .legal-doc-bg-preview-frame i {
+    display: none;
+}
+
+.legal-doc-bg-preview strong,
+.legal-doc-bg-preview small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.legal-doc-bg-preview strong {
+    color: var(--admin-ink);
+    font-size: 0.82rem;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.legal-doc-bg-preview small {
+    color: var(--admin-muted);
+    font-size: 0.72rem;
+}
+
+.legal-doc-bg-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
 [data-bs-theme="dark"] .legal-doc-bg-drop {
     background: rgba(255, 255, 255, 0.04);
+}
+
+[data-bs-theme="dark"] .legal-doc-bg-preview {
+    background: rgba(255, 255, 255, 0.035);
 }
 
 .legal-doc-designer-grid {
@@ -4006,6 +4105,38 @@ img.admin-avatar {
 .legal-doc-element-text {
     white-space: pre-wrap;
     padding: 2px;
+}
+
+.legal-doc-element-text:has(p),
+.legal-doc-element-text:has(ul),
+.legal-doc-element-text:has(ol),
+.legal-doc-element-text:has(table) {
+    white-space: normal;
+}
+
+.legal-doc-element-text p {
+    margin: 0 0 0.35em;
+}
+
+.legal-doc-element-text p:last-child {
+    margin-bottom: 0;
+}
+
+.legal-doc-element-text ul,
+.legal-doc-element-text ol {
+    margin: 0 0 0.35em 1.25em;
+    padding: 0;
+}
+
+.legal-doc-element-text table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.legal-doc-element-text th,
+.legal-doc-element-text td {
+    padding: 0.18em 0.28em;
+    border: 1px solid rgba(17, 24, 39, 0.22);
 }
 
 .legal-doc-element-signature {
@@ -4263,6 +4394,10 @@ img.admin-avatar {
 
     .legal-doc-guide-fields {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .legal-doc-bg-workspace {
+        grid-template-columns: 1fr;
     }
 }
 

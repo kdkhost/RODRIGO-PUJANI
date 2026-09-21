@@ -91,6 +91,10 @@ class SettingsSeeder extends Seeder
             ['group' => 'signatures', 'key' => 'signatures.default_expiration_days', 'label' => 'Prazo padrão da solicitação', 'type' => 'text', 'value' => '7', 'is_public' => false],
             ['group' => 'signatures', 'key' => 'signatures.token_expiration_hours', 'label' => 'Validade do link individual', 'type' => 'text', 'value' => '72', 'is_public' => false],
 
+            ['group' => 'legal_documents', 'key' => 'legal_documents.default_background_path', 'label' => 'Papel timbrado padrão dos documentos', 'type' => 'text', 'value' => '', 'is_public' => false],
+            ['group' => 'legal_documents', 'key' => 'legal_documents.default_background_opacity', 'label' => 'Opacidade padrão do papel timbrado', 'type' => 'text', 'value' => '0.08', 'is_public' => false],
+            ['group' => 'legal_documents', 'key' => 'legal_documents.default_background_fit', 'label' => 'Encaixe padrão do papel timbrado', 'type' => 'text', 'value' => 'cover', 'is_public' => false],
+
             ['group' => 'preloader', 'key' => 'preloader.enabled', 'label' => 'Ativar preloader', 'type' => 'boolean', 'value' => '0', 'is_public' => true],
             ['group' => 'preloader', 'key' => 'preloader.scope', 'label' => 'Exibicao', 'type' => 'text', 'value' => 'all', 'is_public' => true],
             ['group' => 'preloader', 'key' => 'preloader.style', 'label' => 'Estilo', 'type' => 'text', 'value' => 'spinner', 'is_public' => true],
