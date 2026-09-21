@@ -81,13 +81,14 @@ class LegalDocumentTemplateDefinition
     private function normalizeBackground(mixed $background): array
     {
         $background = is_array($background) ? $background : [];
+        $imageFit = $background['image_fit'] ?? 'cover';
 
         return [
             'color' => $this->color((string) ($background['color'] ?? '#ffffff'), '#ffffff'),
             'image_path' => $this->path($background['image_path'] ?? null),
             'image_opacity' => $this->number($background['image_opacity'] ?? 0.08, 0, 1),
-            'image_fit' => in_array(($background['image_fit'] ?? 'cover'), ['contain', 'cover', 'stretch'], true)
-                ? $background['image_fit']
+            'image_fit' => in_array($imageFit, ['contain', 'cover', 'stretch'], true)
+                ? $imageFit
                 : 'cover',
         ];
     }

@@ -229,10 +229,7 @@ class LegalDocumentGeneratorTest extends TestCase
                     'width_mm' => 210,
                     'height_mm' => 297,
                     'background' => [
-                        'color' => '#ffffff',
                         'image_path' => 'uploads/legal-document-backgrounds/papel-timbrado.png',
-                        'image_opacity' => 0.25,
-                        'image_fit' => 'cover',
                     ],
                     'elements' => [],
                 ],
@@ -248,6 +245,8 @@ class LegalDocumentGeneratorTest extends TestCase
         $storedDefinition = $template->versions()->firstOrFail()->definition;
 
         $this->assertCount(1, $storedDefinition['pages'][0]['elements']);
+        $this->assertSame('cover', $storedDefinition['pages'][1]['background']['image_fit']);
+        $this->assertSame(0.08, $storedDefinition['pages'][1]['background']['image_opacity']);
         $this->assertSame('text', $storedDefinition['pages'][0]['elements'][0]['type']);
         $this->assertCount(2, $storedDefinition['pages'][1]['elements']);
         $this->assertSame('assinatura-cliente', $storedDefinition['pages'][1]['elements'][0]['id']);
