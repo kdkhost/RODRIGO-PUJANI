@@ -2512,6 +2512,13 @@ function initLegalDocumentDesigners(scope = document) {
             grid: { visible: false, snap: false, size_mm: 5 },
             margins: { enabled: false, free_positioning: false, top_mm: 20, right_mm: 20, bottom_mm: 20, left_mm: 20 },
         });
+        const defaultBackground = () => ({ color: '#ffffff', image_path: '', image_opacity: 0.08, image_fit: 'cover' });
+        const cloneBackground = (page = null) => ({
+            color: page?.background?.color || '#ffffff',
+            image_path: page?.background?.image_path || '',
+            image_opacity: Number(page?.background?.image_opacity ?? 0.08),
+            image_fit: page?.background?.image_fit || 'cover',
+        });
 
         const fallbackDefinition = (legacy = null) => {
             const legacyText = Array.isArray(legacy?.blocks)
@@ -2534,7 +2541,7 @@ function initLegalDocumentDesigners(scope = document) {
             pages: [{
                 width_mm: pageSize.width,
                 height_mm: pageSize.height,
-                background: { color: '#ffffff', image_path: '', image_opacity: 0.08, image_fit: 'cover' },
+                background: defaultBackground(),
                 elements: [{
                     id: uniqueId('texto'),
                     type: 'text',
@@ -2600,12 +2607,7 @@ function initLegalDocumentDesigners(scope = document) {
             parsed.pages = parsed.pages.map((page) => ({
                 width_mm: pageSize.width,
                 height_mm: pageSize.height,
-                background: {
-                    color: page.background?.color || '#ffffff',
-                    image_path: page.background?.image_path || '',
-                    image_opacity: Number(page.background?.image_opacity ?? 0.08),
-                    image_fit: page.background?.image_fit || 'cover',
-                },
+                background: cloneBackground(page),
                 elements: Array.isArray(page.elements) ? page.elements : [],
             }));
 
@@ -2668,6 +2670,37 @@ function initLegalDocumentDesigners(scope = document) {
             const y = snapMm(element.y_mm);
             element.x_mm = round(clamp(x, bounds.left, Math.max(bounds.left, bounds.right - element.w_mm)));
             element.y_mm = round(clamp(y, bounds.top, Math.max(bounds.top, bounds.bottom - element.h_mm)));
+        };
+        const moveSignaturesToLastPage = () => {
+            if (definition.pages.length < 2) {
+                return;
+            }
+
+            const lastPageIndex = definition.pages.length - 1;
+            const lastPage = definition.pages[lastPageIndex];
+            let selectedSignatureMoved = false;
+
+            definition.pages.forEach((page, pageIndex) => {
+                if (pageIndex === lastPageIndex) {
+                    return;
+                }
+
+                const keptElements = [];
+                (page.elements || []).forEach((element) => {
+                    if (element.type === 'signature') {
+                        lastPage.elements.push({ ...element });
+                        selectedSignatureMoved = selectedSignatureMoved || selected.id === element.id;
+                        return;
+                    }
+
+                    keptElements.push(element);
+                });
+                page.elements = keptElements;
+            });
+
+            if (selectedSignatureMoved) {
+                selected.page = lastPageIndex;
+            }
         };
         const sync = () => {
             const json = JSON.stringify(definition, null, 2);
@@ -2988,7 +3021,12 @@ function initLegalDocumentDesigners(scope = document) {
                     if (definition.pages.length <= 1) {
                         return;
                     }
-                    definition.pages.splice(index, 1);
+                    const [removedPage] = definition.pages.splice(index, 1);
+                    const removedSignatures = (removedPage?.elements || []).filter((element) => element.type === 'signature');
+                    if (removedSignatures.length > 0) {
+                        definition.pages[definition.pages.length - 1].elements.push(...removedSignatures.map((element) => ({ ...element })));
+                    }
+                    moveSignaturesToLastPage();
                     selected = { page: Math.max(0, index - 1), id: null };
                     render();
                 });
@@ -3000,13 +3038,18 @@ function initLegalDocumentDesigners(scope = document) {
         });
 
         designer.querySelector('[data-doc-add-page]')?.addEventListener('click', () => {
+            const sourcePage = currentPage();
             definition.pages.push({
                 width_mm: pageSize.width,
                 height_mm: pageSize.height,
-                background: { color: '#ffffff', image_path: '', image_opacity: 0.08, image_fit: 'cover' },
+                background: cloneBackground(sourcePage),
                 elements: [],
             });
             selected = { page: definition.pages.length - 1, id: null };
+            moveSignaturesToLastPage();
+            if (sourcePage?.background?.image_path) {
+                setBackgroundStatus('Nova página criada com o mesmo papel timbrado; assinaturas movidas para a última folha.', 'success');
+            }
             render();
         });
 

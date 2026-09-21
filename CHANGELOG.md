@@ -2,6 +2,21 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.18] - 2026-09-21
+
+### Adicionado
+- Nova página do editor visual passa a copiar automaticamente o papel timbrado/fundo da página atual, incluindo opacidade e encaixe.
+- Campos de assinatura do cliente e testemunhas passam a ser levados automaticamente para a última folha do documento ao criar ou normalizar múltiplas páginas.
+
+### Alterado
+- Remoção de páginas no editor preserva campos de assinatura, reposicionando-os na nova última folha quando necessário.
+- Normalização backend dos templates visuais reforçada para manter assinaturas sempre na última página, mesmo quando o JSON for editado manualmente.
+
+### Validação
+- `php artisan test --filter LegalDocumentGeneratorTest`: aprovado.
+- `php artisan view:cache`: aprovado.
+- `npm run build`: aprovado, mantendo apenas avisos conhecidos de chunk grande e imagem premium resolvida em runtime.
+
 ## [1.0.17] - 2026-09-21
 
 ### Adicionado

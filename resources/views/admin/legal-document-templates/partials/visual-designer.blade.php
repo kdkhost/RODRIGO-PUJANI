@@ -15,8 +15,9 @@
             <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="line">Linha</button>
             <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="rectangle">Caixa</button>
             <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="logo" data-logo-path="{{ $brandLogo }}">Logo</button>
-            <button class="btn btn-sm btn-outline-secondary" type="button" data-doc-add-page><i class="bi bi-file-earmark-plus me-1"></i>Nova página</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-doc-add-page title="Cria uma nova página copiando o fundo atual e leva assinaturas para a última folha."><i class="bi bi-file-earmark-plus me-1"></i>Nova página</button>
         </div>
+        <small class="legal-doc-designer-hint">Nova página copia automaticamente o papel timbrado atual e mantém assinaturas/testemunhas na última folha.</small>
     </div>
 
     <div class="legal-doc-designer-toolbar">

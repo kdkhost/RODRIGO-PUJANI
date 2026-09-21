@@ -38,6 +38,11 @@ class LegalDocumentTemplateDefinition
             $this->fail('O editor visual deve conter entre 1 e 20 páginas.');
         }
 
+        $normalizedPages = collect($pages)
+            ->values()
+            ->map(fn (mixed $page, int $index): array => $this->normalizePage($page, $index))
+            ->all();
+
         return [
             'layout' => 'absolute',
             'unit' => 'mm',
@@ -47,10 +52,7 @@ class LegalDocumentTemplateDefinition
                 'height_mm' => 297,
             ],
             'guides' => $this->normalizeGuides($definition['guides'] ?? []),
-            'pages' => collect($pages)
-                ->values()
-                ->map(fn (mixed $page, int $index): array => $this->normalizePage($page, $index))
-                ->all(),
+            'pages' => $this->moveSignaturesToLastPage($normalizedPages),
         ];
     }
 
@@ -111,6 +113,44 @@ class LegalDocumentTemplateDefinition
                 'left_mm' => $this->number($margins['left_mm'] ?? 20, 0, 120),
             ],
         ];
+    }
+
+    private function moveSignaturesToLastPage(array $pages): array
+    {
+        if (count($pages) < 2) {
+            return $pages;
+        }
+
+        $lastPageIndex = array_key_last($pages);
+        $signatureElements = [];
+
+        foreach ($pages as $index => $page) {
+            if ($index === $lastPageIndex) {
+                continue;
+            }
+
+            $keptElements = [];
+            foreach ($page['elements'] ?? [] as $element) {
+                if (($element['type'] ?? null) === 'signature') {
+                    $signatureElements[] = $element;
+
+                    continue;
+                }
+
+                $keptElements[] = $element;
+            }
+
+            $pages[$index]['elements'] = $keptElements;
+        }
+
+        if ($signatureElements !== []) {
+            $pages[$lastPageIndex]['elements'] = array_values([
+                ...($pages[$lastPageIndex]['elements'] ?? []),
+                ...$signatureElements,
+            ]);
+        }
+
+        return $pages;
     }
 
     private function normalizeVisualElement(mixed $element, int $pageIndex, int $elementIndex): array

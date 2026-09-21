@@ -130,6 +130,7 @@ class LegalDocumentGeneratorTest extends TestCase
             ->assertSee('Editor visual milimétrico')
             ->assertSee('Grade e margens')
             ->assertSee('Ajuste livre fora da margem')
+            ->assertSee('Nova página copia automaticamente o papel timbrado atual')
             ->assertSee('data-document-designer', false)
             ->assertSee('data-doc-grid-visible', false)
             ->assertSee(route('admin.legal-document-templates.background-upload'), false);
@@ -161,6 +162,100 @@ class LegalDocumentGeneratorTest extends TestCase
         } finally {
             File::deleteDirectory(public_path('uploads/legal-document-backgrounds'));
         }
+    }
+
+    public function test_visual_template_moves_signature_fields_to_last_page_preserving_position(): void
+    {
+        $actor = $this->actor();
+        $definition = [
+            'layout' => 'absolute',
+            'unit' => 'mm',
+            'paper' => ['size' => 'A4', 'width_mm' => 210, 'height_mm' => 297],
+            'pages' => [
+                [
+                    'width_mm' => 210,
+                    'height_mm' => 297,
+                    'background' => [
+                        'color' => '#ffffff',
+                        'image_path' => 'uploads/legal-document-backgrounds/papel-timbrado.png',
+                        'image_opacity' => 0.25,
+                        'image_fit' => 'cover',
+                    ],
+                    'elements' => [
+                        [
+                            'id' => 'corpo',
+                            'type' => 'text',
+                            'x_mm' => 22,
+                            'y_mm' => 38,
+                            'w_mm' => 166,
+                            'h_mm' => 110,
+                            'text' => 'Documento de {{client.name}}.',
+                            'font_size_pt' => 11,
+                            'font_weight' => '400',
+                            'line_height' => 1.35,
+                            'align' => 'justify',
+                            'color' => '#111827',
+                            'opacity' => 1,
+                        ],
+                        [
+                            'id' => 'assinatura-cliente',
+                            'type' => 'signature',
+                            'x_mm' => 38,
+                            'y_mm' => 232,
+                            'w_mm' => 82,
+                            'h_mm' => 24,
+                            'label' => 'Assinatura do cliente',
+                            'signer_order' => 1,
+                            'required' => true,
+                            'border_color' => '#111827',
+                            'opacity' => 1,
+                        ],
+                        [
+                            'id' => 'testemunha',
+                            'type' => 'signature',
+                            'x_mm' => 126,
+                            'y_mm' => 232,
+                            'w_mm' => 54,
+                            'h_mm' => 24,
+                            'label' => 'Testemunha',
+                            'signer_order' => 2,
+                            'required' => false,
+                            'border_color' => '#111827',
+                            'opacity' => 1,
+                        ],
+                    ],
+                ],
+                [
+                    'width_mm' => 210,
+                    'height_mm' => 297,
+                    'background' => [
+                        'color' => '#ffffff',
+                        'image_path' => 'uploads/legal-document-backgrounds/papel-timbrado.png',
+                        'image_opacity' => 0.25,
+                        'image_fit' => 'cover',
+                    ],
+                    'elements' => [],
+                ],
+            ],
+        ];
+
+        $template = app(LegalDocumentTemplateManager::class)->create(
+            $actor,
+            $this->metadata('assinaturas-ultima-pagina', LegalDocumentTemplate::CONTEXT_CLIENT, LegalDocumentTemplate::FORMAT_PDF),
+            'Documento de {{client.name}}',
+            $definition
+        );
+        $storedDefinition = $template->versions()->firstOrFail()->definition;
+
+        $this->assertCount(1, $storedDefinition['pages'][0]['elements']);
+        $this->assertSame('text', $storedDefinition['pages'][0]['elements'][0]['type']);
+        $this->assertCount(2, $storedDefinition['pages'][1]['elements']);
+        $this->assertSame('assinatura-cliente', $storedDefinition['pages'][1]['elements'][0]['id']);
+        $this->assertEquals(38.0, $storedDefinition['pages'][1]['elements'][0]['x_mm']);
+        $this->assertEquals(232.0, $storedDefinition['pages'][1]['elements'][0]['y_mm']);
+        $this->assertSame('testemunha', $storedDefinition['pages'][1]['elements'][1]['id']);
+        $this->assertEquals(126.0, $storedDefinition['pages'][1]['elements'][1]['x_mm']);
+        $this->assertEquals(232.0, $storedDefinition['pages'][1]['elements'][1]['y_mm']);
     }
 
     public function test_published_versions_are_immutable_and_a_new_version_preserves_the_original(): void

@@ -4099,6 +4099,14 @@ img.admin-avatar {
     gap: 0.45rem;
 }
 
+.legal-doc-designer-hint {
+    display: block;
+    width: 100%;
+    color: var(--admin-muted);
+    font-size: 0.78rem;
+    text-align: right;
+}
+
 .legal-doc-designer-toolbar {
     grid-template-columns: minmax(280px, 1fr) minmax(300px, 1.1fr) minmax(220px, 0.75fr);
     align-items: stretch;
@@ -4247,6 +4255,10 @@ img.admin-avatar {
 
     .legal-doc-designer-actions {
         justify-content: flex-start;
+    }
+
+    .legal-doc-designer-hint {
+        text-align: left;
     }
 
     .legal-doc-guide-fields {
