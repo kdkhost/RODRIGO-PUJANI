@@ -10,12 +10,13 @@ class SignedPdfGenerator
 {
     public function generate(string $sourcePath, SignatureRequest $request): string
     {
-        $request->loadMissing(['document', 'signers']);
+        $request->loadMissing(['document', 'signers', 'legalDocument.generation.templateVersion']);
         $pdf = new Fpdi('P', 'mm');
         $pdf->SetTitle($this->latin('Documento assinado eletronicamente'));
         $pdf->SetAuthor($this->latin((string) config('app.name')));
         $pdf->SetCreator($this->latin('Central Jurídica'));
         $pdf->SetAutoPageBreak(true, 18);
+        $placements = $this->signaturePlacements($request);
 
         try {
             $pageCount = $pdf->setSourceFile($sourcePath);
@@ -25,6 +26,7 @@ class SignedPdfGenerator
                 $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
                 $pdf->AddPage($orientation, [$size['width'], $size['height']]);
                 $pdf->useTemplate($template);
+                $this->drawSignaturesOnPage($pdf, $request, $placements[$page] ?? []);
             }
         } catch (\Throwable $exception) {
             throw new RuntimeException('Não foi possível incorporar o PDF original ao documento assinado.', previous: $exception);
@@ -33,6 +35,64 @@ class SignedPdfGenerator
         $this->appendCertificate($pdf, $request);
 
         return $pdf->Output('S');
+    }
+
+    private function drawSignaturesOnPage(Fpdi $pdf, SignatureRequest $request, array $placements): void
+    {
+        if ($placements === []) {
+            return;
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('legal_documents');
+        foreach ($placements as $placement) {
+            $signer = $request->signers->firstWhere('signing_order', (int) ($placement['signer_order'] ?? 1));
+            if (! $signer?->signature_image_path || ! $disk->exists($signer->signature_image_path)) {
+                continue;
+            }
+
+            $x = (float) ($placement['x_mm'] ?? 0);
+            $y = (float) ($placement['y_mm'] ?? 0);
+            $w = max(8, (float) ($placement['w_mm'] ?? 40));
+            $h = max(6, (float) ($placement['h_mm'] ?? 16));
+            $paddingX = min(3, $w * 0.08);
+            $paddingY = min(3, $h * 0.18);
+
+            $pdf->Image(
+                $disk->path($signer->signature_image_path),
+                $x + $paddingX,
+                $y + $paddingY,
+                max(1, $w - ($paddingX * 2)),
+                max(1, $h - ($paddingY * 2)),
+                'PNG'
+            );
+        }
+    }
+
+    private function signaturePlacements(SignatureRequest $request): array
+    {
+        $definition = $request->legalDocument?->generation?->templateVersion?->definition;
+        if (! is_array($definition) || ($definition['layout'] ?? null) !== 'absolute') {
+            return [];
+        }
+
+        $placements = [];
+        foreach (($definition['pages'] ?? []) as $pageIndex => $page) {
+            foreach (($page['elements'] ?? []) as $element) {
+                if (($element['type'] ?? null) !== 'signature') {
+                    continue;
+                }
+
+                $placements[$pageIndex + 1][] = [
+                    'signer_order' => (int) ($element['signer_order'] ?? 1),
+                    'x_mm' => (float) ($element['x_mm'] ?? 0),
+                    'y_mm' => (float) ($element['y_mm'] ?? 0),
+                    'w_mm' => (float) ($element['w_mm'] ?? 40),
+                    'h_mm' => (float) ($element['h_mm'] ?? 16),
+                ];
+            }
+        }
+
+        return $placements;
     }
 
     private function appendCertificate(Fpdi $pdf, SignatureRequest $request): void

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\LegalDocumentTemplate;
 use App\Services\LegalDocumentTemplateManager;
 use App\Services\LegalDocumentTokenEngine;
+use App\Support\PublicUpload;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -46,6 +48,28 @@ class LegalDocumentTemplateController extends Controller
         $this->authorize('create', LegalDocumentTemplate::class);
 
         return $this->formView(new LegalDocumentTemplate(), $tokens, 'Novo template jurídico');
+    }
+
+    public function uploadBackground(Request $request): JsonResponse
+    {
+        $this->authorize('create', LegalDocumentTemplate::class);
+
+        $validated = $request->validate([
+            'background' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+        ]);
+
+        $file = $validated['background'];
+        $originalName = $file->getClientOriginalName();
+        $size = $file->getSize();
+        $path = PublicUpload::store($file, 'legal-document-backgrounds', null, $request->user()?->id);
+
+        return response()->json([
+            'message' => 'Plano de fundo enviado com sucesso.',
+            'path' => $path,
+            'url' => asset($path),
+            'original_name' => $originalName,
+            'size' => $size,
+        ]);
     }
 
     public function store(

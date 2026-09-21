@@ -111,12 +111,20 @@ class ElectronicSignatureService
             }
             $this->assertDocumentIntegrity($request->document);
             $terms = (string) ($evidence['terms_text'] ?? 'Declaro que li e concordo em assinar eletronicamente este documento.');
+            $signatureImage = $this->storeDrawnSignature($request, $signer, $evidence);
             $signer->update([
                 'status' => 'signed', 'signed_at' => now(), 'token_hash' => null, 'token_expires_at' => null,
                 'ip_address' => $evidence['ip_address'] ?? null, 'user_agent' => Str::limit((string) ($evidence['user_agent'] ?? ''), 1000, ''),
                 'terms_version' => config('signatures.terms_version', '1.0'), 'terms_hash' => hash('sha256', $terms),
+                'signature_image_path' => $signatureImage['path'] ?? $signer->signature_image_path,
+                'signature_image_sha256' => $signatureImage['sha256'] ?? $signer->signature_image_sha256,
+                'signature_metrics' => $signatureImage['metrics'] ?? $signer->signature_metrics,
             ]);
-            $this->event($request, $signer, 'signed', ['name' => $signer->name, 'terms_hash' => $signer->terms_hash]);
+            $this->event($request, $signer, 'signed', [
+                'name' => $signer->name,
+                'terms_hash' => $signer->terms_hash,
+                'signature_image_sha256' => $signatureImage['sha256'] ?? null,
+            ]);
             if (! $request->signers()->where('status', '!=', 'signed')->exists()) {
                 $this->complete($request);
             } elseif ($request->ordered) {
@@ -239,7 +247,16 @@ class ElectronicSignatureService
         $evidence = json_encode([
             'request_uuid' => $request->public_uuid, 'document_sha256' => $document->sha256,
             'completed_document_sha256' => $completedSha256, 'completed_at' => $completedAt->toIso8601String(),
-            'signers' => $request->signers->map(fn ($s) => ['uuid' => $s->public_uuid, 'name' => $s->name, 'email' => $s->email, 'signed_at' => $s->signed_at?->toIso8601String(), 'ip' => $s->ip_address, 'terms_hash' => $s->terms_hash])->all(),
+            'signers' => $request->signers->map(fn ($s) => [
+                'uuid' => $s->public_uuid,
+                'name' => $s->name,
+                'email' => $s->email,
+                'signed_at' => $s->signed_at?->toIso8601String(),
+                'ip' => $s->ip_address,
+                'terms_hash' => $s->terms_hash,
+                'signature_image_sha256' => $s->signature_image_sha256,
+                'signature_metrics' => $s->signature_metrics,
+            ])->all(),
             'events' => $request->events->map(fn ($e) => ['type' => $e->type, 'at' => $e->occurred_at?->toIso8601String(), 'document_hash' => $e->document_hash])->all(),
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($evidence === false) {
@@ -266,6 +283,23 @@ class ElectronicSignatureService
         if (! $this->documentIsIntact($document)) {
             throw ValidationException::withMessages(['document' => 'A integridade do documento foi violada.']);
         }
+    }
+
+    private function storeDrawnSignature(SignatureRequest $request, SignatureSigner $signer, array $evidence): ?array
+    {
+        $binary = $evidence['signature_image'] ?? null;
+        if (! is_string($binary) || $binary === '') {
+            return null;
+        }
+
+        $path = 'signatures/'.$request->public_uuid.'/signatures/'.$signer->public_uuid.'.png';
+        Storage::disk('legal_documents')->put($path, $binary);
+
+        return [
+            'path' => $path,
+            'sha256' => hash('sha256', $binary),
+            'metrics' => is_array($evidence['signature_metrics'] ?? null) ? $evidence['signature_metrics'] : null,
+        ];
     }
 
     private function documentIsIntact(SignatureDocument $document): bool

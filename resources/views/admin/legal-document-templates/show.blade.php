@@ -3,6 +3,8 @@
 @php
     $latestVersion = $template->versions->sortByDesc('version')->first();
     $latestDefinition = json_encode($latestVersion?->definition ?? ['blocks' => []], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $branding = branding_config();
+    $brandLogo = $branding['logo_path'] ?? '';
 @endphp
 
 @section('content')
@@ -60,10 +62,65 @@
                                         <label class="form-label" for="title_template">Título do documento</label>
                                         <input class="form-control" id="title_template" name="title_template" maxlength="255" required value="{{ old('title_template', $latestVersion?->title_template) }}">
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label" for="definition_json">Estrutura JSON</label>
-                                        <textarea class="form-control font-monospace" id="definition_json" name="definition_json" rows="16" required>{{ old('definition_json', $latestDefinition) }}</textarea>
+                                    <div class="legal-doc-designer" data-document-designer data-brand-logo="{{ $brandLogo }}" data-background-upload-url="{{ route('admin.legal-document-templates.background-upload') }}" data-csrf-token="{{ csrf_token() }}">
+                                        <div class="legal-doc-designer-toolbar">
+                                            <div>
+                                                <label class="form-label mb-1">Papel timbrado / fundo da página</label>
+                                                <input class="form-control form-control-sm" data-doc-bg-path placeholder="Ex.: storage/branding/papel-timbrado.png">
+                                                <div class="legal-doc-bg-drop mt-2" data-doc-bg-drop role="button" tabindex="0">
+                                                    <input type="file" accept="image/png,image/jpeg,image/webp" hidden data-doc-bg-file>
+                                                    <i class="bi bi-cloud-arrow-up"></i>
+                                                    <span>Arraste o papel timbrado aqui ou clique para enviar</span>
+                                                    <small data-doc-bg-status>PNG, JPG ou WEBP até 10 MB. Aplicado na página selecionada.</small>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="form-label mb-1">Opacidade do fundo</label>
+                                                <input class="form-range" type="range" min="0" max="1" step="0.01" data-doc-bg-opacity>
+                                            </div>
+                                            <div>
+                                                <label class="form-label mb-1">Encaixe no A4</label>
+                                                <select class="form-select form-select-sm" data-doc-bg-fit>
+                                                    <option value="cover">Ocupar A4 inteiro</option>
+                                                    <option value="contain">Conter sem cortar</option>
+                                                    <option value="stretch">Esticar</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="text">Texto</button>
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="signature">Assinatura</button>
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="line">Linha</button>
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="rectangle">Caixa</button>
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-doc-add="logo" data-logo-path="{{ $brandLogo }}">Logo</button>
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-doc-add-page>Nova página</button>
+                                        </div>
+                                        <div class="legal-doc-designer-grid">
+                                            <div class="legal-doc-page-list" data-doc-pages></div>
+                                            <aside class="legal-doc-inspector">
+                                                <h3 class="h6">Item selecionado</h3>
+                                                <div class="row g-2">
+                                                    <div class="col-6"><label class="form-label">X mm</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="x_mm"></div>
+                                                    <div class="col-6"><label class="form-label">Y mm</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="y_mm"></div>
+                                                    <div class="col-6"><label class="form-label">Largura</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="w_mm"></div>
+                                                    <div class="col-6"><label class="form-label">Altura</label><input class="form-control form-control-sm" type="number" step="0.1" data-doc-field="h_mm"></div>
+                                                    <div class="col-6"><label class="form-label">Opacidade</label><input class="form-control form-control-sm" type="number" min="0" max="1" step="0.01" data-doc-field="opacity"></div>
+                                                    <div class="col-6" data-doc-type-field="text"><label class="form-label">Fonte</label><input class="form-control form-control-sm" type="number" step="0.5" data-doc-field="font_size_pt"></div>
+                                                    <div class="col-12" data-doc-type-field="text"><label class="form-label">Texto</label><textarea class="form-control form-control-sm" rows="4" data-doc-field="text"></textarea></div>
+                                                    <div class="col-12" data-doc-type-field="signature"><label class="form-label">Rótulo</label><input class="form-control form-control-sm" data-doc-field="label"></div>
+                                                    <div class="col-6" data-doc-type-field="signature"><label class="form-label">Ordem</label><input class="form-control form-control-sm" type="number" min="1" step="1" data-doc-field="signer_order"></div>
+                                                    <div class="col-6" data-doc-type-field="signature"><label class="form-label">Obrigatório</label><select class="form-select form-select-sm" data-doc-field="required"><option value="true">Sim</option><option value="false">Opcional/testemunha</option></select></div>
+                                                    <div class="col-12" data-doc-type-field="image"><label class="form-label">Imagem</label><input class="form-control form-control-sm" data-doc-field="image_path"></div>
+                                                    <div class="col-12"><button class="btn btn-sm btn-outline-danger" type="button" data-doc-remove>Remover item</button></div>
+                                                </div>
+                                            </aside>
+                                        </div>
                                     </div>
+                                    <textarea class="form-control font-monospace mt-3" id="definition_json" name="definition_json" rows="10" required hidden>{{ old('definition_json', $latestDefinition) }}</textarea>
+                                    <details class="mt-3">
+                                        <summary>Avançado: ver JSON gerado automaticamente</summary>
+                                        <textarea class="form-control font-monospace mt-2" rows="10" data-doc-json-mirror readonly></textarea>
+                                    </details>
                                     <button class="btn btn-primary" type="submit">Publicar versão {{ ((int) $latestVersion?->version) + 1 }}</button>
                                 </form>
                             </div>

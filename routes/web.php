@@ -280,6 +280,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [LegalDocumentTemplateController::class, 'index'])->middleware('permission:legal-document-templates.view')->name('index');
         Route::get('/create', [LegalDocumentTemplateController::class, 'create'])->middleware('permission:legal-document-templates.manage')->name('create');
         Route::post('/', [LegalDocumentTemplateController::class, 'store'])->middleware('permission:legal-document-templates.manage')->name('store');
+        Route::post('/background-upload', [LegalDocumentTemplateController::class, 'uploadBackground'])->middleware('permission:legal-document-templates.manage')->name('background-upload');
         Route::get('/{legalDocumentTemplate}', [LegalDocumentTemplateController::class, 'show'])->middleware('permission:legal-document-templates.view')->name('show');
         Route::get('/{legalDocumentTemplate}/edit', [LegalDocumentTemplateController::class, 'edit'])->middleware('permission:legal-document-templates.manage')->name('edit');
         Route::put('/{legalDocumentTemplate}', [LegalDocumentTemplateController::class, 'update'])->middleware('permission:legal-document-templates.manage')->name('update');

@@ -78,6 +78,7 @@ const AdminUI = {
         this.initPlugins(document);
         bindDeviceAuditFields(document);
         this.initAjaxTables(document);
+        initLegalDocumentDesigners(document);
     },
 
     showToast(type, message) {
@@ -2474,6 +2475,454 @@ const AdminUI = {
         }
     },
 };
+
+function initLegalDocumentDesigners(scope = document) {
+    scope.querySelectorAll('[data-document-designer]').forEach((designer) => {
+        if (designer.dataset.ready === 'true') {
+            return;
+        }
+
+        designer.dataset.ready = 'true';
+        const form = designer.closest('form');
+        const textarea = form?.querySelector('textarea[name="definition_json"]');
+        const mirror = form?.querySelector('[data-doc-json-mirror]');
+        const outputFormat = form?.querySelector('select[name="default_output_format"]');
+        const pagesRoot = designer.querySelector('[data-doc-pages]');
+        const inspector = designer.querySelector('.legal-doc-inspector');
+        const fields = Array.from(designer.querySelectorAll('[data-doc-field]'));
+        const bgPath = designer.querySelector('[data-doc-bg-path]');
+        const bgOpacity = designer.querySelector('[data-doc-bg-opacity]');
+        const bgFit = designer.querySelector('[data-doc-bg-fit]');
+        const bgDrop = designer.querySelector('[data-doc-bg-drop]');
+        const bgFile = designer.querySelector('[data-doc-bg-file]');
+        const bgStatus = designer.querySelector('[data-doc-bg-status]');
+        const uploadUrl = designer.dataset.backgroundUploadUrl || '';
+        const csrfToken = designer.dataset.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const brandLogo = designer.dataset.brandLogo || '';
+        const pageSize = { width: 210, height: 297 };
+        let selected = { page: 0, id: null };
+        const uniqueId = (type) => `${type}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+        const fallbackDefinition = (legacy = null) => {
+            const legacyText = Array.isArray(legacy?.blocks)
+                ? legacy.blocks.map((block) => {
+                    if (block.type === 'list') {
+                        return (block.items || []).map((item) => `- ${item}`).join('\n');
+                    }
+                    if (block.type === 'page_break') {
+                        return '\n\n';
+                    }
+                    return block.text || '';
+                }).filter(Boolean).join('\n\n')
+                : 'Texto do documento';
+
+            return ({
+            layout: 'absolute',
+            unit: 'mm',
+            paper: { size: 'A4', width_mm: pageSize.width, height_mm: pageSize.height },
+            pages: [{
+                width_mm: pageSize.width,
+                height_mm: pageSize.height,
+                background: { color: '#ffffff', image_path: '', image_opacity: 0.08, image_fit: 'cover' },
+                elements: [{
+                    id: uniqueId('texto'),
+                    type: 'text',
+                    x_mm: 24,
+                    y_mm: 40,
+                    w_mm: 162,
+                    h_mm: 170,
+                    text: legacyText,
+                    font_size_pt: 11,
+                    font_weight: '400',
+                    line_height: 1.35,
+                    align: 'justify',
+                    color: '#111827',
+                    opacity: 1,
+                }],
+            }],
+        });
+        };
+
+        const normalizeDefinition = (value) => {
+            let parsed = null;
+            try {
+                parsed = JSON.parse(value || '');
+            } catch (error) {
+                parsed = null;
+            }
+
+            if (!parsed || parsed.layout !== 'absolute' || !Array.isArray(parsed.pages)) {
+                return fallbackDefinition(parsed);
+            }
+
+            parsed.unit = 'mm';
+            parsed.paper = { size: 'A4', width_mm: pageSize.width, height_mm: pageSize.height };
+            parsed.pages = parsed.pages.length > 0 ? parsed.pages : fallbackDefinition().pages;
+            parsed.pages = parsed.pages.map((page) => ({
+                width_mm: pageSize.width,
+                height_mm: pageSize.height,
+                background: {
+                    color: page.background?.color || '#ffffff',
+                    image_path: page.background?.image_path || '',
+                    image_opacity: Number(page.background?.image_opacity ?? 0.08),
+                    image_fit: page.background?.image_fit || 'cover',
+                },
+                elements: Array.isArray(page.elements) ? page.elements : [],
+            }));
+
+            return parsed;
+        };
+
+        let definition = normalizeDefinition(textarea?.value);
+
+        const currentPage = () => definition.pages[selected.page] || definition.pages[0];
+        const currentElement = () => currentPage()?.elements.find((element) => element.id === selected.id) || null;
+        const percent = (value, total) => `${(Number(value || 0) / total) * 100}%`;
+        const assetUrl = (path) => {
+            if (!path) {
+                return '';
+            }
+
+            return path.startsWith('/') ? path : `/${path}`;
+        };
+        const round = (value) => Math.round(Number(value || 0) * 10) / 10;
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        const sync = () => {
+            const json = JSON.stringify(definition, null, 2);
+            if (textarea) {
+                textarea.value = json;
+            }
+            if (mirror) {
+                mirror.value = json;
+            }
+        };
+
+        const setBackgroundStatus = (message, state = 'idle') => {
+            if (!bgStatus) {
+                return;
+            }
+
+            bgStatus.textContent = message;
+            bgStatus.dataset.state = state;
+        };
+
+        const applyBackgroundPath = (path) => {
+            const page = currentPage();
+            if (!page || !path) {
+                return;
+            }
+
+            page.background.image_path = path;
+            if (bgPath) {
+                bgPath.value = path;
+            }
+            render();
+        };
+
+        const uploadBackground = async (file) => {
+            if (!file || !uploadUrl) {
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                setBackgroundStatus('Envie somente imagem PNG, JPG ou WEBP.', 'error');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                setBackgroundStatus('Imagem acima de 10 MB. Reduza o arquivo antes de enviar.', 'error');
+                return;
+            }
+
+            const payload = new FormData();
+            payload.append('background', file);
+            bgDrop?.classList.add('is-uploading');
+            setBackgroundStatus('Enviando papel timbrado...', 'loading');
+
+            try {
+                const response = await fetch(uploadUrl, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: payload,
+                    credentials: 'same-origin',
+                });
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok || !data.path) {
+                    const message = data.message
+                        || Object.values(data.errors || {}).flat().filter(Boolean).shift()
+                        || 'Não foi possível enviar o plano de fundo.';
+                    throw new Error(message);
+                }
+
+                applyBackgroundPath(data.path);
+                setBackgroundStatus('Plano de fundo aplicado à página selecionada.', 'success');
+            } catch (error) {
+                setBackgroundStatus(error?.message || 'Falha ao enviar o plano de fundo.', 'error');
+            } finally {
+                bgDrop?.classList.remove('is-uploading');
+                if (bgFile) {
+                    bgFile.value = '';
+                }
+            }
+        };
+
+        const pageBackgroundHtml = (page) => {
+            const path = page.background?.image_path || '';
+            if (!path) {
+                return '';
+            }
+
+            const fit = page.background?.image_fit || 'cover';
+            const opacity = Number(page.background?.image_opacity ?? 0.08);
+
+            return `<div class="legal-doc-page-bg" style="opacity:${opacity}"><img class="fit-${fit}" src="${AdminUI.escapeHtml(assetUrl(path))}" alt=""></div>`;
+        };
+
+        const renderElement = (element) => {
+            const common = `left:${percent(element.x_mm, pageSize.width)};top:${percent(element.y_mm, pageSize.height)};width:${percent(element.w_mm, pageSize.width)};height:${percent(element.h_mm, pageSize.height)};opacity:${element.opacity ?? 1};`;
+            const selectedClass = selected.id === element.id ? ' is-selected' : '';
+            const data = `data-doc-element="${AdminUI.escapeHtml(element.id)}"`;
+
+            if (element.type === 'signature') {
+                return `<div class="legal-doc-element legal-doc-element-signature${selectedClass}" ${data} style="${common};border-bottom-color:${AdminUI.escapeHtml(element.border_color || '#111827')}">${AdminUI.escapeHtml(element.label || 'Assinatura')}</div>`;
+            }
+            if (element.type === 'line') {
+                return `<div class="legal-doc-element legal-doc-element-line${selectedClass}" ${data} style="${common};background:${AdminUI.escapeHtml(element.color || '#111827')}"></div>`;
+            }
+            if (element.type === 'rectangle') {
+                return `<div class="legal-doc-element legal-doc-element-rectangle${selectedClass}" ${data} style="${common};border-color:${AdminUI.escapeHtml(element.border_color || '#111827')};background:${AdminUI.escapeHtml(element.background_color || 'transparent')}"></div>`;
+            }
+            if (element.type === 'image') {
+                const image = element.image_path ? `<img src="${AdminUI.escapeHtml(assetUrl(element.image_path))}" alt="">` : '<span class="small text-muted">Imagem</span>';
+                return `<div class="legal-doc-element legal-doc-element-image${selectedClass}" ${data} style="${common}">${image}</div>`;
+            }
+
+            return `<div class="legal-doc-element legal-doc-element-text${selectedClass}" ${data} style="${common};font-size:${Number(element.font_size_pt || 11) * 1.333}px;font-weight:${element.font_weight || 400};line-height:${element.line_height || 1.35};text-align:${element.align || 'left'};color:${AdminUI.escapeHtml(element.color || '#111827')}">${AdminUI.escapeHtml(element.text || 'Texto')}</div>`;
+        };
+
+        const render = () => {
+            if (!pagesRoot) {
+                return;
+            }
+
+            pagesRoot.innerHTML = definition.pages.map((page, index) => `
+                <div class="legal-doc-page-shell" data-doc-page-shell="${index}">
+                    <div class="legal-doc-page-title">
+                        <span>Página ${index + 1}</span>
+                        <button class="btn btn-sm btn-outline-danger" type="button" data-doc-remove-page="${index}" ${definition.pages.length === 1 ? 'disabled' : ''}>Remover página</button>
+                    </div>
+                    <div class="legal-doc-page" data-doc-page="${index}" style="background:${AdminUI.escapeHtml(page.background?.color || '#ffffff')}">
+                        ${pageBackgroundHtml(page)}
+                        ${(page.elements || []).map(renderElement).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            bindPageEvents();
+            syncInspector();
+            sync();
+        };
+
+        const selectElement = (pageIndex, id) => {
+            selected = { page: pageIndex, id };
+            render();
+        };
+
+        const syncInspector = () => {
+            const page = currentPage();
+            const element = currentElement();
+            if (bgPath && page) {
+                bgPath.value = page.background?.image_path || '';
+            }
+            if (bgOpacity && page) {
+                bgOpacity.value = Number(page.background?.image_opacity ?? 0.08);
+            }
+            if (bgFit && page) {
+                bgFit.value = page.background?.image_fit || 'cover';
+            }
+            if (inspector) {
+                inspector.dataset.selectedType = element?.type || '';
+            }
+
+            fields.forEach((field) => {
+                const key = field.dataset.docField;
+                if (!element || !key) {
+                    field.value = '';
+                    return;
+                }
+
+                field.value = typeof element[key] === 'boolean' ? String(element[key]) : (element[key] ?? '');
+            });
+        };
+
+        const updateSelected = (key, value) => {
+            const element = currentElement();
+            if (!element) {
+                return;
+            }
+
+            if (['x_mm', 'y_mm', 'w_mm', 'h_mm', 'opacity', 'font_size_pt', 'line_height'].includes(key)) {
+                element[key] = Number(value);
+            } else if (key === 'signer_order') {
+                element[key] = Math.max(1, Number.parseInt(value || '1', 10));
+            } else if (key === 'required') {
+                element[key] = value === 'true';
+            } else {
+                element[key] = value;
+            }
+
+            render();
+        };
+
+        const addElement = (type) => {
+            const page = currentPage();
+            const id = uniqueId(type);
+            const base = { id, type, x_mm: 24, y_mm: 36, w_mm: 80, h_mm: 18, opacity: 1 };
+            const element = {
+                text: { ...base, text: 'Texto do documento', font_size_pt: 11, font_weight: '400', line_height: 1.35, align: 'left', color: '#111827' },
+                signature: { ...base, y_mm: 236, w_mm: 90, h_mm: 24, label: 'Assinatura', signer_order: 1, required: true, border_color: '#111827' },
+                line: { ...base, h_mm: 1, color: '#111827', thickness_mm: 0.25 },
+                rectangle: { ...base, w_mm: 60, h_mm: 30, border_color: '#111827', background_color: 'transparent', border_width_mm: 0.25 },
+                logo: { ...base, type: 'image', w_mm: 36, h_mm: 22, image_path: brandLogo, fit: 'contain' },
+            }[type] || { ...base, text: 'Texto', font_size_pt: 11 };
+
+            page.elements.push(element);
+            selectElement(selected.page, id);
+        };
+
+        const bindPageEvents = () => {
+            pagesRoot.querySelectorAll('[data-doc-page]').forEach((pageEl) => {
+                const pageIndex = Number(pageEl.dataset.docPage || 0);
+                pageEl.addEventListener('pointerdown', (event) => {
+                    const elementEl = event.target.closest('[data-doc-element]');
+                    if (!elementEl) {
+                        selected = { page: pageIndex, id: null };
+                        render();
+                        return;
+                    }
+
+                    event.preventDefault();
+                    const id = elementEl.dataset.docElement;
+                    selected = { page: pageIndex, id };
+                    const element = currentElement();
+                    const rect = pageEl.getBoundingClientRect();
+                    const start = { x: event.clientX, y: event.clientY, xMm: Number(element.x_mm || 0), yMm: Number(element.y_mm || 0) };
+                    elementEl.setPointerCapture?.(event.pointerId);
+
+                    const move = (moveEvent) => {
+                        const dx = (moveEvent.clientX - start.x) * (pageSize.width / rect.width);
+                        const dy = (moveEvent.clientY - start.y) * (pageSize.height / rect.height);
+                        element.x_mm = round(clamp(start.xMm + dx, 0, pageSize.width - Number(element.w_mm || 1)));
+                        element.y_mm = round(clamp(start.yMm + dy, 0, pageSize.height - Number(element.h_mm || 1)));
+                        sync();
+                        elementEl.style.left = percent(element.x_mm, pageSize.width);
+                        elementEl.style.top = percent(element.y_mm, pageSize.height);
+                        syncInspector();
+                    };
+                    const up = () => {
+                        window.removeEventListener('pointermove', move);
+                        window.removeEventListener('pointerup', up);
+                        render();
+                    };
+
+                    window.addEventListener('pointermove', move);
+                    window.addEventListener('pointerup', up, { once: true });
+                });
+            });
+
+            pagesRoot.querySelectorAll('[data-doc-remove-page]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const index = Number(button.dataset.docRemovePage || 0);
+                    if (definition.pages.length <= 1) {
+                        return;
+                    }
+                    definition.pages.splice(index, 1);
+                    selected = { page: Math.max(0, index - 1), id: null };
+                    render();
+                });
+            });
+        };
+
+        designer.querySelectorAll('[data-doc-add]').forEach((button) => {
+            button.addEventListener('click', () => addElement(button.dataset.docAdd));
+        });
+
+        designer.querySelector('[data-doc-add-page]')?.addEventListener('click', () => {
+            definition.pages.push({
+                width_mm: pageSize.width,
+                height_mm: pageSize.height,
+                background: { color: '#ffffff', image_path: '', image_opacity: 0.08, image_fit: 'cover' },
+                elements: [],
+            });
+            selected = { page: definition.pages.length - 1, id: null };
+            render();
+        });
+
+        designer.querySelector('[data-doc-remove]')?.addEventListener('click', () => {
+            const page = currentPage();
+            page.elements = page.elements.filter((element) => element.id !== selected.id);
+            selected.id = null;
+            render();
+        });
+
+        fields.forEach((field) => {
+            field.addEventListener('input', () => updateSelected(field.dataset.docField, field.value));
+            field.addEventListener('change', () => updateSelected(field.dataset.docField, field.value));
+        });
+
+        bgPath?.addEventListener('input', () => {
+            currentPage().background.image_path = bgPath.value;
+            setBackgroundStatus('Caminho do fundo atualizado manualmente.', 'idle');
+            render();
+        });
+        bgOpacity?.addEventListener('input', () => {
+            currentPage().background.image_opacity = Number(bgOpacity.value);
+            render();
+        });
+        bgFit?.addEventListener('change', () => {
+            currentPage().background.image_fit = bgFit.value;
+            render();
+        });
+
+        bgDrop?.addEventListener('click', () => bgFile?.click());
+        bgDrop?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                bgFile?.click();
+            }
+        });
+        bgFile?.addEventListener('change', () => uploadBackground(bgFile.files?.[0]));
+        bgDrop?.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            bgDrop.classList.add('is-dragging');
+        });
+        bgDrop?.addEventListener('dragleave', () => {
+            bgDrop.classList.remove('is-dragging');
+        });
+        bgDrop?.addEventListener('drop', (event) => {
+            event.preventDefault();
+            bgDrop.classList.remove('is-dragging');
+            uploadBackground(event.dataTransfer?.files?.[0]);
+        });
+
+        form?.addEventListener('submit', () => {
+            sync();
+            if (outputFormat && outputFormat.value === 'docx') {
+                outputFormat.value = 'pdf';
+            }
+        });
+
+        if (outputFormat && outputFormat.value === 'docx') {
+            outputFormat.value = 'pdf';
+        }
+
+        render();
+    });
+}
 
 window.AdminUI = AdminUI;
 

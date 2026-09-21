@@ -42,7 +42,7 @@ class LegalDocumentGenerationService
 
         $scope = (string) ($data['context_scope'] ?? $template->context_scope);
         $format = (string) ($data['output_format'] ?? $template->default_output_format);
-        $this->validateOptions($template, $scope, $format);
+        $this->validateOptions($template, $version, $scope, $format);
 
         [$client, $legalCase] = $this->resolveContext($actor, $scope, $data);
         $generatedAt = now();
@@ -179,13 +179,23 @@ class LegalDocumentGenerationService
         }
     }
 
-    private function validateOptions(LegalDocumentTemplate $template, string $scope, string $format): void
+    private function validateOptions(
+        LegalDocumentTemplate $template,
+        LegalDocumentTemplateVersion $version,
+        string $scope,
+        string $format
+    ): void
     {
         if ($scope !== $template->context_scope || ! array_key_exists($scope, LegalDocumentTemplate::contextScopes())) {
             throw ValidationException::withMessages(['context_scope' => 'O contexto não corresponde ao template selecionado.']);
         }
         if (! array_key_exists($format, LegalDocumentTemplate::outputFormats())) {
             throw ValidationException::withMessages(['output_format' => 'Formato de saída não suportado.']);
+        }
+        if ($format === LegalDocumentTemplate::FORMAT_DOCX && ($version->definition['layout'] ?? null) === 'absolute') {
+            throw ValidationException::withMessages([
+                'output_format' => 'Templates milimétricos do editor visual devem ser gerados em PDF para preservar impressão idêntica.',
+            ]);
         }
     }
 

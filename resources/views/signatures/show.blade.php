@@ -50,6 +50,21 @@
                     </label>
                 </div>
 
+                <div class="signature-pad-shell" data-signature-pad>
+                    <label class="form-label mb-0">Assine dentro do campo abaixo</label>
+                    <p class="signature-pad-hint mb-0">Use o dedo, mouse ou caneta. Se errar, clique em Voltar, use a borracha ou limpe tudo. Pontinhos ou riscos mínimos não serão aceitos.</p>
+                    <div class="signature-pad-toolbar">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-signature-undo><i class="bi bi-arrow-counterclockwise me-1"></i>Voltar</button>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-signature-eraser><i class="bi bi-eraser me-1"></i>Borracha</button>
+                        <button class="btn btn-sm btn-outline-danger" type="button" data-signature-clear>Limpar assinatura</button>
+                    </div>
+                    <div class="signature-pad-frame">
+                        <canvas class="signature-pad-canvas" data-signature-canvas width="900" height="260" aria-label="Campo para desenho da assinatura"></canvas>
+                    </div>
+                    <div class="signature-pad-error" data-signature-error>@error('signature_payload'){{ $message }}@enderror</div>
+                    <input type="hidden" name="signature_payload" data-signature-payload>
+                </div>
+
                 <button class="btn btn-success w-100">Assinar documento</button>
             </form>
 

@@ -68,7 +68,7 @@ class ElectronicSignatureTest extends TestCase
             ->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff');
         $this->assertStringStartsWith('%PDF-', $documentResponse->baseResponse->getFile()->getContent());
-        $this->post(route('signatures.public.sign', $token), ['name' => 'Cliente Assinante', 'document' => '123.456.789-09', 'consent' => '1'])->assertRedirect(route('signatures.public.result'));
+        $this->post(route('signatures.public.sign', $token), ['name' => 'Cliente Assinante', 'document' => '123.456.789-09', 'consent' => '1', 'signature_payload' => $this->signaturePayload()])->assertRedirect(route('signatures.public.result'));
         $signatureRequest->refresh()->load('document');
         $this->assertSame('completed', $signatureRequest->status);
         $this->assertTrue($service->verifyEvidence($signatureRequest));
@@ -80,6 +80,7 @@ class ElectronicSignatureTest extends TestCase
         $this->assertDatabaseHas('signature_events', ['signature_request_id' => $signatureRequest->id, 'type' => 'viewed']);
         $this->assertDatabaseHas('signature_events', ['signature_request_id' => $signatureRequest->id, 'type' => 'signed']);
         $this->assertDatabaseHas('signature_events', ['signature_request_id' => $signatureRequest->id, 'type' => 'completed']);
+        $this->assertNotNull($signer->fresh()->signature_image_sha256);
         $this->get(route('signatures.public.show', $token))->assertNotFound();
 
         Storage::disk('legal_documents')->put($signatureRequest->document->completed_path, 'adulterado');
@@ -101,14 +102,14 @@ class ElectronicSignatureTest extends TestCase
         $secondToken = 'segundo-token-seguro';
         $signers[0]->update(['status' => 'sent', 'token_hash' => hash('sha256', $firstToken), 'token_expires_at' => now()->addHour()]);
 
-        $this->post(route('signatures.public.sign', $firstToken), ['name' => 'Cliente Assinante', 'document' => '123.456.789-09', 'consent' => '1'])
+        $this->post(route('signatures.public.sign', $firstToken), ['name' => 'Cliente Assinante', 'document' => '123.456.789-09', 'consent' => '1', 'signature_payload' => $this->signaturePayload()])
             ->assertRedirect(route('signatures.public.result'));
 
         $this->assertSame('pending', $signatureRequest->fresh()->status);
         $this->assertSame('sent', $signers[1]->fresh()->status);
         $signers[1]->update(['token_hash' => hash('sha256', $secondToken), 'token_expires_at' => now()->addHour()]);
 
-        $this->post(route('signatures.public.sign', $secondToken), ['name' => 'Segundo Signatário', 'consent' => '1'])
+        $this->post(route('signatures.public.sign', $secondToken), ['name' => 'Segundo Signatário', 'consent' => '1', 'signature_payload' => $this->signaturePayload()])
             ->assertRedirect(route('signatures.public.result'));
 
         $signatureRequest->refresh()->load('document');
@@ -141,9 +142,31 @@ class ElectronicSignatureTest extends TestCase
         $request->update(['status' => 'pending']);
         $signer->update(['status' => 'sent', 'token_hash' => hash('sha256', $token), 'token_expires_at' => now()->addHour()]);
         Storage::disk('legal_documents')->put($request->document->immutable_path, 'adulterado');
-        $this->post(route('signatures.public.sign', $token), ['name' => 'Cliente Assinante', 'document' => '12345678909', 'consent' => '1'])->assertSessionHasErrors('document');
+        $this->post(route('signatures.public.sign', $token), ['name' => 'Cliente Assinante', 'document' => '12345678909', 'consent' => '1', 'signature_payload' => $this->signaturePayload()])->assertSessionHasErrors('document');
         $this->assertSame('sent', $signer->fresh()->status);
     }
+
+    public function test_public_signature_rejects_dots_or_minimal_marks(): void
+    {
+        [$admin, $document] = $this->fixture();
+        $service = app(ElectronicSignatureService::class);
+        $request = $service->create($document, $this->payload(), $admin->id);
+        $token = 'token-assinatura-minima';
+        $signer = $request->signers()->firstOrFail();
+        $request->update(['status' => 'pending']);
+        $signer->update(['status' => 'sent', 'token_hash' => hash('sha256', $token), 'token_expires_at' => now()->addHour()]);
+
+        $this->post(route('signatures.public.sign', $token), [
+            'name' => 'Cliente Assinante',
+            'document' => '12345678909',
+            'consent' => '1',
+            'signature_payload' => $this->signaturePayload(minimal: true),
+        ])->assertSessionHasErrors('signature_payload');
+
+        $this->assertSame('sent', $signer->fresh()->status);
+        $this->assertNull($signer->fresh()->signature_image_sha256);
+    }
+
 
     public function test_decline_cancel_and_expiration_invalidate_tokens(): void
     {
@@ -249,5 +272,53 @@ class ElectronicSignatureTest extends TestCase
     private function payload(): array
     {
         return ['title' => 'Contrato de teste', 'message' => null, 'ordered' => false, 'expires_at' => now()->addDay(), 'signers' => [['name' => 'Cliente Assinante', 'email' => 'assinante@example.com', 'document' => '123.456.789-09']]];
+    }
+
+    private function signaturePayload(bool $minimal = false): string
+    {
+        $image = imagecreatetruecolor(900, 260);
+        imagesavealpha($image, true);
+        $transparent = imagecolorallocatealpha($image, 255, 255, 255, 127);
+        imagefill($image, 0, 0, $transparent);
+        $ink = imagecolorallocatealpha($image, 17, 24, 39, 0);
+        imagesetthickness($image, $minimal ? 3 : 5);
+
+        if ($minimal) {
+            imagefilledellipse($image, 110, 120, 4, 4, $ink);
+            $metrics = [
+                'stroke_count' => 1,
+                'point_count' => 2,
+                'distance_px' => 2,
+                'duration_ms' => 80,
+                'bounds' => ['x' => 108, 'y' => 118, 'width' => 4, 'height' => 4],
+            ];
+        } else {
+            $points = [
+                [90, 170], [125, 145], [160, 120], [200, 138],
+                [240, 160], [285, 128], [330, 92], [380, 118],
+                [430, 150], [485, 130], [540, 112], [595, 136],
+                [650, 158], [705, 130], [760, 105],
+            ];
+            foreach (array_slice($points, 1) as $index => $point) {
+                imageline($image, $points[$index][0], $points[$index][1], $point[0], $point[1], $ink);
+            }
+            $metrics = [
+                'stroke_count' => 1,
+                'point_count' => count($points),
+                'distance_px' => 780,
+                'duration_ms' => 1300,
+                'bounds' => ['x' => 90, 'y' => 92, 'width' => 670, 'height' => 78],
+            ];
+        }
+
+        ob_start();
+        imagepng($image);
+        $png = (string) ob_get_clean();
+        imagedestroy($image);
+
+        return json_encode([
+            'data_url' => 'data:image/png;base64,'.base64_encode($png),
+            'metrics' => $metrics,
+        ], JSON_THROW_ON_ERROR);
     }
 }

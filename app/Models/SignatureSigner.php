@@ -13,7 +13,14 @@ class SignatureSigner extends Model
 
     protected function casts(): array
     {
-        return ['token_expires_at' => 'datetime', 'sent_at' => 'datetime', 'viewed_at' => 'datetime', 'signed_at' => 'datetime', 'declined_at' => 'datetime'];
+        return [
+            'token_expires_at' => 'datetime',
+            'sent_at' => 'datetime',
+            'viewed_at' => 'datetime',
+            'signed_at' => 'datetime',
+            'declined_at' => 'datetime',
+            'signature_metrics' => 'array',
+        ];
     }
 
     public function signatureRequest(): BelongsTo

@@ -57,14 +57,7 @@ class LegalDocumentTokenEngine
     public function extractFromVersion(string $titleTemplate, array $definition): array
     {
         $values = [$titleTemplate];
-        foreach ($definition['blocks'] ?? [] as $block) {
-            if (isset($block['text'])) {
-                $values[] = (string) $block['text'];
-            }
-            foreach ($block['items'] ?? [] as $item) {
-                $values[] = (string) $item;
-            }
-        }
+        $this->collectTokenValues($definition, $values);
 
         foreach ($values as $value) {
             $withoutTokens = preg_replace(self::TOKEN_PATTERN, '', $value) ?? $value;
@@ -184,6 +177,24 @@ class LegalDocumentTokenEngine
 
     public function renderDefinition(array $definition, array $context): array
     {
+        if (($definition['layout'] ?? null) === 'absolute') {
+            $definition['pages'] = collect($definition['pages'] ?? [])->map(function (array $page) use ($context): array {
+                $page['elements'] = collect($page['elements'] ?? [])->map(function (array $element) use ($context): array {
+                    foreach (['text', 'label'] as $key) {
+                        if (isset($element[$key])) {
+                            $element[$key] = $this->render((string) $element[$key], $context);
+                        }
+                    }
+
+                    return $element;
+                })->all();
+
+                return $page;
+            })->all();
+
+            return $definition;
+        }
+
         return [
             'blocks' => collect($definition['blocks'] ?? [])->map(function (array $block) use ($context): array {
                 if (isset($block['text'])) {
@@ -199,6 +210,20 @@ class LegalDocumentTokenEngine
                 return $block;
             })->all(),
         ];
+    }
+
+    private function collectTokenValues(array $value, array &$values): void
+    {
+        foreach ($value as $item) {
+            if (is_array($item)) {
+                $this->collectTokenValues($item, $values);
+                continue;
+            }
+
+            if (is_string($item) && str_contains($item, '{{')) {
+                $values[] = $item;
+            }
+        }
     }
 
     private function extract(string $value): array

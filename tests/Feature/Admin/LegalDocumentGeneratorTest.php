@@ -7,6 +7,7 @@ use App\Models\LegalCase;
 use App\Models\LegalDocumentGeneration;
 use App\Models\LegalDocumentTemplate;
 use App\Models\LegalDocumentTemplateVersion;
+use App\Models\MediaAsset;
 use App\Models\User;
 use App\Services\LegalDocumentGenerationService;
 use App\Services\LegalDocumentTemplateManager;
@@ -14,11 +15,14 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 use RuntimeException;
+use setasign\Fpdi\Fpdi;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -114,6 +118,46 @@ class LegalDocumentGeneratorTest extends TestCase
 
         $this->assertDatabaseCount('legal_document_templates', 0);
         $this->assertDatabaseCount('legal_document_template_versions', 0);
+    }
+
+    public function test_template_create_page_renders_visual_editor_without_error(): void
+    {
+        $actor = $this->actor();
+
+        $this->actingAs($actor)
+            ->get(route('admin.legal-document-templates.create'))
+            ->assertOk()
+            ->assertSee('Editor visual milimétrico')
+            ->assertSee('data-document-designer', false)
+            ->assertSee(route('admin.legal-document-templates.background-upload'), false);
+    }
+
+    public function test_template_manager_can_upload_a4_background_without_media_library_permission(): void
+    {
+        $actor = User::factory()->create(['is_active' => true]);
+        $actor->givePermissionTo(['admin.access', 'legal-document-templates.manage']);
+
+        try {
+            $response = $this->actingAs($actor)
+                ->postJson(route('admin.legal-document-templates.background-upload'), [
+                    'background' => UploadedFile::fake()->image('papel-timbrado.png', 1240, 1754),
+                ])
+                ->assertOk()
+                ->assertJsonPath('message', 'Plano de fundo enviado com sucesso.');
+
+            $path = $response->json('path');
+            $this->assertIsString($path);
+            $this->assertStringStartsWith('uploads/legal-document-backgrounds/', $path);
+            $this->assertFileExists(public_path($path));
+            $this->assertDatabaseHas('media_assets', [
+                'path' => $path,
+                'type' => 'image',
+                'uploaded_by' => $actor->id,
+            ]);
+            $this->assertSame(1, MediaAsset::query()->count());
+        } finally {
+            File::deleteDirectory(public_path('uploads/legal-document-backgrounds'));
+        }
     }
 
     public function test_published_versions_are_immutable_and_a_new_version_preserves_the_original(): void
@@ -239,6 +283,145 @@ class LegalDocumentGeneratorTest extends TestCase
             ->get(route('admin.legal-documents.download', $pdf))
             ->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff');
+    }
+
+    public function test_visual_absolute_template_generates_a4_pdf_and_rejects_docx_reflow(): void
+    {
+        $actor = $this->actor();
+        [$client] = $this->legalContext($actor);
+        $definition = [
+            'layout' => 'absolute',
+            'unit' => 'mm',
+            'paper' => ['size' => 'A4', 'width_mm' => 210, 'height_mm' => 297],
+            'pages' => [
+                [
+                    'width_mm' => 210,
+                    'height_mm' => 297,
+                    'background' => [
+                        'color' => '#ffffff',
+                        'image_path' => '',
+                        'image_opacity' => 0.18,
+                        'image_fit' => 'cover',
+                    ],
+                    'elements' => [
+                        [
+                            'id' => 'cabecalho',
+                            'type' => 'text',
+                            'x_mm' => 20,
+                            'y_mm' => 24,
+                            'w_mm' => 170,
+                            'h_mm' => 22,
+                            'text' => 'Contrato de honorários',
+                            'font_size_pt' => 16,
+                            'font_weight' => '700',
+                            'line_height' => 1.2,
+                            'align' => 'center',
+                            'color' => '#111827',
+                            'opacity' => 1,
+                        ],
+                        [
+                            'id' => 'corpo',
+                            'type' => 'text',
+                            'x_mm' => 20,
+                            'y_mm' => 62,
+                            'w_mm' => 170,
+                            'h_mm' => 90,
+                            'text' => 'Cliente {{client.name}}, CPF/CNPJ {{client.document_number}}.',
+                            'font_size_pt' => 12,
+                            'font_weight' => '400',
+                            'line_height' => 1.35,
+                            'align' => 'left',
+                            'color' => '#111827',
+                            'opacity' => 1,
+                        ],
+                    ],
+                ],
+                [
+                    'width_mm' => 210,
+                    'height_mm' => 297,
+                    'background' => [
+                        'color' => '#ffffff',
+                        'image_path' => '',
+                        'image_opacity' => 0.18,
+                        'image_fit' => 'cover',
+                    ],
+                    'elements' => [
+                        [
+                            'id' => 'assinatura-cliente',
+                            'type' => 'signature',
+                            'x_mm' => 28,
+                            'y_mm' => 226,
+                            'w_mm' => 72,
+                            'h_mm' => 24,
+                            'label' => 'Assinatura do cliente',
+                            'signer_order' => 1,
+                            'required' => true,
+                            'border_color' => '#111827',
+                            'opacity' => 1,
+                        ],
+                        [
+                            'id' => 'testemunha-opcional',
+                            'type' => 'signature',
+                            'x_mm' => 110,
+                            'y_mm' => 226,
+                            'w_mm' => 72,
+                            'h_mm' => 24,
+                            'label' => 'Testemunha opcional',
+                            'signer_order' => 2,
+                            'required' => false,
+                            'border_color' => '#111827',
+                            'opacity' => 1,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $template = app(LegalDocumentTemplateManager::class)->create(
+            $actor,
+            $this->metadata('contrato-visual-a4', LegalDocumentTemplate::CONTEXT_CLIENT, LegalDocumentTemplate::FORMAT_PDF),
+            'Contrato visual de {{client.name}}',
+            $definition
+        );
+        $version = $template->versions()->firstOrFail();
+
+        $this->assertSame('absolute', $version->definition['layout']);
+        $this->assertSame('cover', $version->definition['pages'][0]['background']['image_fit']);
+        $this->assertSame(2, $version->definition['pages'][1]['elements'][1]['signer_order']);
+        $this->assertFalse($version->definition['pages'][1]['elements'][1]['required']);
+
+        $generation = app(LegalDocumentGenerationService::class)->generate(
+            $actor,
+            $template,
+            $version,
+            [
+                'context_scope' => LegalDocumentTemplate::CONTEXT_CLIENT,
+                'output_format' => LegalDocumentTemplate::FORMAT_PDF,
+                'client_id' => $client->id,
+            ]
+        );
+
+        $pdfContents = Storage::disk('legal_documents')->get($generation->legalDocument->path);
+        $this->assertStringStartsWith('%PDF-', $pdfContents);
+        $this->assertSame('pdf', $generation->legalDocument->extension);
+        $this->assertSame(2, (new Fpdi())->setSourceFile(Storage::disk('legal_documents')->path($generation->legalDocument->path)));
+
+        try {
+            app(LegalDocumentGenerationService::class)->generate(
+                $actor,
+                $template,
+                $version,
+                [
+                    'context_scope' => LegalDocumentTemplate::CONTEXT_CLIENT,
+                    'output_format' => LegalDocumentTemplate::FORMAT_DOCX,
+                    'client_id' => $client->id,
+                ]
+            );
+
+            $this->fail('Templates visuais milimétricos não devem ser exportados em DOCX.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('output_format', $exception->errors());
+        }
     }
 
     public function test_client_case_generation_checks_ownership_and_never_overwrites_an_original(): void

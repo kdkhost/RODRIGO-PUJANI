@@ -2,6 +2,25 @@
 
 Todas as mudancas relevantes deste projeto sao registradas aqui.
 
+## [1.0.16] - 2026-09-21
+
+### Adicionado
+- Editor visual milimétrico para templates jurídicos em A4, com posicionamento por arrasta-e-solta e ajustes em milímetros.
+- Suporte a documentos com múltiplas páginas, assinatura do cliente no final/última página e campos opcionais de testemunhas.
+- Papel timbrado/fundo de página com encaixe "Ocupar A4 inteiro", opacidade configurável e upload por arrasta-e-solta no painel administrativo.
+- Assinatura eletrônica desenhada no navegador, com desfazer, borracha, limpar assinatura e validação contra pontinhos/riscos mínimos.
+- Armazenamento privado da imagem da assinatura, SHA-256 e métricas no comprovante JSON.
+
+### Alterado
+- Templates visuais milimétricos passam a gerar PDF para preservar fidelidade entre criação, assinatura e impressão.
+- PDF assinado agora pode sobrepor a assinatura desenhada nos campos posicionados no template visual.
+
+### Validação
+- `php artisan test --filter LegalDocumentGeneratorTest`: aprovado.
+- `php artisan test --filter ElectronicSignatureTest`: aprovado.
+- `php artisan test --filter SignatureContentEncodingTest`: aprovado.
+- `npm run build`: aprovado, mantendo apenas avisos conhecidos de chunk grande e imagem premium resolvida em runtime.
+
 ## [1.0.15] - 2026-05-02
 
 ### Corrigido
