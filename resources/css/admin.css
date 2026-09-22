@@ -4437,7 +4437,7 @@ img.admin-avatar {
 
 .signature-source-toggle {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
 }
 
@@ -4496,5 +4496,11 @@ img.admin-avatar {
 @media (max-width: 767px) {
     .signature-source-toggle {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .signature-source-toggle {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

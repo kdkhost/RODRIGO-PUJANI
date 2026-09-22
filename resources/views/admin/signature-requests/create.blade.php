@@ -3,11 +3,16 @@
 @section('content')
     @php
         $hasExistingDocuments = $documents->isNotEmpty();
-        $currentSource = old('document_source', $documentSource ?? ($hasExistingDocuments ? 'existing' : 'upload'));
+        $hasTemplates = ($templates ?? collect())->isNotEmpty();
+        $currentSource = old('document_source', $documentSource ?? ($hasExistingDocuments ? 'existing' : ($hasTemplates ? 'template' : 'upload')));
         if (! $hasExistingDocuments && $currentSource === 'existing') {
-            $currentSource = 'upload';
+            $currentSource = $hasTemplates ? 'template' : 'upload';
+        }
+        if (! $hasTemplates && $currentSource === 'template') {
+            $currentSource = $hasExistingDocuments ? 'existing' : 'upload';
         }
         $selectedDocumentId = (int) old('legal_document_id', $selectedDocument ?? 0);
+        $selectedTemplateId = (int) old('template_id', $selectedTemplate ?? 0);
     @endphp
 
     <div class="app-content-header admin-page-hero">
@@ -16,7 +21,7 @@
                 <div>
                     <div class="admin-eyebrow">Assinatura eletrônica</div>
                     <h1>Enviar documento para assinatura</h1>
-                    <p>Selecione um PDF privado já cadastrado ou anexe um novo PDF agora. O sistema envia convites individuais, controla a ordem e guarda evidências.</p>
+                    <p>Selecione um PDF privado, gere um PDF por modelo do Gerador de documentos ou anexe um novo PDF agora. O sistema envia convites individuais, controla a ordem e guarda evidências.</p>
                 </div>
                 <a class="btn btn-outline-secondary" href="{{ route('admin.signature-requests.index') }}">
                     <i class="bi bi-arrow-left me-1"></i>Voltar
@@ -77,6 +82,13 @@
                                             <small>{{ $hasExistingDocuments ? 'Use um PDF privado já salvo em Documentos.' : 'Nenhum PDF privado elegível disponível.' }}</small>
                                         </span>
                                     </label>
+                                    <label class="signature-source-option {{ $hasTemplates ? '' : 'opacity-75' }}">
+                                        <input type="radio" name="document_source" value="template" @checked($currentSource === 'template') @disabled(! $hasTemplates)>
+                                        <span>
+                                            <strong>Gerar pelo modelo</strong>
+                                            <small>{{ $hasTemplates ? 'Use um modelo do Gerador e crie o PDF privado automaticamente.' : 'Nenhum modelo ativo disponível.' }}</small>
+                                        </span>
+                                    </label>
                                     <label class="signature-source-option">
                                         <input type="radio" name="document_source" value="upload" @checked($currentSource === 'upload')>
                                         <span>
@@ -89,7 +101,7 @@
                                 <div class="signature-source-panel mt-4" data-signature-source-panel="existing">
                                     @if($documents->isEmpty())
                                         <div class="alert alert-warning mb-0">
-                                            Nenhum PDF privado elegível foi encontrado. Use a opção <strong>Anexar PDF agora</strong> ou cadastre o documento em Jurídico &gt; Documentos.
+                                            Nenhum PDF privado elegível foi encontrado. Use <strong>Gerar pelo modelo</strong>, <strong>Anexar PDF agora</strong> ou cadastre o documento em Jurídico &gt; Documentos.
                                         </div>
                                     @else
                                         <label class="form-label" for="legal_document_id">Documento existente</label>
@@ -137,6 +149,70 @@
                                         </div>
                                         <div class="form-text">
                                             Só aparecem PDFs privados, com cliente vinculado e hash SHA-256 calculado. Documentos gerados por template em PDF também ficam disponíveis aqui.
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="signature-source-panel mt-4" data-signature-source-panel="template">
+                                    @if($templates->isEmpty())
+                                        <div class="alert alert-warning mb-0">
+                                            Nenhum modelo ativo do Gerador de documentos está disponível para geração e assinatura.
+                                        </div>
+                                    @else
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <label class="form-label" for="template_id">Modelo do Gerador de documentos</label>
+                                                <select id="template_id" name="template_id" class="form-select">
+                                                    <option value="">Selecione o modelo que será convertido em PDF</option>
+                                                    @foreach($templates as $template)
+                                                        @php($contextLabel = \App\Models\LegalDocumentTemplate::contextScopes()[$template->context_scope] ?? $template->context_scope)
+                                                        <option
+                                                            value="{{ $template->id }}"
+                                                            @selected($selectedTemplateId === (int) $template->id)
+                                                            data-name="{{ e($template->name) }}"
+                                                            data-context="{{ e($template->context_scope) }}"
+                                                            data-context-label="{{ e($contextLabel) }}"
+                                                            data-format="{{ e($template->default_output_format) }}"
+                                                            data-version="{{ e($template->latestVersion?->version ?: '1') }}"
+                                                            data-title-template="{{ e($template->latestVersion?->title_template ?: $template->name) }}"
+                                                        >
+                                                            {{ $template->name }} — {{ $contextLabel }} — versão {{ $template->latestVersion?->version ?: '1' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="form-text">
+                                                    Modelos criados em Jurídico &gt; Gerador de documentos aparecem aqui. O sistema gera um PDF privado, calcula SHA-256 e envia o link individual de assinatura.
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label" for="template_client_id">Cliente para preencher o modelo</label>
+                                                <select id="template_client_id" name="template_client_id" class="form-select">
+                                                    <option value="">Selecione o cliente</option>
+                                                    @foreach($clients as $client)
+                                                        <option value="{{ $client->id }}" @selected((string) old('template_client_id') === (string) $client->id)>{{ $client->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="form-text">Obrigatório para modelos de cliente ou cliente + processo.</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label" for="template_legal_case_id">Processo para preencher o modelo</label>
+                                                <select id="template_legal_case_id" name="template_legal_case_id" class="form-select">
+                                                    <option value="">Sem processo específico</option>
+                                                    @foreach($cases as $case)
+                                                        <option value="{{ $case->id }}" data-client-id="{{ $case->client_id }}" @selected((string) old('template_legal_case_id') === (string) $case->id)>{{ $case->title }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="form-text">Obrigatório para modelos de processo ou cliente + processo.</div>
+                                            </div>
+                                        </div>
+                                        <div class="admin-signature-document-preview mt-3" data-signature-template-preview data-empty="true">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <div class="admin-system-preview-mark"><i class="bi bi-magic"></i></div>
+                                                <div class="flex-grow-1 min-w-0">
+                                                    <strong data-template-preview-title>Nenhum modelo selecionado</strong>
+                                                    <div class="small text-muted" data-template-preview-meta>Escolha um modelo para ver escopo, versão e saída.</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     @endif
                                 </div>
@@ -277,6 +353,9 @@
             const radios = Array.from(document.querySelectorAll('input[name="document_source"]'));
             const documentSelect = document.getElementById('legal_document_id');
             const documentPreview = document.querySelector('[data-signature-document-preview]');
+            const templateSelect = document.getElementById('template_id');
+            const templatePreview = document.querySelector('[data-signature-template-preview]');
+            const requestTitle = document.getElementById('title');
 
             function syncSource() {
                 const current = radios.find((radio) => radio.checked)?.value || 'existing';
@@ -343,10 +422,55 @@
             documentSelect?.addEventListener('change', syncDocumentPreview);
             syncDocumentPreview();
 
+            function syncTemplatePreview() {
+                if (!templateSelect || !templatePreview) {
+                    return;
+                }
+
+                const option = templateSelect.selectedOptions[0];
+                const title = templatePreview.querySelector('[data-template-preview-title]');
+                const meta = templatePreview.querySelector('[data-template-preview-meta]');
+
+                if (!option || !option.value) {
+                    templatePreview.dataset.empty = 'true';
+                    if (title) title.textContent = 'Nenhum modelo selecionado';
+                    if (meta) meta.textContent = 'Escolha um modelo para ver escopo, versão e saída.';
+
+                    return;
+                }
+
+                templatePreview.dataset.empty = 'false';
+                if (title) title.textContent = option.dataset.name || option.textContent.trim();
+                if (meta) {
+                    meta.textContent = [
+                        `Escopo: ${option.dataset.contextLabel || option.dataset.context || 'não informado'}`,
+                        `Versão ${option.dataset.version || '1'}`,
+                        'Saída: PDF privado para assinatura',
+                        option.dataset.titleTemplate ? `Título: ${option.dataset.titleTemplate}` : '',
+                    ].filter(Boolean).join(' • ');
+                }
+
+                if (requestTitle && !requestTitle.value.trim()) {
+                    requestTitle.value = `Assinatura - ${option.dataset.name || option.textContent.trim()}`;
+                }
+            }
+
+            templateSelect?.addEventListener('change', syncTemplatePreview);
+            syncTemplatePreview();
+
             document.getElementById('upload_legal_case_id')?.addEventListener('change', (event) => {
                 const selected = event.target.selectedOptions[0];
                 const clientId = selected?.dataset?.clientId;
                 const clientField = document.getElementById('upload_client_id');
+                if (clientId && clientField && !clientField.value) {
+                    clientField.value = clientId;
+                }
+            });
+
+            document.getElementById('template_legal_case_id')?.addEventListener('change', (event) => {
+                const selected = event.target.selectedOptions[0];
+                const clientId = selected?.dataset?.clientId;
+                const clientField = document.getElementById('template_client_id');
                 if (clientId && clientField && !clientField.value) {
                     clientField.value = clientId;
                 }

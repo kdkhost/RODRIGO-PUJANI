@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocument;
+use App\Models\LegalDocumentTemplate;
 use App\Models\SignatureRequest;
 use App\Services\ElectronicSignatureService;
+use App\Services\LegalDocumentGenerationService;
 use App\Services\LegalDocumentStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,13 +84,44 @@ class SignatureRequestController extends Controller
             ->orderBy('title')
             ->get(['id', 'client_id', 'title']);
 
-        $documentSource = $selectedDocument > 0 || $documents->isNotEmpty() ? 'existing' : 'upload';
+        $templates = collect();
+        if ($request->user()?->can('legal-document-templates.generate')
+            && $request->user()?->can('legal-documents.manage')) {
+            $templates = LegalDocumentTemplate::query()
+                ->where('is_active', true)
+                ->whereHas('versions')
+                ->with(['latestVersion:id,legal_document_template_id,version,title_template'])
+                ->orderBy('name')
+                ->limit(300)
+                ->get(['id', 'name', 'context_scope', 'default_output_format', 'is_active'])
+                ->filter(fn (LegalDocumentTemplate $template): bool => $request->user()->can('generate', $template))
+                ->values();
+        }
+
+        $requestedSource = (string) $request->query('source', '');
+        $documentSource = match (true) {
+            $selectedDocument > 0 || $documents->isNotEmpty() => 'existing',
+            $templates->isNotEmpty() => 'template',
+            default => 'upload',
+        };
+
+        if (in_array($requestedSource, ['existing', 'template', 'upload'], true)) {
+            $documentSource = $requestedSource;
+        }
+        if ($documentSource === 'existing' && $documents->isEmpty()) {
+            $documentSource = $templates->isNotEmpty() ? 'template' : 'upload';
+        }
+        if ($documentSource === 'template' && $templates->isEmpty()) {
+            $documentSource = $documents->isNotEmpty() ? 'existing' : 'upload';
+        }
 
         return view('admin.signature-requests.create', [
             'documents' => $documents,
+            'templates' => $templates,
             'clients' => $clients,
             'cases' => $cases,
             'selectedDocument' => $selectedDocument,
+            'selectedTemplate' => (int) $request->integer('template'),
             'documentSource' => $documentSource,
             'fromTemplateGeneration' => $request->boolean('from_generation'),
         ]);
@@ -98,6 +131,7 @@ class SignatureRequestController extends Controller
         Request $request,
         ElectronicSignatureService $service,
         DocumentSignatureProviderInterface $provider,
+        LegalDocumentGenerationService $generationService,
         LegalDocumentStorage $storage
     ): RedirectResponse {
         $this->authorize('create', SignatureRequest::class);
@@ -108,12 +142,15 @@ class SignatureRequestController extends Controller
 
         $data = $request->validate(
             [
-                'document_source' => ['required', Rule::in(['existing', 'upload'])],
+                'document_source' => ['required', Rule::in(['existing', 'template', 'upload'])],
                 'legal_document_id' => ['nullable', 'required_if:document_source,existing', 'integer', Rule::exists('legal_documents', 'id')],
                 'upload_file' => ['nullable', 'required_if:document_source,upload', 'file', 'mimes:pdf', 'max:15360'],
                 'upload_client_id' => ['nullable', 'required_if:document_source,upload', 'integer', $this->clientRule($request)],
                 'upload_legal_case_id' => ['nullable', 'integer', $this->caseRule($request)],
                 'upload_title' => ['nullable', 'string', 'max:255'],
+                'template_id' => ['nullable', 'required_if:document_source,template', 'integer', Rule::exists('legal_document_templates', 'id')],
+                'template_client_id' => ['nullable', 'integer', $this->clientRule($request)],
+                'template_legal_case_id' => ['nullable', 'integer', $this->caseRule($request)],
                 'title' => ['required', 'string', 'max:255'],
                 'message' => ['nullable', 'string', 'max:3000'],
                 'expires_at' => ['required', 'date', 'after:now'],
@@ -124,14 +161,18 @@ class SignatureRequestController extends Controller
                 'signers.*.document' => ['nullable', 'string', 'max:32'],
             ],
             [
-                'legal_document_id.required_if' => 'Selecione um PDF privado existente ou use a opção Anexar PDF agora.',
+                'legal_document_id.required_if' => 'Selecione um PDF privado existente, gere um PDF por modelo ou use a opção Anexar PDF agora.',
                 'upload_file.required_if' => 'Anexe o PDF que será enviado para assinatura.',
                 'upload_client_id.required_if' => 'Selecione o cliente vinculado ao documento anexado.',
+                'template_id.required_if' => 'Selecione um modelo do Gerador de documentos ou escolha outra origem.',
             ],
             [
                 'legal_document_id' => 'documento existente',
                 'upload_file' => 'PDF para assinatura',
                 'upload_client_id' => 'cliente vinculado',
+                'template_id' => 'modelo do gerador',
+                'template_client_id' => 'cliente do modelo',
+                'template_legal_case_id' => 'processo do modelo',
                 'expires_at' => 'data de expiração',
                 'signers' => 'signatários',
                 'signers.*.name' => 'nome do signatário',
@@ -140,9 +181,11 @@ class SignatureRequestController extends Controller
             ]
         );
 
-        $document = $data['document_source'] === 'upload'
-            ? $this->storeUploadedDocument($request, $data, $storage)
-            : $this->eligibleDocumentFromSelection($request, (int) $data['legal_document_id']);
+        $document = match ($data['document_source']) {
+            'upload' => $this->storeUploadedDocument($request, $data, $storage),
+            'template' => $this->generateDocumentFromTemplate($request, $data, $generationService),
+            default => $this->eligibleDocumentFromSelection($request, (int) $data['legal_document_id']),
+        };
 
         $signatureRequest = $service->create($document, $data, (int) $request->user()->id);
         $provider->send($signatureRequest);
@@ -218,6 +261,63 @@ class SignatureRequestController extends Controller
         if (! ElectronicSignatureService::supports($document) || blank($document->client_id)) {
             throw ValidationException::withMessages([
                 'legal_document_id' => 'Selecione um PDF privado, com cliente vinculado e hash de integridade calculado.',
+            ]);
+        }
+
+        return $document;
+    }
+
+    private function generateDocumentFromTemplate(
+        Request $request,
+        array $data,
+        LegalDocumentGenerationService $generationService
+    ): LegalDocument {
+        $template = LegalDocumentTemplate::query()
+            ->with('latestVersion')
+            ->whereKey((int) $data['template_id'])
+            ->firstOrFail();
+
+        $this->authorize('generate', $template);
+
+        $version = $template->latestVersion;
+        if (! $version) {
+            throw ValidationException::withMessages([
+                'template_id' => 'O modelo selecionado ainda não possui versão publicada.',
+            ]);
+        }
+
+        $requiresClient = in_array($template->context_scope, [
+            LegalDocumentTemplate::CONTEXT_CLIENT,
+            LegalDocumentTemplate::CONTEXT_CLIENT_CASE,
+        ], true);
+        $requiresCase = in_array($template->context_scope, [
+            LegalDocumentTemplate::CONTEXT_CASE,
+            LegalDocumentTemplate::CONTEXT_CLIENT_CASE,
+        ], true);
+
+        if ($requiresClient && blank($data['template_client_id'] ?? null)) {
+            throw ValidationException::withMessages([
+                'template_client_id' => 'Selecione o cliente que será usado para gerar o documento pelo modelo.',
+            ]);
+        }
+        if ($requiresCase && blank($data['template_legal_case_id'] ?? null)) {
+            throw ValidationException::withMessages([
+                'template_legal_case_id' => 'Selecione o processo que será usado para gerar o documento pelo modelo.',
+            ]);
+        }
+
+        $generation = $generationService->generate($request->user(), $template, $version, [
+            'context_scope' => $template->context_scope,
+            'output_format' => LegalDocumentTemplate::FORMAT_PDF,
+            'client_id' => filled($data['template_client_id'] ?? null) ? (int) $data['template_client_id'] : null,
+            'legal_case_id' => filled($data['template_legal_case_id'] ?? null) ? (int) $data['template_legal_case_id'] : null,
+            'shared_with_client' => false,
+        ]);
+
+        $document = $generation->legalDocument;
+        if (! $document || ! ElectronicSignatureService::supports($document) || blank($document->client_id)) {
+            throw ValidationException::withMessages([
+                'template_id' => 'O PDF gerado pelo modelo não ficou elegível para assinatura. Confirme cliente vinculado, storage privado e hash SHA-256.',
             ]);
         }
 

@@ -2,6 +2,23 @@
 
 Todas as mudanças relevantes deste projeto são registradas aqui.
 
+## [1.0.20] - 2026-09-22
+
+### Adicionado
+- A tela "Enviar documento para assinatura" ganhou a origem "Gerar pelo modelo", permitindo escolher diretamente um template ativo do Gerador de documentos.
+- Ao escolher um modelo, o sistema agora gera automaticamente um PDF privado, calcula SHA-256, salva em Documentos e cria a solicitação de assinatura sem exigir upload manual.
+- O card do documento mostra preview do modelo selecionado, escopo, versão e saída prevista em PDF privado.
+
+### Alterado
+- Quando não há PDF privado elegível, mas há modelos ativos disponíveis, a tela de assinatura passa a iniciar em "Gerar pelo modelo" em vez de forçar "Anexar PDF agora".
+- As mensagens de validação foram ajustadas para orientar o usuário entre documento existente, geração por modelo ou anexo de PDF.
+- O seletor de origem foi reorganizado em três cartões responsivos para manter o layout limpo no padrão do painel.
+
+### Validação
+- `php artisan test tests/Feature/ElectronicSignatureTest.php --filter=template`: aprovado com 1 teste e 18 asserções.
+- `php -l app/Http/Controllers/Admin/SignatureRequestController.php`: aprovado.
+- `php -l tests/Feature/ElectronicSignatureTest.php`: aprovado.
+
 ## [1.0.19] - 2026-09-21
 
 ### Adicionado

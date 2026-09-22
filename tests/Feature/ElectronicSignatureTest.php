@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\LegalDocument;
+use App\Models\LegalDocumentTemplate;
 use App\Models\SignatureRequest;
 use App\Models\User;
 use App\Notifications\SignatureInvitationNotification;
 use App\Notifications\SignatureStatusNotification;
 use App\Services\ElectronicSignatureService;
+use App\Services\LegalDocumentTemplateManager;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -93,7 +95,7 @@ class ElectronicSignatureTest extends TestCase
 
         $response->assertSessionHasErrors('legal_document_id');
         $this->assertStringContainsString(
-            'Selecione um PDF privado existente ou use a opção Anexar PDF agora.',
+            'Selecione um PDF privado existente, gere um PDF por modelo ou use a opção Anexar PDF agora.',
             session('errors')->first('legal_document_id')
         );
         $this->assertStringNotContainsString('validation.required_if', session('errors')->first('legal_document_id'));
@@ -134,6 +136,84 @@ class ElectronicSignatureTest extends TestCase
         $this->assertSame('pdf', $uploadedDocument->extension);
         $this->assertSame(64, strlen((string) $uploadedDocument->sha256));
         Storage::disk('legal_documents')->assertExists($uploadedDocument->path);
+        Storage::disk('legal_documents')->assertExists($signatureRequest->document->immutable_path);
+        Notification::assertSentOnDemand(SignatureInvitationNotification::class);
+    }
+
+    public function test_admin_can_generate_pdf_from_template_when_creating_signature_request(): void
+    {
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('Administrador');
+        $admin->givePermissionTo([
+            'legal-document-templates.manage',
+            'legal-document-templates.generate',
+            'legal-documents.manage',
+        ]);
+
+        $client = Client::query()->create([
+            'person_type' => 'individual',
+            'name' => 'Helena Martins',
+            'document_number' => '123.456.789-09',
+            'email' => 'helena@example.test',
+            'is_active' => true,
+            'portal_enabled' => true,
+        ]);
+
+        $template = app(LegalDocumentTemplateManager::class)->create(
+            $admin,
+            [
+                'name' => 'Contrato de honorários',
+                'slug' => 'contrato-honorarios-assinatura',
+                'description' => 'Modelo usado no fluxo direto de assinatura.',
+                'context_scope' => LegalDocumentTemplate::CONTEXT_CLIENT,
+                'default_output_format' => LegalDocumentTemplate::FORMAT_PDF,
+                'is_active' => true,
+            ],
+            'Contrato de {{client.name}}',
+            [
+                'blocks' => [
+                    ['type' => 'paragraph', 'text' => 'Cliente: {{client.name}}'],
+                    ['type' => 'paragraph', 'text' => 'Documento: {{client.document_number}}'],
+                ],
+            ]
+        );
+
+        $this->actingAs($admin)
+            ->get(route('admin.signature-requests.create'))
+            ->assertOk()
+            ->assertSee('Gerar pelo modelo')
+            ->assertSee('Contrato de honorários')
+            ->assertSee('data-current-source="template"', false)
+            ->assertDontSee('validation.required_if');
+
+        $response = $this->actingAs($admin)->post(route('admin.signature-requests.store'), [
+            'document_source' => 'template',
+            'template_id' => $template->id,
+            'template_client_id' => $client->id,
+            'title' => 'Assinatura do contrato gerado',
+            'message' => 'Leia o documento e assine pelo link seguro.',
+            'expires_at' => now()->addDays(5)->format('Y-m-d H:i:s'),
+            'ordered' => '0',
+            'signers' => [
+                ['name' => 'Helena Martins', 'email' => 'helena.assinatura@example.test', 'document' => '123.456.789-09'],
+            ],
+        ]);
+
+        $signatureRequest = SignatureRequest::query()
+            ->with(['legalDocument.generation', 'document', 'signers'])
+            ->firstOrFail();
+        $generatedDocument = $signatureRequest->legalDocument;
+
+        $response->assertRedirect(route('admin.signature-requests.show', $signatureRequest));
+        $this->assertSame($client->id, $generatedDocument->client_id);
+        $this->assertSame('Contrato de Helena Martins', $generatedDocument->title);
+        $this->assertSame('legal_documents', $generatedDocument->disk);
+        $this->assertSame('private', $generatedDocument->storage_status);
+        $this->assertSame('application/pdf', $generatedDocument->mime_type);
+        $this->assertSame('pdf', $generatedDocument->extension);
+        $this->assertSame(64, strlen((string) $generatedDocument->sha256));
+        $this->assertSame($template->id, $generatedDocument->generation->legal_document_template_id);
+        Storage::disk('legal_documents')->assertExists($generatedDocument->path);
         Storage::disk('legal_documents')->assertExists($signatureRequest->document->immutable_path);
         Notification::assertSentOnDemand(SignatureInvitationNotification::class);
     }
