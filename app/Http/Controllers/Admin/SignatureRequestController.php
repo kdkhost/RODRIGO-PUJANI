@@ -85,8 +85,13 @@ class SignatureRequestController extends Controller
             ->get(['id', 'client_id', 'title']);
 
         $templates = collect();
+        $inactiveTemplatesCount = 0;
         if ($request->user()?->can('legal-document-templates.generate')
             && $request->user()?->can('legal-documents.manage')) {
+            $inactiveTemplatesCount = LegalDocumentTemplate::query()
+                ->where('is_active', false)
+                ->whereHas('versions')
+                ->count();
             $templates = LegalDocumentTemplate::query()
                 ->where('is_active', true)
                 ->whereHas('versions')
@@ -118,6 +123,7 @@ class SignatureRequestController extends Controller
         return view('admin.signature-requests.create', [
             'documents' => $documents,
             'templates' => $templates,
+            'inactiveTemplatesCount' => $inactiveTemplatesCount,
             'clients' => $clients,
             'cases' => $cases,
             'selectedDocument' => $selectedDocument,

@@ -4,6 +4,7 @@
     @php
         $hasExistingDocuments = $documents->isNotEmpty();
         $hasTemplates = ($templates ?? collect())->isNotEmpty();
+        $inactiveTemplatesCount = (int) ($inactiveTemplatesCount ?? 0);
         $currentSource = old('document_source', $documentSource ?? ($hasExistingDocuments ? 'existing' : ($hasTemplates ? 'template' : 'upload')));
         if (! $hasExistingDocuments && $currentSource === 'existing') {
             $currentSource = $hasTemplates ? 'template' : 'upload';
@@ -86,7 +87,15 @@
                                         <input type="radio" name="document_source" value="template" @checked($currentSource === 'template') @disabled(! $hasTemplates)>
                                         <span>
                                             <strong>Gerar pelo modelo</strong>
-                                            <small>{{ $hasTemplates ? 'Use um modelo do Gerador e crie o PDF privado automaticamente.' : 'Nenhum modelo ativo disponível.' }}</small>
+                                            <small>
+                                                @if($hasTemplates)
+                                                    Use um modelo do Gerador e crie o PDF privado automaticamente.
+                                                @elseif($inactiveTemplatesCount > 0)
+                                                    {{ $inactiveTemplatesCount }} modelo(s) com versão estão inativos. Ative no Gerador de documentos.
+                                                @else
+                                                    Nenhum modelo ativo disponível.
+                                                @endif
+                                            </small>
                                         </span>
                                     </label>
                                     <label class="signature-source-option">
@@ -156,7 +165,11 @@
                                 <div class="signature-source-panel mt-4" data-signature-source-panel="template">
                                     @if($templates->isEmpty())
                                         <div class="alert alert-warning mb-0">
-                                            Nenhum modelo ativo do Gerador de documentos está disponível para geração e assinatura.
+                                            @if($inactiveTemplatesCount > 0)
+                                                Existe(m) {{ $inactiveTemplatesCount }} modelo(s) com versão publicada, mas inativo(s). Acesse <strong>Jurídico &gt; Gerador de documentos</strong>, abra o modelo e clique em <strong>Ativar modelo</strong> para liberar teste, geração e assinatura.
+                                            @else
+                                                Nenhum modelo ativo do Gerador de documentos está disponível para geração e assinatura.
+                                            @endif
                                         </div>
                                     @else
                                         <div class="row g-3">

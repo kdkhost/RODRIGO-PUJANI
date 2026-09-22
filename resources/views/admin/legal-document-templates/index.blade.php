@@ -69,9 +69,39 @@
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.legal-document-templates.show', $template) }}">
-                                            Detalhes
-                                        </a>
+                                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                            <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.legal-document-templates.show', $template) }}">
+                                                Detalhes
+                                            </a>
+                                            @can('generate', $template)
+                                                <a class="btn btn-sm btn-outline-success" href="{{ route('admin.legal-document-templates.generate.create', [$template, 'intent' => 'test']) }}">
+                                                    Testar PDF
+                                                </a>
+                                                @if(config('signatures.enabled', false) && auth()->user()?->can('signature-requests.create'))
+                                                    <a class="btn btn-sm btn-success" href="{{ route('admin.legal-document-templates.generate.create', [$template, 'intent' => 'signature']) }}">
+                                                        Enviar para assinatura
+                                                    </a>
+                                                @endif
+                                            @else
+                                                @if(! $template->is_active)
+                                                    @can('update', $template)
+                                                        <form method="POST" action="{{ route('admin.legal-document-templates.update', $template) }}" class="d-inline">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <input type="hidden" name="name" value="{{ $template->name }}">
+                                                            <input type="hidden" name="slug" value="{{ $template->slug }}">
+                                                            <input type="hidden" name="description" value="{{ $template->description }}">
+                                                            <input type="hidden" name="context_scope" value="{{ $template->context_scope }}">
+                                                            <input type="hidden" name="default_output_format" value="{{ $template->default_output_format }}">
+                                                            <input type="hidden" name="is_active" value="1">
+                                                            <button class="btn btn-sm btn-warning" type="submit">
+                                                                Ativar modelo
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                @endif
+                                            @endcan
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

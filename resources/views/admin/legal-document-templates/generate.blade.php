@@ -1,5 +1,12 @@
 @extends('admin.layouts.app')
 
+@php
+    $currentIntent = old('after_generate', $intent ?? 'documents');
+    $defaultFormat = in_array($currentIntent, ['test', 'signature'], true)
+        ? App\Models\LegalDocumentTemplate::FORMAT_PDF
+        : $template->default_output_format;
+@endphp
+
 @section('content')
     <div class="app-content-header">
         <div class="container-fluid d-flex justify-content-between align-items-center gap-3">
@@ -20,6 +27,20 @@
                         <div class="card">
                             <div class="card-header"><strong>Dados da geração</strong></div>
                             <div class="card-body row g-3">
+                                <div class="col-12">
+                                    <div class="alert alert-light border mb-0">
+                                        <div class="d-flex gap-2">
+                                            <i class="bi bi-info-circle mt-1"></i>
+                                            <div>
+                                                <strong>Escolha o caminho do documento.</strong>
+                                                <div class="small text-muted">
+                                                    Use <strong>Testar/visualizar PDF</strong> para conferir o arquivo antes do cliente receber o link. Se estiver tudo certo, use <strong>Gerar PDF e enviar para assinatura</strong>.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label" for="legal_document_template_version_id">Versão</label>
                                     <select class="form-select" id="legal_document_template_version_id" name="legal_document_template_version_id" required>
@@ -34,9 +55,10 @@
                                     <label class="form-label" for="output_format">Formato</label>
                                     <select class="form-select" id="output_format" name="output_format" required>
                                         @foreach($outputFormats as $value => $label)
-                                            <option value="{{ $value }}" @selected(old('output_format', $template->default_output_format) === $value)>{{ $label }}</option>
+                                            <option value="{{ $value }}" @selected(old('output_format', $defaultFormat) === $value)>{{ $label }}</option>
                                         @endforeach
                                     </select>
+                                    <div class="form-text">Teste e assinatura sempre usam PDF para preservar a fidelidade visual e permitir o SHA-256 do arquivo assinado.</div>
                                 </div>
 
                                 @if($clients->isNotEmpty())
@@ -85,7 +107,7 @@
                                             <div>
                                                 <strong>Vai enviar para assinatura eletrônica?</strong>
                                                 <div class="small">
-                                                    Use o botão <strong>Gerar PDF e enviar para assinatura</strong>. O sistema gera o documento pelo template, salva em Documentos, abre a tela de assinatura com o PDF já selecionado e envia o link individual por e-mail quando você confirmar os signatários.
+                                                    O sistema gera o documento pelo template, salva em Documentos, abre a tela de assinatura com o PDF já selecionado e envia o link individual por e-mail quando você confirmar os signatários.
                                                 </div>
                                             </div>
                                         </div>
@@ -103,9 +125,14 @@
                                 <button class="btn btn-primary" type="submit" name="after_generate" value="documents">
                                     <i class="bi bi-file-earmark-check me-1"></i>Gerar documento
                                 </button>
-                                <button class="btn btn-success" type="submit" name="after_generate" value="signature" data-force-output-format="pdf">
-                                    <i class="bi bi-send me-1"></i>Gerar PDF e enviar para assinatura
+                                <button class="btn btn-outline-success" type="submit" name="after_generate" value="test" data-force-output-format="pdf">
+                                    <i class="bi bi-eye me-1"></i>Testar/visualizar PDF
                                 </button>
+                                @if(config('signatures.enabled', false) && auth()->user()?->can('signature-requests.create'))
+                                    <button class="btn btn-success" type="submit" name="after_generate" value="signature" data-force-output-format="pdf">
+                                        <i class="bi bi-send me-1"></i>Gerar PDF e enviar para assinatura
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </form>

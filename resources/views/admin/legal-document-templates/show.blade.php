@@ -19,9 +19,17 @@
                     <a class="btn btn-outline-secondary" href="{{ route('admin.legal-document-templates.edit', $template) }}">Editar metadados</a>
                 @endcan
                 @can('generate', $template)
+                    <a class="btn btn-outline-success" href="{{ route('admin.legal-document-templates.generate.create', [$template, 'intent' => 'test']) }}">
+                        <i class="bi bi-eye me-1"></i>Testar PDF
+                    </a>
                     <a class="btn btn-primary" href="{{ route('admin.legal-document-templates.generate.create', $template) }}">
                         <i class="bi bi-file-earmark-plus me-1"></i>Gerar documento
                     </a>
+                    @if(config('signatures.enabled', false) && auth()->user()?->can('signature-requests.create'))
+                        <a class="btn btn-success" href="{{ route('admin.legal-document-templates.generate.create', [$template, 'intent' => 'signature']) }}">
+                            <i class="bi bi-send me-1"></i>Enviar para assinatura
+                        </a>
+                    @endif
                 @endcan
             </div>
         </div>
@@ -29,6 +37,30 @@
 
     <div class="app-content">
         <div class="container-fluid">
+            @if(! $template->is_active)
+                <div class="alert alert-warning d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                    <div>
+                        <strong>Este modelo está inativo.</strong>
+                        <div class="small">Modelos inativos não aparecem para geração, teste ou envio por assinatura. Ative o modelo para usar no fluxo do cliente.</div>
+                    </div>
+                    @can('update', $template)
+                        <form method="POST" action="{{ route('admin.legal-document-templates.update', $template) }}" class="d-inline">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="name" value="{{ $template->name }}">
+                            <input type="hidden" name="slug" value="{{ $template->slug }}">
+                            <input type="hidden" name="description" value="{{ $template->description }}">
+                            <input type="hidden" name="context_scope" value="{{ $template->context_scope }}">
+                            <input type="hidden" name="default_output_format" value="{{ $template->default_output_format }}">
+                            <input type="hidden" name="is_active" value="1">
+                            <button class="btn btn-warning" type="submit">
+                                <i class="bi bi-unlock me-1"></i>Ativar modelo
+                            </button>
+                        </form>
+                    @endcan
+                </div>
+            @endif
+
             <div class="row g-4">
                 <div class="col-xl-8">
                     <div class="card">

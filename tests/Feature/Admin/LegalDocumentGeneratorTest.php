@@ -142,7 +142,10 @@ class LegalDocumentGeneratorTest extends TestCase
 
     public function test_template_index_renders_latest_version_without_ambiguous_query(): void
     {
+        config()->set('signatures.enabled', true);
+        Permission::findOrCreate('signature-requests.create', 'web');
         $actor = $this->actor();
+        $actor->givePermissionTo('signature-requests.create');
         $manager = app(LegalDocumentTemplateManager::class);
 
         $template = $manager->create(
@@ -163,7 +166,38 @@ class LegalDocumentGeneratorTest extends TestCase
             ->get(route('admin.legal-document-templates.index'))
             ->assertOk()
             ->assertSee('contrato-honorarios')
-            ->assertSee('v2');
+            ->assertSee('v2')
+            ->assertSee('Testar PDF')
+            ->assertSee('Enviar para assinatura')
+            ->assertSee(route('admin.legal-document-templates.generate.create', [$template, 'intent' => 'test']), false)
+            ->assertSee(route('admin.legal-document-templates.generate.create', [$template, 'intent' => 'signature']), false);
+    }
+
+    public function test_inactive_template_explains_activation_before_generation(): void
+    {
+        $actor = $this->actor();
+        $template = app(LegalDocumentTemplateManager::class)->create(
+            $actor,
+            [
+                ...$this->metadata('modelo-inativo', LegalDocumentTemplate::CONTEXT_CLIENT),
+                'is_active' => false,
+            ],
+            'Documento de {{client.name}}',
+            $this->definition('Cliente: {{client.name}}')
+        );
+
+        $this->actingAs($actor)
+            ->get(route('admin.legal-document-templates.index'))
+            ->assertOk()
+            ->assertSee('Inativo')
+            ->assertSee('Ativar modelo')
+            ->assertDontSee(route('admin.legal-document-templates.generate.create', [$template, 'intent' => 'test']), false);
+
+        $this->actingAs($actor)
+            ->get(route('admin.legal-document-templates.show', $template))
+            ->assertOk()
+            ->assertSee('Este modelo está inativo.')
+            ->assertSee('Ativar modelo');
     }
 
     public function test_template_create_page_uses_default_background_setting(): void
@@ -576,6 +610,27 @@ class LegalDocumentGeneratorTest extends TestCase
             ->assertSee($document->title)
             ->assertSee('Enviar para assinatura', false)
             ->assertSee(route('admin.signature-requests.create', ['document' => $document->id]), false);
+
+        $testResponse = $this->actingAs($actor)->post(
+            route('admin.legal-document-templates.generate.store', $template),
+            [
+                'legal_document_template_version_id' => $template->versions()->firstOrFail()->id,
+                'client_id' => $client->id,
+                'output_format' => LegalDocumentTemplate::FORMAT_PDF,
+                'after_generate' => 'test',
+            ]
+        );
+
+        $testDocument = LegalDocumentGeneration::query()
+            ->with('legalDocument')
+            ->latest('id')
+            ->firstOrFail()
+            ->legalDocument;
+
+        $testResponse
+            ->assertRedirect(route('admin.legal-documents.index', ['highlight_document' => $testDocument->id]))
+            ->assertSessionHas('status', 'PDF de teste gerado e salvo em Documentos. Revise ou baixe o arquivo; se estiver correto, use Enviar para assinatura.')
+            ->assertSessionHas('generated_document_id', $testDocument->id);
 
         $signatureResponse = $this->actingAs($actor)->post(
             route('admin.legal-document-templates.generate.store', $template),

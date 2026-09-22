@@ -23,6 +23,10 @@ class LegalDocumentGenerationController extends Controller
         LegalDocumentTemplate $legalDocumentTemplate
     ): View {
         $this->authorize('generate', $legalDocumentTemplate);
+        $intent = $request->string('intent')->toString();
+        if (! in_array($intent, ['documents', 'test', 'signature'], true)) {
+            $intent = 'documents';
+        }
 
         $clients = collect();
         $cases = collect();
@@ -56,6 +60,7 @@ class LegalDocumentGenerationController extends Controller
             'clients' => $clients,
             'cases' => $cases,
             'outputFormats' => LegalDocumentTemplate::outputFormats(),
+            'intent' => $intent,
         ]);
     }
 
@@ -77,13 +82,13 @@ class LegalDocumentGenerationController extends Controller
             'legal_case_id' => ['nullable', 'integer'],
             'output_format' => ['required', Rule::in(array_keys(LegalDocumentTemplate::outputFormats()))],
             'shared_with_client' => ['nullable', 'boolean'],
-            'after_generate' => ['nullable', Rule::in(['documents', 'signature'])],
+            'after_generate' => ['nullable', Rule::in(['documents', 'test', 'signature'])],
         ]);
 
-        if (($validated['after_generate'] ?? 'documents') === 'signature'
+        if (in_array(($validated['after_generate'] ?? 'documents'), ['test', 'signature'], true)
             && $validated['output_format'] !== LegalDocumentTemplate::FORMAT_PDF) {
             throw ValidationException::withMessages([
-                'output_format' => 'Para enviar para assinatura, gere o documento em PDF.',
+                'output_format' => 'Para testar ou enviar para assinatura, gere o documento em PDF.',
             ]);
         }
 
@@ -123,6 +128,13 @@ class LegalDocumentGenerationController extends Controller
                     'from_generation' => 1,
                 ])
                 ->with('status', 'Documento gerado em PDF. Complete os signatários para enviar o link de assinatura ao cliente.');
+        }
+
+        if (($validated['after_generate'] ?? 'documents') === 'test') {
+            return redirect()
+                ->route('admin.legal-documents.index', ['highlight_document' => $generation->legal_document_id])
+                ->with('status', 'PDF de teste gerado e salvo em Documentos. Revise ou baixe o arquivo; se estiver correto, use Enviar para assinatura.')
+                ->with('generated_document_id', $generation->legal_document_id);
         }
 
         return redirect()

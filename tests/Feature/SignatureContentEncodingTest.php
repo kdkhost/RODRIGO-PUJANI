@@ -43,8 +43,9 @@ class SignatureContentEncodingTest extends TestCase
             'Documentos gerados por template em PDF também ficam disponíveis aqui',
         ],
         'resources/views/admin/legal-document-templates/generate.blade.php' => [
+            'Testar/visualizar PDF',
             'Gerar PDF e enviar para assinatura',
-            'abre a tela de assinatura com o PDF já selecionado',
+            'para conferir o arquivo antes do cliente receber o link',
         ],
         'resources/js/admin.js' => [
             'Prévia do PDF',

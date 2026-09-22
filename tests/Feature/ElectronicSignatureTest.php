@@ -101,6 +101,42 @@ class ElectronicSignatureTest extends TestCase
         $this->assertStringNotContainsString('validation.required_if', session('errors')->first('legal_document_id'));
     }
 
+    public function test_create_page_explains_when_templates_exist_but_are_inactive(): void
+    {
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('Administrador');
+        $admin->givePermissionTo([
+            'legal-document-templates.manage',
+            'legal-document-templates.generate',
+            'legal-documents.manage',
+        ]);
+
+        app(LegalDocumentTemplateManager::class)->create(
+            $admin,
+            [
+                'name' => 'Modelo inativo para assinatura',
+                'slug' => 'modelo-inativo-assinatura',
+                'description' => 'Modelo de teste inativo.',
+                'context_scope' => LegalDocumentTemplate::CONTEXT_CLIENT,
+                'default_output_format' => LegalDocumentTemplate::FORMAT_PDF,
+                'is_active' => false,
+            ],
+            'Documento de {{client.name}}',
+            [
+                'blocks' => [
+                    ['type' => 'paragraph', 'text' => 'Cliente: {{client.name}}'],
+                ],
+            ]
+        );
+
+        $this->actingAs($admin)
+            ->get(route('admin.signature-requests.create'))
+            ->assertOk()
+            ->assertSee('1 modelo(s) com versão estão inativos')
+            ->assertSee('Ative no Gerador de documentos')
+            ->assertSee('data-current-source="upload"', false);
+    }
+
     public function test_admin_can_attach_pdf_directly_when_creating_signature_request(): void
     {
         $admin = User::factory()->create(['is_active' => true]);

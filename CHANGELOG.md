@@ -2,6 +2,26 @@
 
 Todas as mudanças relevantes deste projeto são registradas aqui.
 
+## [1.0.21] - 2026-09-22
+
+### Adicionado
+- O Gerador de documentos passou a oferecer ações diretas para testar o PDF antes do envio e para gerar o documento já encaminhando para a assinatura eletrônica.
+- A listagem e a página de detalhes dos modelos exibem atalhos "Testar PDF" e "Enviar para assinatura" quando o modelo está ativo e a assinatura está habilitada.
+- Modelos inativos com versão publicada agora exibem ação segura de ativação diretamente no Gerador de documentos, sem exigir edição manual do registro.
+
+### Alterado
+- A tela "Enviar documento para assinatura" agora informa quando existem modelos com versão publicada, mas inativos, orientando a ativação no Gerador de documentos em vez de deixar a opção aparentemente quebrada.
+- O fluxo de teste força saída em PDF, salva o arquivo em Documentos e redireciona para conferência antes de qualquer envio ao cliente.
+- A ação de assinatura pelo modelo exige PDF e mantém o documento privado com hash SHA-256 antes de criar a solicitação.
+
+### Corrigido
+- Corrigida a percepção de ausência de modelos na assinatura quando havia template versionado, porém inativo, em produção.
+- Removido o bloqueio silencioso que fazia o usuário acreditar que documentos criados no sistema não poderiam ser usados no envio de assinatura.
+
+### Validação
+- `php artisan test tests/Feature/Admin/LegalDocumentGeneratorTest.php tests/Feature/ElectronicSignatureTest.php tests/Feature/SignatureContentEncodingTest.php`: aprovado com 35 testes e 374 asserções.
+- `php -l` nos controllers e views alterados: aprovado.
+
 ## [1.0.20] - 2026-09-22
 
 ### Adicionado
