@@ -36,6 +36,25 @@ class SignatureContentEncodingTest extends TestCase
             'Comprovante válido',
             'Baixar comprovante',
         ],
+        'resources/views/admin/signature-requests/create.blade.php' => [
+            'Documento gerado por template selecionado automaticamente',
+            'Pré-visualizar',
+            'Arraste e solte ou selecione um PDF real',
+            'Documentos gerados por template em PDF também ficam disponíveis aqui',
+        ],
+        'resources/views/admin/legal-document-templates/generate.blade.php' => [
+            'Gerar PDF e enviar para assinatura',
+            'abre a tela de assinatura com o PDF já selecionado',
+        ],
+        'resources/js/admin.js' => [
+            'Prévia do PDF',
+            'Arraste e solte ou',
+        ],
+        'lang/pt_BR/validation.php' => [
+            'O campo :attribute é obrigatório quando :other for :value.',
+            'PDF para assinatura',
+            'documento existente',
+        ],
         'resources/views/admin/system-settings/sections/mail.blade.php' => [
             'Comunicação por e-mail',
             'Usuário SMTP',

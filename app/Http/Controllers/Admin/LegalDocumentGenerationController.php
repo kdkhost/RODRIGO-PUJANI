@@ -7,11 +7,13 @@ use App\Models\Client;
 use App\Models\LegalCase;
 use App\Models\LegalDocumentTemplate;
 use App\Models\LegalDocumentTemplateVersion;
+use App\Services\ElectronicSignatureService;
 use App\Services\LegalDocumentGenerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class LegalDocumentGenerationController extends Controller
@@ -75,7 +77,15 @@ class LegalDocumentGenerationController extends Controller
             'legal_case_id' => ['nullable', 'integer'],
             'output_format' => ['required', Rule::in(array_keys(LegalDocumentTemplate::outputFormats()))],
             'shared_with_client' => ['nullable', 'boolean'],
+            'after_generate' => ['nullable', Rule::in(['documents', 'signature'])],
         ]);
+
+        if (($validated['after_generate'] ?? 'documents') === 'signature'
+            && $validated['output_format'] !== LegalDocumentTemplate::FORMAT_PDF) {
+            throw ValidationException::withMessages([
+                'output_format' => 'Para enviar para assinatura, gere o documento em PDF.',
+            ]);
+        }
 
         $version = LegalDocumentTemplateVersion::query()
             ->where('legal_document_template_id', $legalDocumentTemplate->id)
@@ -94,7 +104,25 @@ class LegalDocumentGenerationController extends Controller
                 'generation_id' => $generation->id,
                 'document_id' => $generation->legal_document_id,
                 'download_url' => $downloadUrl,
+                'signature_url' => ElectronicSignatureService::supports($generation->legalDocument)
+                    ? route('admin.signature-requests.create', ['document' => $generation->legal_document_id, 'from_generation' => 1])
+                    : null,
             ], 201);
+        }
+
+        if (($validated['after_generate'] ?? 'documents') === 'signature') {
+            if (! ElectronicSignatureService::supports($generation->legalDocument) || blank($generation->legalDocument->client_id)) {
+                throw ValidationException::withMessages([
+                    'output_format' => 'O documento gerado não ficou elegível para assinatura. Confirme cliente vinculado, PDF privado e hash SHA-256.',
+                ]);
+            }
+
+            return redirect()
+                ->route('admin.signature-requests.create', [
+                    'document' => $generation->legal_document_id,
+                    'from_generation' => 1,
+                ])
+                ->with('status', 'Documento gerado em PDF. Complete os signatários para enviar o link de assinatura ao cliente.');
         }
 
         return redirect()

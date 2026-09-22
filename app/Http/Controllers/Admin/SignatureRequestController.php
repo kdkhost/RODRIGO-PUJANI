@@ -43,17 +43,32 @@ class SignatureRequestController extends Controller
     {
         $this->authorize('create', SignatureRequest::class);
 
-        $documents = LegalDocument::query()
+        $selectedDocument = (int) $request->integer('document');
+
+        $documentQuery = LegalDocument::query()
             ->visibleTo($request->user())
-            ->with(['client:id,name', 'legalCase:id,title'])
+            ->with(['client:id,name', 'legalCase:id,title', 'generation.template:id,name'])
             ->whereNotNull('client_id')
             ->where('disk', LegalDocumentStorage::DISK)
             ->where('storage_status', 'private')
             ->where('mime_type', 'application/pdf')
             ->where('extension', 'pdf')
-            ->whereNotNull('sha256')
+            ->whereNotNull('sha256');
+
+        $documents = (clone $documentQuery)
             ->latest()
-            ->get(['id', 'title', 'client_id', 'legal_case_id', 'original_name', 'sha256', 'created_at']);
+            ->limit(300)
+            ->get(['id', 'title', 'client_id', 'legal_case_id', 'original_name', 'file_name', 'mime_type', 'extension', 'size', 'sha256', 'created_at']);
+
+        if ($selectedDocument > 0 && ! $documents->contains('id', $selectedDocument)) {
+            $selected = (clone $documentQuery)
+                ->whereKey($selectedDocument)
+                ->first(['id', 'title', 'client_id', 'legal_case_id', 'original_name', 'file_name', 'mime_type', 'extension', 'size', 'sha256', 'created_at']);
+
+            if ($selected) {
+                $documents->prepend($selected);
+            }
+        }
 
         $clients = Client::query()
             ->visibleTo($request->user())
@@ -67,14 +82,15 @@ class SignatureRequestController extends Controller
             ->orderBy('title')
             ->get(['id', 'client_id', 'title']);
 
-        $selectedDocument = (int) $request->integer('document');
+        $documentSource = $selectedDocument > 0 || $documents->isNotEmpty() ? 'existing' : 'upload';
 
         return view('admin.signature-requests.create', [
             'documents' => $documents,
             'clients' => $clients,
             'cases' => $cases,
             'selectedDocument' => $selectedDocument,
-            'documentSource' => $selectedDocument > 0 || $documents->isNotEmpty() ? 'existing' : 'upload',
+            'documentSource' => $documentSource,
+            'fromTemplateGeneration' => $request->boolean('from_generation'),
         ]);
     }
 
@@ -90,22 +106,39 @@ class SignatureRequestController extends Controller
             'document_source' => $request->input('document_source', $request->hasFile('upload_file') ? 'upload' : 'existing'),
         ]);
 
-        $data = $request->validate([
-            'document_source' => ['required', Rule::in(['existing', 'upload'])],
-            'legal_document_id' => ['nullable', 'required_if:document_source,existing', 'integer', Rule::exists('legal_documents', 'id')],
-            'upload_file' => ['nullable', 'required_if:document_source,upload', 'file', 'mimes:pdf', 'max:15360'],
-            'upload_client_id' => ['nullable', 'required_if:document_source,upload', 'integer', $this->clientRule($request)],
-            'upload_legal_case_id' => ['nullable', 'integer', $this->caseRule($request)],
-            'upload_title' => ['nullable', 'string', 'max:255'],
-            'title' => ['required', 'string', 'max:255'],
-            'message' => ['nullable', 'string', 'max:3000'],
-            'expires_at' => ['required', 'date', 'after:now'],
-            'ordered' => ['nullable', 'boolean'],
-            'signers' => ['required', 'array', 'min:1', 'max:20'],
-            'signers.*.name' => ['required', 'string', 'max:255'],
-            'signers.*.email' => ['required', 'email:rfc', 'max:255', 'distinct:ignore_case'],
-            'signers.*.document' => ['nullable', 'string', 'max:32'],
-        ]);
+        $data = $request->validate(
+            [
+                'document_source' => ['required', Rule::in(['existing', 'upload'])],
+                'legal_document_id' => ['nullable', 'required_if:document_source,existing', 'integer', Rule::exists('legal_documents', 'id')],
+                'upload_file' => ['nullable', 'required_if:document_source,upload', 'file', 'mimes:pdf', 'max:15360'],
+                'upload_client_id' => ['nullable', 'required_if:document_source,upload', 'integer', $this->clientRule($request)],
+                'upload_legal_case_id' => ['nullable', 'integer', $this->caseRule($request)],
+                'upload_title' => ['nullable', 'string', 'max:255'],
+                'title' => ['required', 'string', 'max:255'],
+                'message' => ['nullable', 'string', 'max:3000'],
+                'expires_at' => ['required', 'date', 'after:now'],
+                'ordered' => ['nullable', 'boolean'],
+                'signers' => ['required', 'array', 'min:1', 'max:20'],
+                'signers.*.name' => ['required', 'string', 'max:255'],
+                'signers.*.email' => ['required', 'email:rfc', 'max:255', 'distinct:ignore_case'],
+                'signers.*.document' => ['nullable', 'string', 'max:32'],
+            ],
+            [
+                'legal_document_id.required_if' => 'Selecione um PDF privado existente ou use a opção Anexar PDF agora.',
+                'upload_file.required_if' => 'Anexe o PDF que será enviado para assinatura.',
+                'upload_client_id.required_if' => 'Selecione o cliente vinculado ao documento anexado.',
+            ],
+            [
+                'legal_document_id' => 'documento existente',
+                'upload_file' => 'PDF para assinatura',
+                'upload_client_id' => 'cliente vinculado',
+                'expires_at' => 'data de expiração',
+                'signers' => 'signatários',
+                'signers.*.name' => 'nome do signatário',
+                'signers.*.email' => 'e-mail do signatário',
+                'signers.*.document' => 'CPF/CNPJ do signatário',
+            ]
+        );
 
         $document = $data['document_source'] === 'upload'
             ? $this->storeUploadedDocument($request, $data, $storage)

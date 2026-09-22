@@ -48,14 +48,14 @@
                 class="form-control"
                 data-filepond
                 data-accepted="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp"
-                data-current-url="{{ $record->path ? site_asset_url($record->path) : '' }}"
+                data-current-url="{{ $record->exists && $record->path ? route('admin.legal-documents.download', $record) : '' }}"
                 data-current-name="{{ $record->original_name ?: $record->file_name }}"
                 data-current-type="{{ $record->mime_type }}"
                 data-current-size="{{ $record->size }}"
             >
             @if($record->path)
                 <div class="small text-muted mt-2">
-                    Atual: <a href="{{ site_asset_url($record->path) }}" target="_blank" rel="noopener">{{ $record->original_name ?: $record->file_name }}</a>
+                    Atual: <a href="{{ route('admin.legal-documents.download', $record) }}" target="_blank" rel="noopener">{{ $record->original_name ?: $record->file_name }}</a>
                 </div>
             @endif
         </div>

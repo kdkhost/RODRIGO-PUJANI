@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\DjenRateLimitException;
+use App\Exceptions\DjenUnavailableException;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
@@ -120,6 +121,22 @@ class DjenClient
                 $this->retryAt($response->header('Retry-After')),
                 $limit,
                 $remaining,
+            );
+        }
+
+        if (in_array($response->status(), [401, 403, 451], true)) {
+            throw new DjenUnavailableException(
+                'A API pública do DJEN recusou a consulta (HTTP '.$response->status().'). A próxima tentativa será feita automaticamente.',
+                CarbonImmutable::now()->addHours(6),
+                $response->status(),
+            );
+        }
+
+        if ($response->serverError()) {
+            throw new DjenUnavailableException(
+                'A API pública do DJEN está temporariamente indisponível (HTTP '.$response->status().'). A próxima tentativa será feita automaticamente.',
+                CarbonImmutable::now()->addMinutes(15),
+                $response->status(),
             );
         }
 

@@ -41,8 +41,17 @@ class LegalDocumentStorage
             throw ValidationException::withMessages(['file' => 'O arquivo não foi aprovado pela verificação de segurança.']);
         }
 
+        [$sourcePath, $deleteSource] = $this->optimizedSourcePath($file, $metadata);
+        $metadata = $this->metadataFromPath($sourcePath, $metadata);
         $path = now()->format('Y/m').'/'.Str::uuid().'.'.$metadata['extension'];
-        Storage::disk(self::DISK)->putFileAs(dirname($path), $file, basename($path));
+
+        try {
+            Storage::disk(self::DISK)->put($path, File::get($sourcePath));
+        } finally {
+            if ($deleteSource) {
+                @unlink($sourcePath);
+            }
+        }
 
         if (! Storage::disk(self::DISK)->exists($path)) {
             throw new RuntimeException('Não foi possível confirmar o armazenamento privado do documento.');
@@ -235,5 +244,85 @@ class LegalDocumentStorage
         $zip->close();
 
         return $valid && ! $hasMacros;
+    }
+
+    /**
+     * @param  array{extension:string,mime_type:string,size:int|null,sha256:string,original_name:string}  $metadata
+     * @return array{0:string,1:bool}
+     */
+    private function optimizedSourcePath(UploadedFile $file, array $metadata): array
+    {
+        $source = $file->getRealPath();
+        $extension = Str::lower((string) $metadata['extension']);
+
+        if (! is_string($source) || ! is_file($source) || ! in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            return [(string) $source, false];
+        }
+
+        $target = tempnam(sys_get_temp_dir(), 'pujani-doc-optimized-');
+        if (! is_string($target)) {
+            return [$source, false];
+        }
+
+        try {
+            $image = match ($extension) {
+                'jpg', 'jpeg' => function_exists('imagecreatefromjpeg') ? @imagecreatefromjpeg($source) : false,
+                'png' => function_exists('imagecreatefrompng') ? @imagecreatefrompng($source) : false,
+                'webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($source) : false,
+                default => false,
+            };
+
+            if (! $image) {
+                @unlink($target);
+
+                return [$source, false];
+            }
+
+            if (in_array($extension, ['png', 'webp'], true)) {
+                imagepalettetotruecolor($image);
+                imagealphablending($image, false);
+                imagesavealpha($image, true);
+            }
+
+            $written = match ($extension) {
+                'jpg', 'jpeg' => imagejpeg($image, $target, 82),
+                'png' => imagepng($image, $target, 8),
+                'webp' => function_exists('imagewebp') ? imagewebp($image, $target, 82) : false,
+                default => false,
+            };
+
+            imagedestroy($image);
+
+            if (! $written || ! is_file($target) || filesize($target) <= 0 || filesize($target) > filesize($source)) {
+                @unlink($target);
+
+                return [$source, false];
+            }
+
+            $header = substr(File::get($target, true), 0, 16);
+            if (! $this->matchesSignature($target, $extension, $header)) {
+                @unlink($target);
+
+                return [$source, false];
+            }
+
+            return [$target, true];
+        } catch (\Throwable) {
+            @unlink($target);
+
+            return [$source, false];
+        }
+    }
+
+    /**
+     * @param  array{extension:string,mime_type:string,size:int|null,sha256:string,original_name:string}  $metadata
+     * @return array{extension:string,mime_type:string,size:int,sha256:string,original_name:string}
+     */
+    private function metadataFromPath(string $path, array $metadata): array
+    {
+        $metadata['size'] = (int) (filesize($path) ?: 0);
+        $metadata['sha256'] = hash_file('sha256', $path);
+
+        return $metadata;
     }
 }

@@ -1,6 +1,33 @@
 # Changelog
 
-Todas as mudancas relevantes deste projeto sao registradas aqui.
+Todas as mudanças relevantes deste projeto são registradas aqui.
+
+## [1.0.19] - 2026-09-21
+
+### Adicionado
+- O documento gerado por template agora pode seguir direto para a assinatura eletrônica pelo botão "Gerar PDF e enviar para assinatura".
+- A tela de nova solicitação de assinatura passou a listar PDFs privados gerados pelo sistema em lista suspensa, com prévia, cliente, processo, origem do template, tamanho e SHA-256.
+- Upload direto de PDF para assinatura agora usa arrasta-e-solta com FilePond, limite explícito e pré-visualização durante o preenchimento.
+
+### Alterado
+- Documentos jurídicos privados passaram a usar rota autenticada de download/preview no painel, evitando URL pública para arquivo sensível.
+- Uploads públicos de imagens e documentos privados em imagem agora são otimizados com GD quando a recompressão reduz o tamanho sem alterar a extensão.
+- PDFs, DOCX e DOC continuam sendo validados por assinatura, hash e storage privado, preservando integridade documental em vez de recompressão destrutiva.
+- Falhas HTTP 401, 403, 451 ou 5xx da API pública do DJEN agora são registradas como indisponibilidade externa com nova tentativa programada, sem derrubar o job como erro crítico recorrente.
+
+### Corrigido
+- Removido o risco de o documento gerado não aparecer no fluxo de assinatura: ao gerar PDF pelo template, ele é salvo em Documentos e aberto automaticamente já selecionado para envio ao cliente.
+- Tela de envio para assinatura agora inicia em "Anexar PDF agora" quando não há PDF privado elegível, bloqueia a opção inválida e troca o erro técnico `validation.required_if` por mensagens amigáveis em PT-BR.
+- Expandida a validação contra mojibake nos textos da assinatura, painel de geração, prévia de PDF e JavaScript administrativo.
+
+### Validação
+- `php artisan test`: aprovado com 234 testes, 1684 asserções e 2 skips esperados em ambiente Windows.
+- `php artisan test tests/Feature/ElectronicSignatureTest.php tests/Feature/Admin/LegalDocumentGeneratorTest.php tests/Feature/Admin/DjenPublicationMonitoringTest.php tests/Feature/SignatureContentEncodingTest.php`: aprovado com 43 testes e 388 asserções.
+- `composer audit`: aprovado, sem vulnerabilidades conhecidas.
+- `npm audit`: aprovado, sem vulnerabilidades.
+- `npm audit --omit=dev`: aprovado, sem vulnerabilidades.
+- `npm run build`: aprovado, mantendo apenas os avisos conhecidos de chunk grande e imagem premium resolvida em runtime.
+- `git diff --check`, lint PHP e varredura UTF-8 sem BOM/mojibake: aprovados.
 
 ## [1.0.18] - 2026-09-21
 

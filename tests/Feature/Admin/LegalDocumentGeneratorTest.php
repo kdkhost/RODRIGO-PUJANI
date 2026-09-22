@@ -576,6 +576,41 @@ class LegalDocumentGeneratorTest extends TestCase
             ->assertSee($document->title)
             ->assertSee('Enviar para assinatura', false)
             ->assertSee(route('admin.signature-requests.create', ['document' => $document->id]), false);
+
+        $signatureResponse = $this->actingAs($actor)->post(
+            route('admin.legal-document-templates.generate.store', $template),
+            [
+                'legal_document_template_version_id' => $template->versions()->firstOrFail()->id,
+                'client_id' => $client->id,
+                'output_format' => LegalDocumentTemplate::FORMAT_PDF,
+                'after_generate' => 'signature',
+            ]
+        );
+
+        $signatureDocument = LegalDocumentGeneration::query()
+            ->with('legalDocument')
+            ->latest('id')
+            ->firstOrFail()
+            ->legalDocument;
+
+        $signatureResponse
+            ->assertRedirect(route('admin.signature-requests.create', [
+                'document' => $signatureDocument->id,
+                'from_generation' => 1,
+            ]))
+            ->assertSessionHas('status');
+
+        $this->actingAs($actor)
+            ->get(route('admin.signature-requests.create', [
+                'document' => $signatureDocument->id,
+                'from_generation' => 1,
+            ]))
+            ->assertOk()
+            ->assertSee('Documento gerado por template selecionado automaticamente')
+            ->assertSee('gerado por template')
+            ->assertSee('Pré-visualizar')
+            ->assertSee('data-filepond', false)
+            ->assertSee((string) $signatureDocument->sha256);
     }
 
     public function test_visual_absolute_template_generates_a4_pdf_and_rejects_docx_reflow(): void

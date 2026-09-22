@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\DjenRateLimitException;
+use App\Exceptions\DjenUnavailableException;
 use App\Models\DjenMonitor;
 use App\Models\DjenPublication;
 use App\Models\DjenSyncRun;
@@ -110,6 +111,14 @@ class DjenPublicationSyncService
                 'rate_limited_until' => $exception->retryAt,
                 'next_sync_at' => $exception->retryAt,
                 'last_error' => $exception->getMessage(),
+            ])->save();
+        } catch (DjenUnavailableException $exception) {
+            $status = $counters['pages'] > 0 ? DjenSyncRun::STATUS_PARTIAL : DjenSyncRun::STATUS_UNAVAILABLE;
+            $this->finishWithError($run, $status, $exception->getMessage(), $counters, $exception->retryAt);
+            $monitor->forceFill([
+                'last_attempt_at' => now(),
+                'next_sync_at' => $exception->retryAt,
+                'last_error' => Str::limit($exception->getMessage(), 2000, ''),
             ])->save();
         } catch (Throwable $exception) {
             $status = $counters['pages'] > 0 ? DjenSyncRun::STATUS_PARTIAL : DjenSyncRun::STATUS_FAILED;

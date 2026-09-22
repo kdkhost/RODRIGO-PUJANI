@@ -79,14 +79,33 @@
                                 </div>
 
                                 <div class="col-12">
+                                    <div class="alert alert-primary mb-0">
+                                        <div class="d-flex gap-2">
+                                            <i class="bi bi-pen mt-1"></i>
+                                            <div>
+                                                <strong>Vai enviar para assinatura eletrônica?</strong>
+                                                <div class="small">
+                                                    Use o botão <strong>Gerar PDF e enviar para assinatura</strong>. O sistema gera o documento pelo template, salva em Documentos, abre a tela de assinatura com o PDF já selecionado e envia o link individual por e-mail quando você confirmar os signatários.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
                                     <div class="alert alert-info mb-0">
                                         O arquivo será armazenado no storage jurídico privado. O sistema manterá a versão do template, o contexto criptografado, o usuário, a data e os hashes SHA-256 para auditoria.
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-footer d-flex justify-content-end gap-2">
+                            <div class="card-footer d-flex flex-wrap justify-content-end gap-2">
                                 <a class="btn btn-outline-secondary" href="{{ route('admin.legal-document-templates.show', $template) }}">Cancelar</a>
-                                <button class="btn btn-primary" type="submit"><i class="bi bi-file-earmark-check me-1"></i>Gerar documento</button>
+                                <button class="btn btn-primary" type="submit" name="after_generate" value="documents">
+                                    <i class="bi bi-file-earmark-check me-1"></i>Gerar documento
+                                </button>
+                                <button class="btn btn-success" type="submit" name="after_generate" value="signature" data-force-output-format="pdf">
+                                    <i class="bi bi-send me-1"></i>Gerar PDF e enviar para assinatura
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -119,4 +138,16 @@
             });
         </script>
     @endif
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-force-output-format]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const format = document.getElementById('output_format');
+                    if (format) {
+                        format.value = button.dataset.forceOutputFormat || 'pdf';
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

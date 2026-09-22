@@ -53,6 +53,10 @@ class SyncDjenMonitor implements ShouldBeUnique, ShouldQueue
             return;
         }
 
+        if ($run->status === DjenSyncRun::STATUS_UNAVAILABLE) {
+            return;
+        }
+
         if (in_array($run->status, [DjenSyncRun::STATUS_FAILED, DjenSyncRun::STATUS_PARTIAL], true)) {
             throw new RuntimeException($run->error_summary ?: 'A sincronização automática do DJEN não foi concluída.');
         }

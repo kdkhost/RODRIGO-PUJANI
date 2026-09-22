@@ -40,6 +40,8 @@ class DjenSyncRun extends Model
 
     public const STATUS_RATE_LIMITED = 'rate_limited';
 
+    public const STATUS_UNAVAILABLE = 'unavailable';
+
     public const STATUS_SKIPPED = 'skipped';
 
     protected function casts(): array

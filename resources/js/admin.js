@@ -1330,7 +1330,7 @@ const AdminUI = {
     uploadPreviewSource(input, file) {
         const kind = this.mediaKind(file.type, this.fileExtension(file.name, file.type));
 
-        if (!['image', 'video', 'audio'].includes(kind.key)) {
+        if (!['image', 'video', 'audio', 'pdf'].includes(kind.key)) {
             return null;
         }
 
@@ -1354,6 +1354,10 @@ const AdminUI = {
 
         if (source && kind.key === 'audio') {
             return `<i class="bi ${kind.icon}"></i>`;
+        }
+
+        if (source && kind.key === 'pdf') {
+            return `<object data="${source}" type="application/pdf" aria-label="Prévia do PDF"><i class="bi ${kind.icon}"></i></object>`;
         }
 
         return `<i class="bi ${kind.icon}"></i>`;
@@ -1611,6 +1615,7 @@ const AdminUI = {
                     credits: false,
                     storeAsFile: true,
                     acceptedFileTypes: input.dataset.accepted ? input.dataset.accepted.split(',') : null,
+                    maxFileSize: input.dataset.maxFileSize || null,
                     files: current ? [{
                         source: current.url,
                         options: {

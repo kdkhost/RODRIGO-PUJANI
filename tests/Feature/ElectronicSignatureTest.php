@@ -64,7 +64,39 @@ class ElectronicSignatureTest extends TestCase
             ->assertSee('Anexar PDF agora')
             ->assertSee('legal_document_id', false)
             ->assertSee('upload_file', false)
+            ->assertSee('data-filepond', false)
+            ->assertSee('Pré-visualizar')
+            ->assertSee('SHA-256')
             ->assertSee('Contrato');
+    }
+
+    public function test_create_page_without_existing_pdf_defaults_to_upload_and_shows_translated_validation(): void
+    {
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('Administrador');
+
+        $this->actingAs($admin)
+            ->get(route('admin.signature-requests.create'))
+            ->assertOk()
+            ->assertSee('Nenhum PDF privado elegível disponível')
+            ->assertSee('Nenhum PDF privado elegível foi encontrado')
+            ->assertSee('data-current-source="upload"', false)
+            ->assertSee('data-has-existing-documents="0"', false);
+
+        $response = $this->actingAs($admin)->post(route('admin.signature-requests.store'), [
+            'document_source' => 'existing',
+            'title' => 'Assinatura sem documento',
+            'expires_at' => now()->addDays(5)->format('Y-m-d H:i:s'),
+            'ordered' => '0',
+            'signers' => [['name' => 'Cliente Assinante', 'email' => 'assinante-sem-documento@example.com', 'document' => '123.456.789-09']],
+        ]);
+
+        $response->assertSessionHasErrors('legal_document_id');
+        $this->assertStringContainsString(
+            'Selecione um PDF privado existente ou use a opção Anexar PDF agora.',
+            session('errors')->first('legal_document_id')
+        );
+        $this->assertStringNotContainsString('validation.required_if', session('errors')->first('legal_document_id'));
     }
 
     public function test_admin_can_attach_pdf_directly_when_creating_signature_request(): void

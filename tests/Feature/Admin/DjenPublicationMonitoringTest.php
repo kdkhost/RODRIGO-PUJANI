@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\DjenMonitor;
 use App\Models\DjenPublication;
 use App\Models\DjenSyncRun;
+use App\Jobs\SyncDjenMonitor;
 use App\Models\LegalCase;
 use App\Models\User;
 use App\Services\DjenClient;
@@ -113,6 +114,27 @@ class DjenPublicationMonitoringTest extends TestCase
         $this->assertDatabaseCount('djen_publications', 0);
         $this->assertTrue($monitor->refresh()->rate_limited_until->isFuture());
         Http::assertSentCount(1);
+    }
+
+    public function test_forbidden_djen_response_is_recorded_as_external_unavailability(): void
+    {
+        [$admin, , $monitor] = $this->processMonitor();
+        Http::fake(['*' => Http::response([], 403)]);
+
+        $run = app(DjenPublicationSyncService::class)->syncMonitor($monitor, $admin->id, 'scheduled');
+
+        $this->assertSame(DjenSyncRun::STATUS_UNAVAILABLE, $run->status);
+        $this->assertTrue($run->retry_at->isFuture());
+        $this->assertSame(0, $run->items_fetched);
+        $this->assertStringContainsString('HTTP 403', (string) $run->error_summary);
+        $this->assertDatabaseCount('djen_publications', 0);
+        $this->assertTrue($monitor->refresh()->next_sync_at->isFuture());
+        $this->assertStringContainsString('HTTP 403', (string) $monitor->last_error);
+
+        Http::fake(['*' => Http::response([], 403)]);
+        (new SyncDjenMonitor($monitor->id, $admin->id, 'scheduled'))->handle(app(DjenPublicationSyncService::class));
+
+        $this->assertTrue(true, 'O job não deve lançar exceção crítica quando o DJEN estiver indisponível.');
     }
 
     public function test_sync_deduplicates_atomically_preserves_raw_payload_and_never_publishes_before_review(): void

@@ -2,7 +2,11 @@
 
 @section('content')
     @php
-        $currentSource = old('document_source', $documentSource ?? 'existing');
+        $hasExistingDocuments = $documents->isNotEmpty();
+        $currentSource = old('document_source', $documentSource ?? ($hasExistingDocuments ? 'existing' : 'upload'));
+        if (! $hasExistingDocuments && $currentSource === 'existing') {
+            $currentSource = 'upload';
+        }
         $selectedDocumentId = (int) old('legal_document_id', $selectedDocument ?? 0);
     @endphp
 
@@ -23,6 +27,19 @@
 
     <div class="app-content">
         <div class="container-fluid">
+            @if(session('status'))
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-1"></i>{{ session('status') }}
+                </div>
+            @endif
+
+            @if(!empty($fromTemplateGeneration))
+                <div class="alert alert-info">
+                    <i class="bi bi-magic me-1"></i>
+                    Documento gerado por template selecionado automaticamente. Revise os signatários e confirme para enviar o link individual por e-mail.
+                </div>
+            @endif
+
             @if($errors->any())
                 <div class="alert alert-danger">
                     <strong>Revise os dados da solicitação.</strong>
@@ -47,12 +64,17 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <div class="signature-source-toggle" data-signature-source-toggle>
-                                    <label class="signature-source-option">
-                                        <input type="radio" name="document_source" value="existing" @checked($currentSource === 'existing')>
+                                <div
+                                    class="signature-source-toggle"
+                                    data-signature-source-toggle
+                                    data-current-source="{{ $currentSource }}"
+                                    data-has-existing-documents="{{ $hasExistingDocuments ? '1' : '0' }}"
+                                >
+                                    <label class="signature-source-option {{ $hasExistingDocuments ? '' : 'opacity-75' }}">
+                                        <input type="radio" name="document_source" value="existing" @checked($currentSource === 'existing') @disabled(! $hasExistingDocuments)>
                                         <span>
                                             <strong>Selecionar documento existente</strong>
-                                            <small>Use um PDF privado já salvo em Documentos.</small>
+                                            <small>{{ $hasExistingDocuments ? 'Use um PDF privado já salvo em Documentos.' : 'Nenhum PDF privado elegível disponível.' }}</small>
                                         </span>
                                     </label>
                                     <label class="signature-source-option">
@@ -74,7 +96,19 @@
                                         <select id="legal_document_id" name="legal_document_id" class="form-select">
                                             <option value="">Selecione o PDF que será enviado</option>
                                             @foreach($documents as $document)
-                                                <option value="{{ $document->id }}" @selected($selectedDocumentId === (int) $document->id)>
+                                                <option
+                                                    value="{{ $document->id }}"
+                                                    @selected($selectedDocumentId === (int) $document->id)
+                                                    data-title="{{ e($document->title) }}"
+                                                    data-client="{{ e($document->client?->name ?: 'Sem cliente') }}"
+                                                    data-case="{{ e($document->legalCase?->title ?: 'Sem processo') }}"
+                                                    data-file="{{ e($document->original_name ?: $document->file_name ?: 'documento.pdf') }}"
+                                                    data-size="{{ e($document->size ? number_format($document->size / 1024, 1, ',', '.').' KB' : 'Tamanho não informado') }}"
+                                                    data-sha="{{ e($document->sha256) }}"
+                                                    data-generated="{{ $document->generation ? '1' : '0' }}"
+                                                    data-template="{{ e($document->generation?->template?->name ?: '') }}"
+                                                    data-download-url="{{ route('admin.legal-documents.download', $document) }}"
+                                                >
                                                     {{ $document->title }}
                                                     @if($document->client)
                                                         — {{ $document->client->name }}
@@ -82,11 +116,27 @@
                                                     @if($document->legalCase)
                                                         — {{ $document->legalCase->title }}
                                                     @endif
+                                                    @if($document->generation)
+                                                        — gerado por template
+                                                    @endif
                                                 </option>
                                             @endforeach
                                         </select>
+                                        <div class="admin-signature-document-preview mt-3" data-signature-document-preview data-empty="true">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <div class="admin-system-preview-mark"><i class="bi bi-file-earmark-pdf"></i></div>
+                                                <div class="flex-grow-1 min-w-0">
+                                                    <strong data-document-preview-title>Nenhum documento selecionado</strong>
+                                                    <div class="small text-muted" data-document-preview-meta>Escolha um PDF privado na lista para ver cliente, processo, origem e hash.</div>
+                                                    <div class="small text-muted text-break mt-1" data-document-preview-sha></div>
+                                                </div>
+                                                <a class="btn btn-sm btn-outline-primary d-none" href="#" target="_blank" rel="noopener" data-document-preview-download>
+                                                    <i class="bi bi-eye me-1"></i>Pré-visualizar
+                                                </a>
+                                            </div>
+                                        </div>
                                         <div class="form-text">
-                                            Só aparecem PDFs privados, com cliente vinculado e hash SHA-256 calculado.
+                                            Só aparecem PDFs privados, com cliente vinculado e hash SHA-256 calculado. Documentos gerados por template em PDF também ficam disponíveis aqui.
                                         </div>
                                     @endif
                                 </div>
@@ -118,8 +168,17 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label" for="upload_file">PDF para assinatura</label>
-                                            <input id="upload_file" type="file" name="upload_file" class="form-control" accept="application/pdf,.pdf">
-                                            <div class="form-text">Apenas PDF real. O arquivo será salvo em área privada com SHA-256.</div>
+                                            <input
+                                                id="upload_file"
+                                                type="file"
+                                                name="upload_file"
+                                                class="form-control"
+                                                accept="application/pdf,.pdf"
+                                                data-filepond
+                                                data-accepted="application/pdf"
+                                                data-max-file-size="15MB"
+                                            >
+                                            <div class="form-text">Arraste e solte ou selecione um PDF real. O arquivo será salvo em área privada, validado e registrado com SHA-256.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -216,6 +275,8 @@
         (() => {
             const panels = Array.from(document.querySelectorAll('[data-signature-source-panel]'));
             const radios = Array.from(document.querySelectorAll('input[name="document_source"]'));
+            const documentSelect = document.getElementById('legal_document_id');
+            const documentPreview = document.querySelector('[data-signature-document-preview]');
 
             function syncSource() {
                 const current = radios.find((radio) => radio.checked)?.value || 'existing';
@@ -232,6 +293,55 @@
 
             radios.forEach((radio) => radio.addEventListener('change', syncSource));
             syncSource();
+
+            function syncDocumentPreview() {
+                if (!documentSelect || !documentPreview) {
+                    return;
+                }
+
+                const option = documentSelect.selectedOptions[0];
+                const title = documentPreview.querySelector('[data-document-preview-title]');
+                const meta = documentPreview.querySelector('[data-document-preview-meta]');
+                const sha = documentPreview.querySelector('[data-document-preview-sha]');
+                const download = documentPreview.querySelector('[data-document-preview-download]');
+
+                if (!option || !option.value) {
+                    documentPreview.dataset.empty = 'true';
+                    if (title) title.textContent = 'Nenhum documento selecionado';
+                    if (meta) meta.textContent = 'Escolha um PDF privado na lista para ver cliente, processo, origem e hash.';
+                    if (sha) sha.textContent = '';
+                    if (download) {
+                        download.classList.add('d-none');
+                        download.removeAttribute('href');
+                    }
+
+                    return;
+                }
+
+                const origin = option.dataset.generated === '1'
+                    ? `Gerado por template${option.dataset.template ? `: ${option.dataset.template}` : ''}`
+                    : 'Documento cadastrado';
+
+                documentPreview.dataset.empty = 'false';
+                if (title) title.textContent = option.dataset.title || option.textContent.trim();
+                if (meta) {
+                    meta.textContent = [
+                        origin,
+                        option.dataset.client,
+                        option.dataset.case,
+                        option.dataset.file,
+                        option.dataset.size,
+                    ].filter(Boolean).join(' • ');
+                }
+                if (sha) sha.textContent = option.dataset.sha ? `SHA-256: ${option.dataset.sha}` : '';
+                if (download) {
+                    download.href = option.dataset.downloadUrl || '#';
+                    download.classList.remove('d-none');
+                }
+            }
+
+            documentSelect?.addEventListener('change', syncDocumentPreview);
+            syncDocumentPreview();
 
             document.getElementById('upload_legal_case_id')?.addEventListener('change', (event) => {
                 const selected = event.target.selectedOptions[0];
